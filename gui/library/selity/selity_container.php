@@ -40,6 +40,8 @@ class selity_container{
 	protected $uid		 	= null;
 	protected $modified		= false;
 
+	protected $errors		= array();
+
 	public function __construct($table = null){
 		if($table != null)
 			$this->tableName = $table;
@@ -107,6 +109,9 @@ class selity_container{
 
 	public function save(){
 		if(!$this->modified) return true;
+		if(is_callable(array($this, 'validate')) && !$this->validate()){
+			return false;
+		}
 		$fields = array_keys($this->values);
 		array_walk($fields, function(&$value, $key){
 			$value = '`'.$value.'`';
@@ -148,6 +153,10 @@ class selity_container{
 		if(is_null($uniqueIdName))
 			throw new Exception (tr('No unique id for table %s', $table));
 		self::$tableStruct[$table]['uniqueIdName'] = $uniqueIdName;
+	}
+
+	public function getMessage(){
+		return $this->errors;
 	}
 }
 

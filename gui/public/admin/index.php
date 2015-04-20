@@ -163,13 +163,13 @@ $tpl->saveVariable(
 		'ADMIN_USERS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `admin` WHERE `admin_type` = ?', 'admin')->cnt,
 		'RESELLER_USERS'	=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `admin` WHERE `admin_type` = ?', 'reseller')->cnt,
 		'NORMAL_USERS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `admin` WHERE `admin_type` = ?', 'user')->cnt,
-		//'SERVERS'			=> '', $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `servers`')->cnt,
-		'DOMAINS'			=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `domain_aliasses`')->cnt,
-		'SUBDOMAINS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `subdomain_alias`')->cnt,
-		'MAIL_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `mail_users`')->cnt,
-		'FTP_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `ftp_users`')->cnt,
-		'SQL_DATABASES'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `sql_database`')->cnt,
-		'SQL_USERS'			=> $sql->doQuery('SELECT COUNT(DISTINCT(`sqlu_name`)) AS `cnt` FROM `sql_user`')->cnt,
+		'SERVERS'			=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `servers`')->cnt,
+		'DOMAINS'			=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `domains`')->cnt,
+		'SUBDOMAINS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `subdomains`')->cnt,
+		//'MAIL_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `mail_users`')->cnt,
+		//'FTP_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `ftp_users`')->cnt,
+		//'SQL_DATABASES'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `sql_database`')->cnt,
+		//'SQL_USERS'			=> $sql->doQuery('SELECT COUNT(DISTINCT(`sqlu_name`)) AS `cnt` FROM `sql_user`')->cnt,
 	)
 );
 

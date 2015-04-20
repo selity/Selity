@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel='stylesheet' href='{THEME_COLOR_PATH}/style/style.css' type='text/css' />
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+		<script type="text/javascript">
+			function action_delete(url, object) {
+				message = "{TR_MESSAGE_DELETE}"
+				if (!confirm(message.replace(/%s/, object)))
+					return false;
+				location = url;
+			}
+		</script>
+	</head>
+	<body>
+		<div id='nonFooter'>
+			<div id='page'>
+				<div class='clear'>&nbsp;</div>
+				<div id='menu'>
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class='content-wrap'>
+					<div id='main'>
+
+						<h2>{TR_MANAGE_SERVERS}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+
+						<div class="col1">
+							<b>{TR_USERS}</b>
+						</div>
+
+						<div class="content-wrap">
+							<div class='col4_4'>
+								<center>
+									<b>{TR_ACTION}</b>
+								</center>
+							</div>
+						</div>
+						<div class='col4_1'>
+							<center>
+								<b>{TR_STATUS}</b>
+							</center>
+						</div>
+						<div class='col4_2'>
+							<b>{TR_SERVER_NAME}</b>
+						</div>
+						<div class='col4_3'>
+							<center>
+								<b>{TR_ONLINE}</b>
+							</center>
+						</div>
+						<div class='clear'>&nbsp;</div>
+
+						<!--Repeats_:SERVER_LIST:-->
+							<div class="content-wrap">
+								<div class='col4_4'>
+									<center>
+										<a href="#">{TR_}</a>
+										&nbsp;|&nbsp;
+										<a href="servers_op.php?op=edit&server_id={SERVER_ID}">{TR_EDIT}</a>
+										&nbsp;|&nbsp;
+										<a href="server_status.php?server_id={SERVER_ID}">{TR_DETAILS}</a>
+									</center>
+								</div>
+							</div>
+							<div class='col4_1'>
+								<center>
+									<a href="{STATUS_URL}" class="link">{STATUS}</a>
+								</center>
+							</div>
+							<div class='col4_2'>
+								{NAME}
+							</div>
+							<div class='col4_3' style="color:{COLOR}">
+								<center>
+									{ONLINE}
+								</center>
+							</div>
+							<div class='clear'>&nbsp;</div>
+						<!--:SERVER_LIST:_Repeats-->
+
+
+					<div class='clear'>&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+
+				<div class='clear'>&nbsp;</div>
+			</div>
+			<div class='clear'>&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

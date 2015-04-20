@@ -93,6 +93,14 @@ function genGeneralMenu(){
 }
 
 function genAdminServerMenu(){
+	template::getInstance()->saveVariable(
+		array(
+			'TR_SERVER_OVERVIEW'	=> tr('Servers list'),
+			'TR_SERVER_ADD'			=> tr('Add server'),
+			'TR_SERVER_STATUS'		=> tr('Servers status'),
+		)
+	);
+	template::getInstance()->saveSection('SERVER_MENU');
 }
 
 function genAdminUsersMenu(){

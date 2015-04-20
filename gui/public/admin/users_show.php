@@ -147,10 +147,6 @@ if (isset($_POST['details']) && !empty($_POST['details'])) {
 	}
 }
 
-if (!Config::exists('HOSTING_PLANS_LEVEL') || strtolower(Config::get('HOSTING_PLANS_LEVEL')) !== 'admin') {
-	$tpl->assign('EDIT_OPTION', '');
-}
-
 genMainMenu();
 genAdminUsersMenu();
 
@@ -164,7 +160,6 @@ $tpl->saveVariable(array(
 	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
 	//'THEME_CHARSET'	=> tr('encoding'),
 	'ADMIN_TYPE'		=> $_SESSION['user_type'],
-	//'TR_MANAGE_USERS'	=> tr('Manage'),
 	'TR_ADMINS'			=> tr('Administrators'),
 	'TR_RESELLERS'		=> tr('Resellers'),
 	'TR_USERS'			=> tr('Clients'),

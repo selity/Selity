@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_SERVER_ADD}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name="" method="post" action="">
+							<input name="submit" type="submit" class="button" style="display:none;">
+
+							<div class="col1">
+								<b>{TR_SERVER_DATA}</b>
+							</div>
+							<div class="clear">&nbsp;</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="serverName" value="{SERVER_NAME}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_SERVER_NAME}:
+							</div>
+							<div class="clear">&nbsp;</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="serverIP" value="{SERVER_IP}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_SERVER_IP}:
+							</div>
+							<div class="clear">&nbsp;</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="rootUser" value="{ROOT_USER}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_ROOT_USER}:
+							</div>
+							<div class="clear">&nbsp;</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="password" name="rootPass" value="{ROOT_PASS}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_ROOT_PASS}:
+							</div>
+							<div class="clear">&nbsp;</div>
+
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input name="submit" type="submit" class="button" value="{TR_SUBMIT}">
+								</div>
+							</div>
+							<div class='col2_1'>
+								&nbsp;
+							</div>
+							<div class="clear">&nbsp;</div>
+
+						</form>
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

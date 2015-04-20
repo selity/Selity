@@ -21,6 +21,7 @@
 define('INCLUDEPATH', realpath(dirname(__FILE__)));
 require_once(INCLUDEPATH . '/selity-config.php');
 require_once('selity-library.php');
+require_once('selity_constants.php');
 
 session_name('Selity');
 
@@ -117,8 +118,10 @@ Config::set('BRUTEFORCE_BETWEEN_TIME', 30);
 // enable or disable maintenance mode
 // true = disable, false = enable
 Config::set('MAINTENANCEMODE', false);
+configs::getInstance()->MAINTENANCEMODE = false;
 // servicemode message
 Config::set('MAINTENANCEMODE_MESSAGE', tr("We are sorry, but the system is currently under maintenance.\nOnly administrators can login."));
+configs::getInstance()->MAINTENANCEMODE_MESSAGE = tr("We are sorry, but the system is currently under maintenance.\nOnly administrators can login.");
 
 // password chars
 Config::set('PASSWD_CHARS', 6);
