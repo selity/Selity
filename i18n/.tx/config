@@ -1,0 +1,7 @@
+[main]
+host = https://www.transifex.net
+
+[Selity.selitypot]
+file_filter = po/<lang>.po
+source_file = po/selity.pot
+source_lang = en

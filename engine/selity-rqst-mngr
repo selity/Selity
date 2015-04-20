@@ -1,0 +1,373 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012-2014 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/PerlLib";
+use lib "$FindBin::Bin/PerlVendor";
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Execute;
+use Data::Dumper;
+use MIME::Base64;
+
+newDebug('selity-rqst-mngr.log');
+
+sub start_up {
+
+	umask(027);
+
+	Selity::Boot->new()->init();
+	0;
+}
+
+sub mngr_engine_process{
+
+	my ($type, $sql, $ipMods) = @_;
+	my $rs = 0;
+
+	debug("=======================");
+	debug("Processing type $type.");
+
+	print("=======================\n");
+	print("Processing type $type.\n");
+
+	my $database = Selity::Database->factory();
+	my $rdata = $database->doQuery('id', $sql);
+	if(ref $rdata ne 'HASH'){
+		error("$rdata");
+		return 1;
+	}
+
+	my $i = 1;
+	my $total = scalar keys %$rdata;
+	$$ipMods += $total if(ref $ipMods);
+
+	foreach (keys %$rdata) {
+		my $id		= $rdata->{$_}->{id};
+		my $name	= $rdata->{$_}->{name};
+		my $status	= $rdata->{$_}->{status};
+
+		debug("processing $id, $name, $status.");
+		print("processing $id, $name, $status. ($i of $total: remaining ".($total -$i).")\n");
+		$i++;
+
+		newDebug("${type}_mngr_$name.log");
+
+		my $file	= "Modules/${type}.pm";
+		my $class	= "Modules::$type";
+
+		eval {require $file};
+		if($@){
+			error("Error while processing $id, $name, $status: $@");
+			$rs = 1;
+		} else {
+			$rs |=  $class->new()->process($id);
+		}
+
+		endDebug();
+
+		error("Error while processing $id, $name, $status.") if $rs;
+		error("See ${type}_mngr_$name.log for details.") if $rs;
+	}
+
+	$rs;
+}
+
+sub engine {
+
+	my $rs = 0;
+	my $sql;
+
+	## First we add / delete certificates
+	## First we add / alter main domain
+	## Then we add / alter subdomain for main domain
+	## Next we add / alter alias for main domain
+	## Next we add / alter subdomain for alias
+	## Next we process mailboxes
+	## Next we process .htaccess related data
+	## Now we can delete in order alias subdomains
+	## Subdomains
+	## Alias
+	## Main domain
+
+	$sql = "
+		SELECT
+			`cert_id` AS 'id',
+			`type` AS 'name',
+			`status` AS 'status'
+		FROM
+			`ssl_certs`
+		WHERE
+			`status`
+		IN (
+			'toadd',
+			'change',
+			'delete'
+		)
+	";
+
+	$rs |= mngr_engine_process('Certificates', $sql);
+
+	my $ipsMod = 0;
+
+	$sql = "
+		SELECT
+			`domain_id` AS 'id',
+			`domain_name` AS 'name',
+			`domain_status` AS 'status'
+		FROM
+			`domain`
+		WHERE
+			`domain_status`
+		IN (
+			'toadd',
+			'change',
+			'dnschange',
+			'restore',
+			'toenable',
+			'todisable'
+		)
+	";
+
+	$rs |= mngr_engine_process('Domain', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`subdomain_id` AS 'id',
+			`subdomain_name` AS 'name',
+			`subdomain_status` AS 'status'
+		FROM
+			`subdomain`
+		WHERE
+			`subdomain_status`
+		IN (
+			'toadd',
+			'change',
+			'toenable',
+			'todisable'
+		)
+	";
+
+	$rs |= mngr_engine_process('Subdomain', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`alias_id` AS 'id',
+			`alias_name` AS 'name',
+			`alias_status` AS 'status'
+		FROM
+			`domain_aliasses`
+		WHERE
+			`alias_status`
+		IN (
+			'toadd',
+			'change',
+			'dnschange',
+			'toenable',
+			'todisable'
+		)
+	";
+
+	$rs |= mngr_engine_process('Alias', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`subdomain_alias_id` AS 'id',
+			`subdomain_alias_name` AS 'name',
+			`subdomain_alias_status` AS 'status'
+		FROM
+			`subdomain_alias`
+		WHERE
+			`subdomain_alias_status`
+		IN (
+			'toadd',
+			'change',
+			'toenable',
+			'todisable'
+		)
+	";
+
+	$rs |= mngr_engine_process('SubAlias', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`mail_id` AS 'id',
+			`mail_addr` AS 'name',
+			`status` as 'status'
+		FROM
+			`mail_users`
+		WHERE
+			`status`
+		IN (
+			'toadd',
+			'change',
+			'toenable',
+			'delete',
+			'todisable'
+		)
+	";
+
+	$rs |= mngr_engine_process('Mail', $sql);
+
+	$sql = "
+		SELECT
+			`id`,
+			`uname` as 'name',
+			`status`
+		FROM
+			`htaccess_users`
+		WHERE
+			`status`
+		IN (
+			'toadd',
+			'change',
+			'delete'
+		)
+	";
+	$rs |= mngr_engine_process('Htusers', $sql);
+
+	$sql = "
+		SELECT
+			`id` AS 'id',
+			CONCAT(`ugroup`,':',`id`) AS 'name',
+			`status`
+		FROM
+			`htaccess_groups`
+		WHERE
+			`status`
+		IN (
+			'toadd',
+			'change',
+			'delete'
+		)
+	";
+	$rs |= mngr_engine_process('Htgroup', $sql);
+
+	$sql = "
+		SELECT
+			`id`,
+			`auth_name` AS 'name',
+			`status`
+		FROM
+			`htaccess`
+		WHERE
+			`status`
+		IN (
+			'toadd',
+			'change',
+			'delete'
+		)
+	";
+	$rs |= mngr_engine_process('Htaccess', $sql);
+
+	$sql = "
+		SELECT
+			`subdomain_alias_id` AS 'id',
+			`subdomain_alias_name` AS 'name',
+			`subdomain_alias_status` AS 'status'
+		FROM
+			`subdomain_alias`
+		WHERE
+			`subdomain_alias_status` = 'delete'
+	";
+
+	$rs |= mngr_engine_process('SubAlias', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`subdomain_id` AS 'id',
+			`subdomain_name` AS 'name',
+			`subdomain_status` AS 'status'
+		FROM
+			`subdomain`
+		WHERE
+			`subdomain_status` = 'delete'
+	";
+
+	$rs |= mngr_engine_process('Subdomain', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`alias_id` AS 'id',
+			`alias_name` AS 'name',
+			`alias_status` AS 'status'
+		FROM
+			`domain_aliasses`
+		WHERE
+			`alias_status` = 'delete'
+	";
+
+	$rs |= mngr_engine_process('Alias', $sql, \$ipsMod);
+
+	$sql = "
+		SELECT
+			`domain_id` AS 'id',
+			`domain_name` AS 'name',
+			`domain_status` AS 'status'
+		FROM
+			`domain`
+		WHERE
+			`domain_status` = 'delete'
+	";
+
+	$rs |= mngr_engine_process('Domain', $sql, \$ipsMod);
+
+	#
+	# Network card management BEGIN.
+	#
+
+	$sql = "
+		SELECT
+			`ip_id` AS 'id',
+			`ip_status` AS 'name',
+			`ip_status` AS 'status'
+		FROM
+			`server_ips`
+		WHERE
+			`ip_status` != 'ok'
+	";
+	$rs |= mngr_engine_process('NetCard', $sql);
+
+	#
+	# IP management BEGIN.
+	#
+
+	if($ipsMod != 0){
+		use Modules::Ips;
+		$rs |= Modules::Ips->new()->process();
+	}
+
+	$rs;
+}
+
+start_up() and exit 1;
+engine() and exit 1;
+
+exit 0;

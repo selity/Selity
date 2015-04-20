@@ -1,0 +1,346 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+
+umask(027);
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Dialog;
+
+newDebug('selity-uninstall.log');
+
+################################################################################
+# Starting update process
+#
+# @return void
+#
+sub uninstall_start_up {
+
+	Selity::Boot->new()->init();
+
+	#enter silent mode
+	silent(1);
+
+	user_dialog();
+
+	0;
+}
+
+################################################################################
+# User dialog
+#
+# @return void
+#
+sub user_dialog {
+
+	use Selity::Dialog;
+
+	Selity::Dialog->factory()->set('yes-label','CONTINUE');
+	Selity::Dialog->factory()->set('no-label','EXIT');
+	Selity::Dialog->factory()->set('defaultno', '');
+	if (Selity::Dialog->factory()->yesno(
+					"\n
+						Welcome to \\Z1Selity version $main::selityConfig{'Version'}\\Zn Un-Install Dialog.
+
+						This program will uninstall Selity system from your server.
+
+						\\Zu\\Z1[WARNING]\\Zn
+						All domain users and their accounts will be removed.
+
+						\\Zu\\Z4[NOTE]\\Zn
+						During the migration process some or all services might require to be shut down or restarted.
+
+						You can stop this process by pushing \\Z1EXIT\\Z0 button
+						To continue select \\Z1CONTINUE\\Z0 button"
+
+					)
+	){
+		Selity::Dialog->factory()->msgbox(
+					"\n
+					\\Z1[NOTICE]\\Zn
+
+					The update process was aborted by user..."
+		);
+		exit 0;
+	}
+
+	0;
+}
+################################################################################
+# Shutting down setup process
+#
+# @return int 0 on success, other on failure
+#
+sub uninstall_shut_down {
+
+	Selity::Dialog->factory()->msgbox(
+					"\n
+					\\Z1Congratulations!!!\\Zn
+
+					You have uninstall Selity successfully!\n\n
+
+					"
+	);
+
+	0;
+}
+
+
+sub uninstall_engine {
+
+	use Selity::Stepper;
+	## Starting user dialog
+
+	my @steps = (
+
+		[\&uninstall_customers, 'Remove customers: '],
+		[\&uninstallServers, 'Selity server uninstall task: '],
+		[\&uninstall_selityd, 'Selity daemons uninstall task: '],
+		[\&uninstall_crontab, 'Selity crontab uninstall task: '],
+		[\&uninstall_logrotate, 'Selity logrotate uninstall task: '],
+		[\&uninstall_sql, 'Selity sql uninstall task: '],
+		[\&uninstall_system_users, 'Selity system user uninstall task: '],
+		[\&uninstall_system_dirs, 'Selity system directory uninstall task: '],
+	);
+	my $rs = 0;
+	my $step = 1;
+	for (@steps){
+		$rs |= step($_->[0], $_->[1], scalar @steps, $step);
+		$step++;
+	}
+	Selity::Dialog->factory()->endGauge() if Selity::Dialog->factory()->needGauge();
+
+	$rs;
+}
+
+
+sub uninstall_customers {
+
+	use Selity::Boot;
+
+	my $tables = {
+		domain => 'domain_status', domain_aliasses => 'alias_status',
+		subdomain => 'subdomain_status', subdomain_alias => 'subdomain_alias_status',
+		mail_users => 'status'
+	};
+
+	# Set status as 'change'
+	my $rs		= 0;
+	my $error;
+	my $database = Selity::Database->new()->factory();
+
+	while (my ($table, $field) = each %$tables) {
+		$error = $database->doQuery('dummy',
+			"
+				UPDATE
+					$table
+				SET
+					$field = 'delete'
+				;
+			"
+		);
+		$rs = 1 if (ref $error ne 'HASH');
+	}
+
+	Selity::Boot->new()->unlock();
+
+	my ($stdout, $stderr);
+	$rs |= execute("perl $main::selityConfig{'ENGINE_ROOT_DIR'}/selity-rqst-mngr", \$stdout, \$stderr);
+	debug("$stdout") if $stdout;
+	error("$stderr") if $stderr;
+	error("Error while rebuilding customers configuration files") if(!$stderr && $rs);
+	Selity::Boot->new()->lock();
+
+	$rs;
+}
+
+sub uninstallServers{
+
+	use Selity::Dir;
+	use FindBin;
+	use Selity::Stepper;
+
+	my ($rs, $file, $class, $server, $msg);
+
+	my $dir	= Selity::Dir->new(dirname => "$main::selityConfig{'ENGINE_ROOT_DIR'}/PerlLib/Servers");
+	$rs		= $dir->get();
+	return $rs if $rs;
+
+	my @servers = $dir->getFiles();
+
+	my $step = 1;
+	startDetail();
+
+	for(@servers){
+		s/\.pm//;
+		$file	= "Servers/$_.pm";
+		$class	= "Servers::$_";
+		require $file;
+		$server	= $class->factory();
+		$msg = "Performing uninstall tasks for ".uc($_)." server". ($main::selityConfig{uc($_)."_SERVER"} ? ": ".$main::selityConfig{uc($_)."_SERVER"} : '');
+		$rs |= step(sub{ $server->uninstall() }, $msg, scalar @servers, $step) if($server->can('uninstall'));
+		$step++;
+	}
+
+	endDetail();
+
+	$rs;
+}
+
+sub uninstall_system_users{
+
+	use Modules::SystemGroup;
+	Modules::SystemGroup->new()->delSystemGroup($main::selityConfig{MASTER_GROUP});
+
+}
+
+sub uninstall_system_dirs{
+
+	my $rs = 0;
+
+	use Selity::Dir;
+
+	chdir("/");
+
+	for (
+		$main::selityConfig{'CONF_DIR'},
+		$main::selityConfig{'USER_HOME_DIR'},
+		$main::selityConfig{'LOG_DIR'},
+		$main::selityConfig{'ROOT_DIR'}
+	) {
+		$rs |= Selity::Dir->new(dirname => $_)->remove();
+	}
+
+	$rs;
+
+}
+
+sub uninstall_sql{
+
+	my $database = Selity::Database->factory();
+	my $rs = 0;
+	my $err;
+
+	my $rdata = $database->doQuery('sqlu_name', 'SELECT DISTINCT(`sqlu_name`) FROM `sql_user`');
+
+	if(ref $rdata ne 'HASH'){
+		error("$rdata");
+		$rs = 1;
+	}
+
+	foreach (keys %$rdata) {
+
+		$database->doQuery( 'delete', "DROP USER ?@?", $rdata->{$_}->{sqlu_name}, 'localhost');
+		$database->doQuery( 'delete', "DROP USER ?@?", $rdata->{$_}->{sqlu_name}, '%');
+
+	}
+
+	$rdata = $database->doQuery('sqld_name', 'SELECT `sqld_name` FROM `sql_database`');
+	if(ref $rdata ne 'HASH'){
+		error("$rdata");
+		$rs = 1;
+	}
+
+	$database->doQuery('delete', "DROP DATABASE $rdata->{$_}->{sqld_name}") foreach (keys %$rdata);
+
+	$database->doQuery('delete', "DROP USER ?@?", 'pma', 'localhost');
+	$database->doQuery('delete', "DROP USER ?@?", 'pma', '%');
+
+	$err = $database->doQuery('dummy', 'FLUSH PRIVILEGES');
+	if (ref $err ne 'HASH'){
+		error($err);
+		$rs = 1;
+	}
+
+	$database->doQuery('delete', "DROP DATABASE $main::selityConfig{DATABASE_NAME}");
+
+	$rs;
+}
+
+sub uninstall_crontab{
+
+	my $rs = 0;
+
+	use Selity::File;
+
+	$rs |= Selity::File->new(filename =>'/etc/cron.d/selity')->delFile() if -f '/etc/cron.d/selity';
+
+	$rs;
+}
+
+sub uninstall_logrotate{
+
+	my $rs = 0;
+
+	use Selity::File;
+
+	$rs |= Selity::File->new(filename =>'/etc/logrotate.d/selity')->delFile() if -f '/etc/logrotate.d/selity';
+
+	$rs;
+
+}
+
+sub uninstall_selityd{
+
+	my $rs = 0;
+	my ($stdout, $stderr);
+
+	use Selity::File;
+	use Selity::Execute;
+
+	for ($main::selityConfig{'CMD_SELITYN'}, $main::selityConfig{'CMD_SELITYD'}) {
+		# Do not process if the service is disabled
+		next if(/^no$/i);
+
+		my $filename		= $_;
+		my ($serviceName)	= /.*\/([^\/]*)$/;
+
+		# Services remove (Debian, Ubuntu)
+		$rs = execute("/usr/sbin/update-rc.d -f $serviceName remove", \$stdout, \$stderr);
+		debug("$stdout") if $stdout;
+		error("$stderr") if $rs;
+
+		$rs |= Selity::File->new(filename => $filename)->delFile();
+	}
+
+	$rs;
+}
+
+################################################################################
+#                                Main program                                  #
+################################################################################
+
+uninstall_start_up() and exit 1;
+uninstall_engine();
+uninstall_shut_down();
+
+exit 0;

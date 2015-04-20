@@ -1,0 +1,216 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Execute;
+use Selity::Mail;
+use Servers::mta;
+use Data::Dumper;
+
+newDebug('selity-dsk-quota.log');
+
+sub quota_start_up {
+
+	umask(027);
+	Selity::Boot->new()->init({nolock => 'yes'});
+
+	0;
+}
+
+sub quota_files {
+
+	my ($rs, $rdata) = (0, undef);
+
+
+	my $sql = "SELECT `domain_id`, `domain_name` FROM `domain` WHERE `domain_status` = ?";
+	$rdata = Selity::Database->new()->factory()->doQuery('domain_id', $sql, 'ok');
+
+	if (ref $rdata ne 'HASH'){
+		error("$rdata");
+		Selity::Mail->new()->errmsg($rdata);
+		$rs = 1;
+	} else {
+
+		my $mta	= Servers::mta->factory();
+
+		foreach (keys %$rdata) {
+
+			my $domain_name	= $rdata->{$_}->{domain_name};
+			my $domain_id	= $rdata->{$_}->{domain_id};
+			my $size = 0;
+			my @cmd;
+
+			if ($^O =~ /bsd$/) {
+				@cmd = (
+					$main::selityConfig{CMD_DU}.' -I "backups/*" -I "logs/*.log" -d 0 '."$main::selityConfig{USER_HOME_DIR}/$domain_name",
+					$main::selityConfig{CMD_DU}.' -d 0 '."$mta->{'MTA_VIRTUAL_MAIL_DIR'}/$domain_name"
+				);
+			} else {
+				@cmd = (
+					"$main::selityConfig{CMD_DU} --exclude='backups/*' --exclude='logs/*.log' -s -B1 $main::selityConfig{USER_HOME_DIR}/$domain_name",
+					"$main::selityConfig{CMD_DU} -s -B1 $mta->{'MTA_VIRTUAL_MAIL_DIR'}/$domain_name"
+				);
+			}
+			foreach(@cmd){
+				my ($stdout, $stderr);
+				$rs |= execute($_, \$stdout, \$stderr);
+				error("$stderr") if $stderr;
+				if($stdout){
+					debug("$stdout");
+					$stdout =~ /^(\d+)/;
+					$size += $1 if $1 && $^O !~ /bsd$/;
+					$size += $1*1024 if $1 && $^O =~ /bsd$/;
+				}
+			}
+
+			if ($size > 0) {
+				$sql = "UPDATE `domain` SET `domain_disk_usage` = ? WHERE `domain_id` = ?";
+				my $rsdata = Selity::Database->new()->factory()->doQuery('update', $sql, $size, $domain_id);
+				if (ref $rsdata ne 'HASH'){
+					error("$rsdata");
+					Selity::Mail->new()->errmsg($rsdata);
+					$rs = 1;
+				}
+
+				$sql = "UPDATE `quotatallies` SET `bytes_in_used` = ? WHERE `name` = ?";
+				$rsdata = Selity::Database->new()->factory()->doQuery('cnt', $sql, $size, $domain_name);
+				if (ref $rsdata ne 'HASH'){
+					error("$rsdata");
+					Selity::Mail->new()->errmsg($rsdata);
+					$rs = 1;
+				}
+			}
+		}
+	}
+
+	$rs;
+}
+
+sub quota_mysql {
+
+	my $rs = 0;
+
+	my $sql = "SHOW DATABASES";
+	my $databases = Selity::Database->new()->factory()->doQuery('Database', $sql);
+
+	if (ref $databases ne 'HASH'){
+		error("$databases");
+		Selity::Mail->new()->errmsg($databases);
+		return 1;
+	}
+
+	$sql = "SELECT `domain_id`, `domain_name`, `domain_disk_usage` FROM `domain` WHERE `domain_status` = ?";
+	my $rdata = Selity::Database->new()->factory()->doQuery('domain_id', $sql, 'ok');
+
+	if (ref $rdata ne 'HASH'){
+		error("$rdata");
+		Selity::Mail->new()->errmsg($rdata);
+		$rs = 1;
+	} else {
+
+		foreach (keys %$rdata) {
+
+			my $domain_id	= $rdata->{$_}->{domain_id};
+			my $domain_name	= $rdata->{$_}->{domain_name};
+			my $disk_usage	= $rdata->{$_}->{domain_disk_usage};
+			$sql			= "SELECT `sqld_id`, `sqld_name` FROM `sql_database` WHERE `domain_id` = ?";
+			my $userDBs		= Selity::Database->new()->factory()->doQuery('sqld_id', $sql, $domain_id);
+			my $size			= 0;
+
+			if (ref $userDBs ne 'HASH'){
+				error("$userDBs");
+				Selity::Mail->new()->errmsg($userDBs);
+				$rs = 1;
+			}
+
+			foreach (keys %$userDBs) {
+
+				my $sqldb_id     = $userDBs->{$_}->{sqld_id};
+				my $sqldb_name   = $userDBs->{$_}->{sqld_name};
+
+				if(grep{$_ eq $sqldb_name} keys %$databases) {
+
+					$sql = "show table status from `$sqldb_name`";
+					my $tables = Selity::Database->new()->factory()->doQuery('Name ', $sql);
+
+					if (ref $tables ne 'HASH'){
+						error("tables:$tables");
+						Selity::Mail->new()->errmsg($tables);
+						$rs = 1;
+					}
+					foreach(keys %$tables) {
+						$size +=
+								($tables->{$_}->{Data_length} =~ /^\d+$/ ? $tables->{$_}->{Data_length} : 0)
+								+
+								($tables->{$_}->{Index_length} =~ /^\d+$/ ? $tables->{$_}->{Index_length} : 0);
+					}
+				} else {
+					error("Database '$sqldb_name' exists only in table 'sql_database'!!!");
+					Selity::Mail->new()->errmsg("Database '$sqldb_name' exists only in table 'sql_database'!!!");
+				}
+			}
+
+			if ($size > 0) {
+
+				$size += $disk_usage;
+
+				$sql = "UPDATE `domain` SET `domain_disk_usage` = ? WHERE `domain_id` = ?";
+				my $quota = Selity::Database->new()->factory()->doQuery('update ', $sql, $size, $domain_id);
+				if (ref $quota ne 'HASH'){
+					error("$quota");
+					Selity::Mail->new()->errmsg($quota);
+					$rs = 1;
+				}
+
+				$sql = "UPDATE `quotatallies` SET `bytes_in_used` = ? WHERE `name` = ?";
+				$quota = Selity::Database->new()->factory()->doQuery('cnt', $sql, $size, $domain_name);
+				if (ref $quota ne 'HASH'){
+					error("$quota");
+					Selity::Mail->new()->errmsg($quota);
+					$rs = 1;
+				}
+			}
+		}
+	}
+
+	$rs;
+}
+
+my $rs = 0;
+
+exit 1 if quota_start_up();
+
+$rs |= quota_files();
+$rs |= quota_mysql();
+
+exit $rs;

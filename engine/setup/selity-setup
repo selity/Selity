@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+use lib "$FindBin::Bin/../PerlVendor";
+
+umask(027);
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Dialog;
+
+newDebug('selity-setup.log');
+
+our $noprompt;
+
+use Getopt::Long;
+
+my $opt = ''; # option variable with default value (false)
+GetOptions ('noprompt' => \$noprompt);
+
+
+Selity::Dialog->factory()->set('exitOnPrompt', 'yes') if $noprompt;
+
+require "$FindBin::Bin/selity-setup-methods.pl";
+
+
+################################################################################
+# Shutting down setup process
+#
+# @return int 0 on success, other on failure
+#
+sub setup_shut_down {
+
+	return 0 if $main::noprompt;
+
+	Selity::Dialog->factory()->msgbox(
+					"\n
+					\\Z1Congratulations!!!\\Zn
+
+					You installed Selity '$main::selityConfig{'Version'}' successfully!\n\n
+
+					Please type $main::selityConfig{'BASE_SERVER_VHOST_PREFIX'}$main::selityConfig{'BASE_SERVER_VHOST'} in your browser and log in with your Administrator Account to use Selity."
+	);
+
+	0;
+}
+
+################################################################################
+#                                Main program                                  #
+################################################################################
+
+setup_start_up() and exit 1;
+setup_engine() and exit 1;
+setup_shut_down() and exit 1;
+
+exit 0;

@@ -1,0 +1,188 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Execute;
+use Selity::Mail;
+use Selity::Dir;
+use Data::Dumper;
+
+newDebug('selity-backup-all.log');
+
+our $command = {
+				bzip2	=> {extension => 'bz2',		command => 'CMD_BZIP'},
+				gzip	=> {extension => 'gz',		command => 'CMD_GZIP'},
+				lzma	=> {extension => 'lzma',	command => 'CMD_LZMA'},
+				xz		=> {extension => 'xz',		command => 'CMD_XZ'}
+			};
+
+sub backup_start_up {
+
+	umask(027);
+	Selity::Boot->new()->init({nolock => 'yes'});
+
+	0;
+}
+
+sub backup{
+
+	my $rs = 0;
+	my ($stdout, $stderr);
+
+	unless ($main::selityConfig{ZIP} =~ /^(bzip2|gzip|lzma|xz)$/i) {
+		my $msg = "Backup algorithm not supported: $main::selityConfig{ZIP}!";
+		error($msg);
+		return 1;
+	}
+
+	my $sql = "
+		SELECT
+			*
+		FROM
+			`domain` AS t1,
+			`admin` AS t2
+		WHERE
+			t1.domain_status = 'ok'
+		AND
+			t1.domain_admin_id = t2.admin_id
+		AND
+			t1.allowbackup != 'no'
+	";
+	my $rdata = Selity::Database->new()->factory()->doQuery('domain_name', $sql);
+
+	if (ref $rdata ne 'HASH'){
+		error("$rdata");
+		$rs = 1;
+	} else {
+
+		foreach (keys %$rdata) {
+			Selity::Boot->new()->lock();
+			if ($rdata->{$_}->{allowbackup} !~ m/^no$/i) {
+
+				my $hDir		= $main::selityConfig{USER_HOME_DIR}."/$_";
+				my $bkpDir		= "$hDir/backups";
+
+				my $rv |= Selity::Dir->new( dirname => $bkpDir)->make({
+					user	=> $main::selityConfig{ROOT_USER},
+					group	=> $main::selityConfig{ROOT_GROUP},
+					mode	=> 0755
+				});
+				$rs |= $rv;
+				if($rv){
+					Selity::Boot->new()->unlock();
+					next ;
+				}
+
+				$rs |= execute("$main::selityConfig{'CMD_RM'} -rf $bkpDir/*", \$stdout, \$stderr);
+				debug($stdout) if $stdout;
+				error($stderr) if $stderr;
+
+				use POSIX qw(strftime);
+				my $ext		= $command->{lc($main::selityConfig{ZIP})}->{extension};
+				my $date	= strftime "%Y.%m.%d-%H:%M", localtime;
+
+				if ($rdata->{$_}->{allowbackup} =~ m/full|dmn/i) {
+
+					my @cmd = (
+						lc($main::selityConfig{CMD_TAR}),
+						"--create --directory=$hDir",
+						"--".lc($main::selityConfig{ZIP}),
+						"--file=$bkpDir/$_-backup-$date.tar.$ext",
+						"--exclude=logs",
+						"--exclude=phptmp",
+						"--exclude=backups",
+						"--exclude=domain_disable_page",
+						". "
+					);
+
+					my $rs |= execute(join(' ', @cmd), \$stdout, \$stderr);
+					debug($stdout) if $stdout;
+					error($stderr) if $stderr;
+
+					my $file = Selity::File->new(filename => "$bkpDir/$_-backup-$date.tar.$ext");
+					$rs |= $file->mode(0644);
+					$rs |= $file->owner($main::selityConfig{ROOT_USER}, $main::selityConfig{ROOT_GROUP});
+				}
+
+				if (
+					$rdata->{$_}->{allowbackup} =~ m/full|sql/i
+					&&
+					Selity::Database->new()->factory()->can('dumpdb')
+				) {
+
+					$sql		= "SELECT `sqld_id`, `sqld_name` FROM `sql_database` WHERE `domain_id` = ?";
+					my $dbData	= Selity::Database->new()->factory()->doQuery('sqld_name', $sql, $rdata->{$_}->{domain_id});
+
+					if (ref $dbData ne 'HASH'){
+						error("$dbData");
+						$rs |= 1;
+						Selity::Boot->new()->unlock();
+						next;
+					}
+
+					foreach (keys %$dbData) {
+
+						my $cmd = $main::selityConfig{$command->{$main::selityConfig{ZIP}}->{command}}." --force \'$bkpDir/$_.sql\'";
+						$rs |= Selity::Database->new()->factory()->dumpdb($_, "$bkpDir/$_.sql");
+
+						my $file = Selity::File->new(filename => "$bkpDir/$_.sql");
+						$rs |= $file->mode(0644);
+						$rs |= $file->owner($main::selityConfig{ROOT_USER}, $main::selityConfig{ROOT_GROUP});
+
+						$rs |= execute($cmd, \$stdout, \$stderr);
+						debug("$stdout") if $stdout;
+						error("$stderr") if $stderr;
+						error("Can not dump $_") if (!$stderr && $rs);
+					}
+				}
+			}
+			Selity::Boot->new()->unlock();
+		}
+	}
+
+	my @warnings	= getMessageByType('WARNING');
+	my @errors		= getMessageByType('ERROR');
+	my @all			= (@warnings, @errors);
+
+	Selity::Mail->new()->errmsg("@all") if(scalar @all > 0 );
+
+	$rs;
+}
+
+my $rs = 0;
+
+exit 1 if backup_start_up();
+
+$rs |= backup();
+
+exit $rs;

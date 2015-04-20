@@ -1,0 +1,167 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+use lib "$FindBin::Bin/../PerlVendor";
+
+use Selity::Debug;
+use Selity::Boot;
+use Mail::Address;
+use MIME::Entity;
+use Email::Simple;
+use Data::Dumper;
+
+newDebug('selity-arpl-msgr/selity-arpl-msgr.log');
+
+
+sub arpl_start_up {
+
+	umask(027);
+	Selity::Boot->new()->init({nolock => 'yes', norequirements => 'yes'});
+
+	0;
+}
+
+sub arpl_engine {
+
+	my $from = $ARGV[0];
+	$from =~ s/selity-arpl\.//gim;
+
+	my @msg = <STDIN>;
+
+	my $sql = "
+		DELETE FROM
+			`autoreplies_log`
+		WHERE
+			ADDTIME(`time`, '24:00:00') < NOW()
+	";
+
+	my $rdata = Selity::Database->factory()->doQuery('delete', $sql);
+	error("$rdata") if(ref $rdata ne 'HASH');
+
+	my $mail	= Email::Simple->new(join('', @msg));
+	my ($to)	= Mail::Address->parse($mail->header("From"));
+
+	if (not $to){
+		error("Couldn't parse a From address");
+		return 0;
+	}
+	my ($to) = lc($to->address);
+
+	if(
+		$mail->header('X-Mailer') && $mail->header('X-Mailer') =~ m/Autoreply Manager/i ||
+		$mail->header('Auto-Submitted') && $mail->header('Auto-Submitted') =~ m/auto-replied/i ||
+		$mail->header('Sender') && $mail->header('Sender') =~ m/autoresponder/i ||
+		$mail->header('X-Autoresponse-From')
+	) {
+		return 0;
+	}
+
+	$sql = "
+			SELECT
+				`time`
+			FROM
+				`autoreplies_log`
+			WHERE
+				`from` = ?
+			AND
+				`to` = ?
+			AND
+				ADDTIME(`time`, '24:00:00') > NOW()
+	";
+
+	$rdata = Selity::Database->factory()->doQuery('time', $sql, $from, $to);
+	error("$rdata") if(ref $rdata ne 'HASH');
+
+	return 0 if(scalar keys %{$rdata});
+
+	$sql = "
+		SELECT
+			CONVERT(`mail_auto_respond_text` using utf8) as `text`
+		FROM
+			`mail_users`
+		WHERE
+			`mail_addr` = ?
+		AND
+			`mail_auto_respond` = 1
+	";
+
+	$rdata = Selity::Database->factory()->doQuery('text', $sql, $from);
+	if(ref $rdata ne 'HASH'){
+		error("$rdata");
+		return 1;
+	}
+	return 0 unless(scalar keys %{$rdata});
+
+	my $text = (keys %{$rdata})[0];
+
+	my $out = new MIME::Entity;
+
+	$out->build(
+		From => $from,
+		To => $to,
+		Subject => "[Autoreply] ".$mail->header('Subject'),
+		Type => "multipart/mixed; charset=utf-8",
+		'X-Autoresponse-From' => $from,
+		'X-Mailer' => "Selity $main::selityConfig{'Version'} Autoreply Manager"
+	);
+
+	$out->attach(
+		Type => "text/plain; charset=utf-8",
+		Encoding => "7bit",
+		Description => "Mail User Autoreply Message",
+		Data => $text
+	);
+
+	$out->attach(
+		Type => "message/rfc822",
+		Description => "Original Message",
+		Data => join('', @msg)
+	);
+
+	open MAIL, "| /usr/sbin/sendmail -t -oi";
+	$out -> print(\*MAIL);
+	close MAIL;
+
+	# Log the autoreply
+	$sql = "INSERT INTO `autoreplies_log` (`time`, `from`, `to`) VALUES (NOW(), ?, ?)";
+	$rdata = Selity::Database->factory()->doQuery('insert', $sql, $from, $to);
+	if(ref $rdata ne 'HASH'){
+		error("$rdata");
+		return 1;
+	}
+
+	0;
+}
+
+exit 1 if arpl_start_up();
+exit 1 if arpl_engine();
+
+exit 0;

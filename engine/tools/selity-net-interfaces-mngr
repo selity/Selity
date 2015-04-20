@@ -1,0 +1,226 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+use lib "$FindBin::Bin/../PerlVendor";
+
+use Selity::Debug;
+use Selity::Boot;
+
+newDebug('selity-net-interfaces-mngr.log');
+
+my $rs = undef;
+our $proceed = $ARGV[0];
+
+sub net_interfaces_mngr_start_up {
+
+	umask(027);
+	Selity::Boot->new()->init({nolock => 'yes'});
+
+	0;
+}
+
+sub virtual_netcard_add{
+
+	use Selity::IP;
+	use Selity::Mail;
+	use Selity::Database;
+	use Selity::Execute;
+
+	my ($rs, $stdout, $stderr);
+	my $database = Selity::Database->new()->factory();
+
+	my $ips = Selity::IP->new();
+
+	$rs = $database->doQuery(
+		'ip_id',
+		'SELECT
+			`ip_id`,
+			`ip_number`,
+			`ip_card`
+		FROM
+			`server_ips`
+		'
+	);
+	if (ref $rs ne 'HASH'){
+		error("$rs");
+		Selity::Mail->new()->errmsg($rs);
+	} else {
+		foreach(values %$rs){
+			#if ip is attached to a network card?
+			if($ips->getCardByIP($_->{ip_number})){
+				#if is a virtual interface?
+				my $vcard = $ips->addedToVCard($_->{ip_number});
+				#if( $vcard ){
+					#my $msg =
+						#"$_->{ip_number} is already attached to $vcard\n".
+						#"Consider remove from network configuration ".
+						#"and let Selity handle it"
+					#;
+					#warning("$msg");
+					#Selity::Mail->new()->warnMsg($msg);
+				#}
+			} else {
+				#ip is not attached so we will attached to virtual card
+				#check if phisical card exits
+				if($ips->existsNetCard($_->{ip_card})){
+					$rs = $ips->attachIpToNetCard($_->{ip_card}, $_->{ip_number});
+					error("Can not add $_->{ip_number} to $_->{ip_card}") if $rs;
+					#Selity::Mail->new()->errmsg($stderr)if $stderr;
+				} else {
+					my $msg =
+						"Card $_->{ip_card} do not exists. Please fix this in ".
+						"$main::selityConfig{BASE_SERVER_VHOST_PREFIX}".
+						"$main::selityConfig{BASE_SERVER_VHOST}/admin/ip_manage.php"
+					;
+					error("$msg");
+					Selity::Mail->new()->errmsg($msg);
+				}
+			}
+		}
+
+		my @cards = $ips->getNetCards();
+		foreach(@cards){
+			if(!$ips->isCardUp($_)){
+				#net card is not up so we try put that up
+				$rs = execute("ifconfig $_ up", \$stdout, \$stderr);
+				debug("$stdout")if $stdout;
+				error("$stderr")if $stderr;
+				Selity::Mail->new()->errmsg($stderr)if $stderr;
+			}
+		}
+	}
+	0;
+}
+
+sub virtual_netcard_remove{
+
+	my $ref = undef;
+
+	use Selity::IP;
+	use Selity::Mail;
+	use Selity::Database;
+	use Selity::Execute;
+
+	my ($rs, $stdout, $stderr);
+	my $database = Selity::Database->new()->factory();
+
+	my $ips = Selity::IP->new();
+	$ips->loadIPs();
+
+	$rs = $database->doQuery(
+		'ip_id',
+		"SELECT
+			`ip_id`,
+			`ip_number`,
+			`ip_card`
+		FROM
+			`server_ips`
+		WHERE
+			`ip_number` != '$main::selityConfig{'BASE_SERVER_IP'}'
+		"
+	);
+	if (ref $rs ne 'HASH'){
+		error("$rs");
+		Selity::Mail->new()->errmsg($rs);
+	} else {
+		foreach(values %$rs){
+			my $vcard = $ips->addedToVCard($_->{ip_number});
+			if($vcard){
+				#We bring down only virtual network cards
+				$rs = $ips->detachIpFromNetCard($_->{ip_number});
+				error("Can not detach $_->{ip_number}") if $rs;
+				#Selity::Mail->new()->errmsg($stderr)if $stderr;
+			}
+		}
+	}
+
+	0;
+}
+
+sub net_interfaces_mngr_engine {
+
+	my $rs;
+
+	if ($proceed && $proceed eq 'start') {
+		$rs = virtual_netcard_add();
+		return $rs if $rs;
+	}elsif ($proceed && $proceed eq 'restart') {
+		$rs = virtual_netcard_remove();
+		return $rs if $rs;
+		$rs = virtual_netcard_add();
+		return $rs if $rs;
+	} elsif ($proceed && $proceed eq 'stop') {
+		$rs = virtual_netcard_remove();
+		return $rs if $rs;
+	} else {
+		my $msg = "Must be called with 'Start', 'Restart' or 'Stop' argument";
+		error("$msg");
+		Selity::Mail->new()->errmsg($msg);
+		exit 1;
+	}
+
+	my $database = Selity::Database->new(db => $main::selityConfig{'DATABASE_TYPE'})->factory();
+	$rs = $database->doQuery(
+		'dummy',
+		"
+		DELETE FROM
+			`server_ips`
+		WHERE
+			`ip_status` = 'delete'
+		"
+	);
+	if (ref $rs ne 'HASH'){
+		error("$rs")if $rs;
+		Selity::Mail->new()->errmsg($rs)if $rs;
+	}
+
+	$rs = $database->doQuery(
+		'dummy',
+		"
+		UPDATE
+			`server_ips`
+		SET
+			`ip_status` = 'ok'
+		"
+	);
+	if (ref $rs ne 'HASH'){
+		error("$rs")if $rs;
+		Selity::Mail->new()->errmsg($rs)if $rs;
+	}
+
+	0;
+}
+
+exit 1 if net_interfaces_mngr_start_up();
+
+exit 1 if net_interfaces_mngr_engine();
+
+exit 0;

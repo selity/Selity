@@ -1,0 +1,190 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+use lib "$FindBin::Bin/../PerlVendor";
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Dialog;
+
+newDebug('selity-net-interfaces-mngr.log');
+
+our $command = {
+				bzip2	=> {extension => 'bz2',		command => 'CMD_BZIP'},
+				gzip	=> {extension => 'gz',		command => 'CMD_GZIP'},
+				lzma	=> {extension => 'lzma',	command => 'CMD_LZMA'}
+			};
+
+sub backup_selity_start_up {
+
+	umask(027);
+	Selity::Boot->new()->init({nolock => 'yes'});
+
+	Selity::Boot->new()->lock('/tmp/selity-backup-selity.lock');
+
+	0;
+}
+
+sub backup_selity_shut_down {
+
+	use Selity::Mail;
+
+	my @warnings	= getMessageByType('WARNING');
+	my @errors		= getMessageByType('ERROR');
+
+	my $msg	 = "\nWARNINGS:\n"		. join("\n", @warnings)	. "\n" if @warnings > 0;
+	$msg	.= "\nERRORS:\n"		. join("\n", @errors)	. "\n" if @errors > 0;
+	Selity::Mail->new()->errmsg($msg) if ($msg);
+
+	0;
+}
+
+sub backup_selity_database {
+
+	use POSIX;
+	use Selity::Execute;
+	use Selity::File;
+
+	my $date		= strftime "%Y.%m.%d-%H:%M", localtime;
+	my $zip			= $main::selityConfig{'ZIP'};
+	my $sqlFName	= "$main::selityConfig{'BACKUP_FILE_DIR'}/$main::selityConfig{DATABASE_NAME}-$date.sql";
+	my $compressCmd = $main::selityConfig{$command->{$zip}->{command}}." --force \'$sqlFName\'";
+
+	my $database = Selity::Database->new(db => $main::selityConfig{DATABASE_TYPE})->factory();
+
+	if($database->can('dumpdb')){
+
+		my ($rs, $stdout, $stderr);
+
+		$rs = $database->dumpdb($main::selityConfig{DATABASE_NAME}, $sqlFName);
+		return $rs if $rs;
+
+		my $file = Selity::File->new(filename => $sqlFName);
+		$file->mode(0640) and return 1;
+		$file->owner($main::selityConfig{'ROOT_USER'}, $main::selityConfig{'ROOT_GROUP'}) and return 1;
+
+		$rs = execute($compressCmd, \$stdout, \$stderr);
+		debug("$stdout") if $stdout;
+		error("$stderr") if $stderr;
+		error("Can not dump $main::selityConfig{DATABASE_NAME}") if (!$stderr && $rs);
+		return $rs if $rs;
+
+		#$file = Selity::File->new(filename => $fName);
+		#$file->mode(0644) and return 1;
+		#$file->owner($main::selityConfig{'ROOT_USER'}, $main::selityConfig{'ROOT_GROUP'}) and return 1;
+
+	} else {
+		warning("Driver for $main::selityConfig{DATABASE_TYPE} does not support dump");
+	}
+
+	0;
+}
+
+sub backup_selity_engine {
+
+	if ($main::selityConfig{'BACKUP_SELITY'} ne 'yes') {
+		#warning('domain backups are disabled');
+		return 0;
+	}
+
+	unless(
+		exists $command->{$main::selityConfig{'ZIP'}}
+		&&
+		exists $command->{$main::selityConfig{'ZIP'}}->{extension}
+		&&
+		exists $command->{$main::selityConfig{'ZIP'}}->{command}
+	){
+		error("Backup algorithm not supported: $main::selityConfig{'ZIP'}");
+		return 1;
+	}
+
+	use Selity::Dir;
+	my $dir = Selity::Dir->new(dirname => $main::selityConfig{'BACKUP_FILE_DIR'});
+	$dir->make({
+		mode	=> 0750,
+		user	=> $main::selityConfig{'ROOT_USER'},
+		group	=> $main::selityConfig{'ROOT_GROUP'}
+	}) and return 1;
+
+	# DB backup
+	my $rs = backup_selity_database();
+	return $rs if $rs;
+
+	$rs = backup_selity_configs();
+	return $rs if $rs;
+
+	#remove old backups: >14 days old
+	my ($stdout, $stderr);
+	$rs = execute("find $main::selityConfig{BACKUP_FILE_DIR}/* -maxdepth 0 -type f -mtime +14 -print | xargs -r /bin/rm -v", \$stdout, \$stderr);
+	debug("$stdout") if $stdout;
+	error("$stderr") if $stderr;
+	error("Can not remove old backups backup") if (!$stderr && $rs);
+	return $rs if $rs;
+
+	return 0;
+}
+
+sub backup_selity_configs{
+
+	my $date		= strftime "%Y.%m.%d-%H:%M", localtime;
+	my $tarName	= "$main::selityConfig{BACKUP_FILE_DIR}/config-backup-$date.tar";
+	my $fName	= "$tarName.$command->{$main::selityConfig{ZIP}}->{extension}";
+	my $bkpCmd	= "$main::selityConfig{CMD_TAR} ".
+					"--create ".
+					"-C $main::selityConfig{CONF_DIR} ".
+					"--$main::selityConfig{ZIP} ".
+					"--exclude=?*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] ".
+					"-p ".
+					"--file=$fName .";
+
+	my ($rs, $stdout, $stderr);
+	$rs = execute($bkpCmd, \$stdout, \$stderr);
+	debug("$stdout") if $stdout;
+	error("$stderr") if $stderr;
+	error("Can not create backup") if (!$stderr && $rs);
+	return $rs if $rs;
+
+	my $file = Selity::File->new(filename => $fName);
+	$file->mode(0640) and return 1;
+	$file->owner($main::selityConfig{'ROOT_USER'}, $main::selityConfig{'ROOT_GROUP'}) and return 1;
+
+	return 0;
+}
+
+my $rs;
+
+exit 1 if backup_selity_start_up();
+
+exit 1 if backup_selity_engine();
+
+exit 1 if backup_selity_shut_down();
+
+exit 0;

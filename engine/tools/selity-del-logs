@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012-2014 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../PerlLib";
+
+use Selity::Debug;
+use Selity::Boot;
+use Selity::Execute;
+use Selity::Mail;
+use Servers::httpd;
+use Data::Dumper;
+
+newDebug('selity-del-logs.log');
+
+sub logs_start_up {
+
+	umask(027);
+	Selity::Boot->new()->init({nolock => 'yes'});
+
+	0;
+}
+
+sub del_logs{
+
+	my $rs = 0;
+	my $httpd	= Servers::httpd->factory();
+	$rs = $httpd->del_old_logs() if $httpd->can('del_old_logs');
+
+	$rs;
+}
+
+my $rs = 0;
+
+exit 1 if logs_start_up();
+
+$rs |= del_logs();
+
+exit $rs;
+

@@ -1,0 +1,192 @@
+#!/usr/bin/perl
+
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012-2014 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/engine/PerlLib";
+use lib "$FindBin::Bin/engine/PerlVendor";
+
+umask(027);
+
+use Selity::Debug;
+use Selity::Dialog;
+use Selity::SO;
+use Selity::Config;
+use Selity::Dir;
+
+newDebug('selity-build.log');
+
+require "$FindBin::Bin/library/autoinstall-methods.pl";
+
+use Selity::Requirements;
+Selity::Requirements->new()->user();
+
+if(preInstall()){
+	error("Unable to install pre-required packages");
+	exit 1;
+}
+
+# Entering in silent mode
+silent(1);
+
+Selity::Dialog->factory()->infobox("\\ZuDetecting the target distribution\\Zn");
+my $SO = Selity::SO->new();
+my $rs = $SO->getSO();
+exit $rs if $rs;
+
+# Display the Selity README file
+use Selity::File;
+my $file = Selity::File->new(filename => $FindBin::Bin.'/README');
+my $content = $file->get() or fatal("Unable to find the $FindBin::Bin/README file.");
+
+Selity::Dialog->factory()->msgbox($content);
+
+if(
+	Selity::Dialog->factory()->yesno(
+		"\nThe Installer detected that you are using $SO->{Distribution} $SO->{CodeName}. Is this ok?"
+	)
+) {
+	error(
+		"Sorry, the installer failing to detect your distribution.\n\n" .
+		"Note: For now, only Debian like operating systems are supported."
+	);
+	exit 1;
+}
+
+my $defaultConf = "$FindBin::Bin/configs/" . lc($SO->{Distribution}) . "/selity.conf";
+tie %main::defaultConf, 'Selity::Config','fileName' => $defaultConf;
+
+# A supported distribution was detected
+
+use Selity::Stepper;
+
+my @steps = (
+	[\&installDependencies,				"Installing all required $SO->{Distribution} packages for Selity"],
+	[\&testRequirements,				'Testing Selity requirements'],
+	[\&processConfFile,					"Loading $SO->{Distribution} specific variables"],
+	[\&processSpecificConfFile,			'Processing distribution specific configuration files'],
+	[\&buildSelityDaemon,				'Building Selity daemon'],
+	[\&installEngine,					'Installing engine files'],
+	[\&installGui,						'Installing GUI files'],
+	[\&finishBuild,						'Processing post-build tasks'],
+	[\&cleanUpTmp,						'Processing cleanup tasks']
+);
+
+my $step = 1;
+
+for (@steps) {
+	$rs = step($_->[0], $_->[1], scalar @steps, $step);
+	exit $rs if $rs;
+	$step++;
+}
+
+Selity::Dialog->factory()->endGauge() if Selity::Dialog->factory()->needGauge();
+
+my @warnings	= getMessageByType('WARNING');
+my @errors		= getMessageByType('ERROR');
+my $msg;
+
+if (@errors > 0  || @warnings > 0) {
+	$msg  =	"\n\\Z".(@errors > 0 ? 1 : 3 )."Build step finished but with ".
+			(@errors > 0 ? 'errors' : 'warnings') . ":\\Zn\n";
+	$msg .= "\nWARNINGS:\n".join("\n", @warnings)."\n" if @warnings > 0;
+	$msg .= "\nERRORS:\n".join("\n", @errors)."\n" if @errors > 0;
+	Selity::Dialog->factory()->set('defaultno', '');
+} else {
+	$msg  =	"\n\\Z2 -> Build step finished without errors\n";
+}
+
+$msg .= "\nDo you want to continue the Selity installation?";
+
+unless(Selity::Dialog->factory()->yesno($msg)) {
+
+	Selity::Dialog->factory()->set('defaultno', undef);
+
+	require "$FindBin::Bin/engine/setup/selity-setup-methods.pl";
+
+	@steps = (
+		[\&doSelityBackup,		'Backup existing installation'],
+		[\&saveGuiWorkingData,	'Saving GUI working data'],
+		[\&installTmp,			'Installing new Selity files in final destination'],
+		[\&setup_start_up,		'Prepare Selity setup/update'],
+		[\&setup_engine,		'Processing Selity setup/update']
+	);
+
+	$step = 1;
+
+	for (@steps){
+		$rs = step($_->[0], $_->[1], scalar @steps, $step);
+		exit $rs if $rs;
+		$step++;
+	}
+
+	Selity::Dialog->factory()->endGauge() if Selity::Dialog->factory()->needGauge();
+	Selity::Dialog->factory()->msgbox("Selity $main::defaultConf{Version} was successfully installed on your system.");
+	Selity::Dialog->factory()->infobox("Removing temporary files...");
+
+	$rs = removeTmp();
+	exit $rs;
+} else {
+	Selity::Dialog->factory()->msgbox(
+		"To continue setup run from console\n\n".
+		"1.  Purge all GUI sessions files\n\n".
+		"\t# rm -Rf /var/www/selity/gui/data/sessions\n\n".
+		"2.  Purge all GUI cache files\n\n".
+		"\t# rm -Rf /var/www/selity/gui/data/cache\n\n".
+		"3.  Backup needed files\n\n".
+		"\t# cp -Rfv /var/www/selity/gui/data /tmp/selity/var/www/selity/gui\n".
+		"\t# cp -Rfv /var/www/selity/gui/public/tools/webmail/data ".
+		"/tmp/selity/var/www/selity/gui/public/tools/webmail\n\n".
+		"\t# cp -Rfv /var/www/selity/gui/plugins /tmp/selity/var/www/selity/gui\n\n".
+		"4.  Delete old directories:\n\n".
+		"\t# rm -Rf /var/www/selity/{daemon,engine,gui}\n\n".
+		"5.  Copy directories into your system (you may make backups)\n\n".
+		"\t# cp -R /tmp/selity/* / \n\n".
+		"6. Clean tmp\n\n".
+		"\t# rm -R /tmp/selity\n\n".
+		"7.  Now it's time to update your installation.".
+		"Change into the engine directory\n\n".
+		"\t# cd /var/www/selity/engine/setup\n\n".
+		"8. Start the engine update\n\n".
+		"\t# perl selity-setup\n\n".
+		"9. Update Selity step-by-step\n\n".
+		"If you get no error, all went good; if you get one, look at ".
+		"http://selity.org/forum/ to solve the problem."
+	);
+}
+
+0;
+
+END{
+	my $exitCode = $?;
+
+	my $logdir = $main::defaultConf{LOG_DIR} || '/tmp';
+	Selity::Dir->new(dirname => $logdir)->make() unless -d $logdir;
+
+	$? = $exitCode;
+}

@@ -1,0 +1,103 @@
+# Selity - When virtual hosting becomes scalable
+# Copyright 2012 by Selity
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# @category		Selity
+# @copyright	2012-2014 by Selity | http://selity.org
+# @author		Daniel Andreca <sci2tech@gmail.com>
+# @link			http://selity.org Selity Home Site
+# @license		http://www.gnu.org/licenses/gpl-2.0.html GPL v2
+
+auth_mechanisms = plain login digest-md5
+base_dir = /var/run/dovecot
+
+dict {
+	quotadict = mysql:/etc/dovecot/dovecot-dict-sql.conf
+}
+
+disable_plaintext_auth = no
+mail_location = maildir:%h
+mail_privileged_group = mail
+
+namespace {
+	inbox = yes
+	location =
+	prefix = INBOX.
+	type = private
+}
+
+passdb {
+	args = {DOVECOT_CONF_DIR}/dovecot-sql.conf
+	driver = sql
+}
+
+userdb {
+	driver = prefetch
+}
+
+userdb {
+	args = {DOVECOT_CONF_DIR}/dovecot-sql.conf
+	driver = sql
+}
+
+plugin {
+	global_script_path = {DOVECOT_CONF_DIR}/sieve/dovecot.sieve
+	quota = dict:user::proxy::quotadict
+	quota_rule = *:bytes=1G
+}
+
+protocols = imap pop3
+
+service auth {
+	unix_listener /var/spool/postfix/private/auth {
+		group = postfix
+		mode = 0660
+		user = postfix
+	}
+	unix_listener auth-master {
+		group = {MAIL_GROUP}
+		mode = 0660
+		user = {MAIL_USER}
+	}
+	user = root
+}
+
+service dict {
+	extra_groups = {MAIL_GROUP}
+	unix_listener dict {
+		group = {MAIL_GROUP}
+		mode = 0660
+	}
+}
+
+ssl = {DOVECOT_SSL}
+{COMMENT_SSL}ssl_cert =<{GUI_CERT_DIR}/{HOST_NAME}.pem
+{COMMENT_SSL}ssl_key =<{GUI_CERT_DIR}/{HOST_NAME}.pem
+
+protocol imap {
+	mail_plugins = quota imap_quota
+}
+
+protocol pop3 {
+	mail_plugins = quota
+	pop3_uidl_format = %u-%v
+}
+
+protocol lda {
+	auth_socket_path = /var/run/dovecot/auth-master
+	mail_plugins = quota sieve
+	postmaster_address = postmaster@{HOST_NAME}
+}

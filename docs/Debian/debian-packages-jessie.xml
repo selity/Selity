@@ -1,0 +1,101 @@
+<packages>
+	<apache_fcgi section="httpd">
+		<install>
+			apache2 apache2-mpm-worker apache2-suexec-custom libapache2-mod-fastcgi libapache2-mod-fcgid
+		</install>
+		<require_server></require_server>
+		<remove>
+			apache_itk
+		</remove>
+	</apache_fcgi>
+	<apache_itk section="httpd">
+		<install>
+			apache2 apache2-mpm-itk apache2-suexec libapache2-mod-php5
+		</install>
+		<require_server></require_server>
+		<remove>apache_fcgi</remove>
+	</apache_itk>
+	<courier section="po">
+		<install>
+			courier-imap courier-imap-ssl courier-maildrop courier-pop courier-pop-ssl libgamin0 gamin
+		</install>
+		<require_server>mta</require_server>
+		<remove>dovecot</remove>
+	</courier>
+	<dovecot section="po">
+		<install>
+			dovecot-core dovecot-imapd dovecot-pop3d dovecot-sieve dovecot-mysql libfam0
+		</install>
+		<require_server>mta</require_server>
+		<remove>courier</remove>
+	</dovecot>
+	<postfix section="mta">
+		<install>postfix</install>
+	</postfix>
+	<proftpd section="ftpd">
+		<install>proftpd-basic proftpd-mod-mysql</install>
+	</proftpd>
+	<bind section="named">
+		<install>bind9</install>
+	</bind>
+	<mysql>
+		<install>mysql-server mysql-client</install>
+	</mysql>
+	<php>
+		<install>
+			php-pear php5 php5-adodb php5-cgi php5-cli php5-gd php-gettext
+			php5-intl php5-mcrypt php5-mysql
+		</install>
+	</php>
+	<perl>
+		<install>
+			perl perl-base libperl5.20 libberkeleydb-perl libcrypt-blowfish-perl
+			libcrypt-cbc-perl libcrypt-passwdmd5-perl libdata-validate-domain-perl
+			libdata-validate-ip-perl libdate-calc-perl libdate-manip-perl libdatetime-perl
+			libdbd-mysql-perl libdbi-perl libdigest-md5-perl libemail-valid-perl
+			libfile-copy-recursive-perl libfile-mimeinfo-perl libio-socket-inet6-perl
+			libio-stringy-perl libmail-sendmail-perl libmailtools-perl libmime-perl
+			libnet-dns-perl libnet-libidn-perl libnet-netmask-perl libnet-smtp-server-perl
+			libsnmp-session-perl libterm-readkey-perl libterm-readpassword-perl
+			libhtml-parser-perl libtimedate-perl libxml-parser-perl libxml-simple-perl
+			libemail-simple-perl
+		</install>
+	</perl>
+	<other>
+		<install>
+			bash
+			bzip2
+			lsb-base
+			lsb-release
+			awstats
+			chkrootkit
+			dialog
+			diffutils
+			dnsutils
+			gcc
+			gzip
+			iptables
+			ispell
+			libc6-dev
+			libexpat1
+			libexpat1-dev
+			libsasl2-modules
+			libmcrypt4
+			locales-all
+			lynx
+			lzma
+			make
+			openssl
+			original-awk
+			patch
+			policyd-weight
+			postgrey
+			procmail
+			rkhunter
+			sasl2-bin
+			ssh
+			tar
+			wget
+		</install>
+	</other>
+</packages>
