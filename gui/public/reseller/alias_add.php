@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -31,14 +31,6 @@ $tpl->define_dynamic('ip_entry', 'page');
 
 $theme_color = Config::get('USER_INITIAL_THEME');
 
-$tpl->assign(
-		array(
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
-			'THEME_CHARSET' => tr('encoding'),
-			'ISP_LOGO' => get_logo($_SESSION['user_id'])
-		)
-	);
-
 /*
  *
  * static page messages.
@@ -50,20 +42,21 @@ gen_reseller_menu($tpl, Config::get('RESELLER_TEMPLATE_PATH') . '/menu_users_man
 
 gen_logged_from($tpl);
 
-$tpl->assign(
-		array(
-			'TR_CLIENT_ADD_ALIAS_PAGE_TITLE' => tr('Selity Reseller : Add Alias'),
-			'TR_MANAGE_DOMAIN_ALIAS' => tr('Manage domain alias'),
-			'TR_ADD_ALIAS' => tr('Add domain alias'),
-			'TR_DOMAIN_NAME' => tr('Domain name'),
-			'TR_DOMAIN_ACCOUNT' => tr('User account'),
-			'TR_MOUNT_POINT' => tr('Directory mount point'),
-			'TR_DOMAIN_IP' => tr('Domain IP'),
-			'TR_FORWARD' => tr('Forward to URL'),
-			'TR_ADD' => tr('Add alias'),
-			'TR_DMN_HELP' => tr("You do not need 'www.' Selity will add it on its own.")
-		)
-	);
+$tpl->assign(array(
+	'THEME_COLOR_PATH'			=> '../themes/'.$theme_color,
+	'THEME_CHARSET'				=> tr('encoding'),
+	'ISP_LOGO'					=> get_logo($_SESSION['user_id']),
+	'TR_PAGE_TITLE'				=> tr('Selity Reseller : Add Alias'),
+	'TR_MANAGE_DOMAIN_ALIAS'	=> tr('Manage domain alias'),
+	'TR_ADD_ALIAS'				=> tr('Add domain alias'),
+	'TR_DOMAIN_NAME'			=> tr('Domain name'),
+	'TR_DOMAIN_ACCOUNT'			=> tr('User account'),
+	'TR_MOUNT_POINT'			=> tr('Directory mount point'),
+	'TR_DOMAIN_IP'				=> tr('Domain IP'),
+	'TR_FORWARD'				=> tr('Forward to URL'),
+	'TR_ADD'					=> tr('Add alias'),
+	'TR_DMN_HELP'				=> tr('You do not need "www." Selity will add it on its own.')
+));
 
 $err_txt = '_off_';
 if (isset($_POST['uaction']) && $_POST['uaction'] === 'add_alias') {
@@ -71,7 +64,7 @@ if (isset($_POST['uaction']) && $_POST['uaction'] === 'add_alias') {
 } else {
 	// Init fileds
 	init_empty_data();
-	$tpl->assign("PAGE_MESSAGE", "");
+	$tpl->assign('PAGE_MESSAGE', '');
 }
 
 gen_al_page($tpl, $_SESSION['user_id']);
@@ -81,21 +74,20 @@ $tpl->parse('PAGE', 'page');
 
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
-// Begin function declaration lines
 
 function init_empty_data() {
 	global $cr_user_id, $alias_name, $domain_ip, $forward, $mount_point;
 
-	$cr_user_id = "";
-	$alias_name = "";
-	$domain_ip = "";
-	$forward = "";
-	$mount_point = "";
-} //End of init_empty_data()
+	$cr_user_id = '';
+	$alias_name = '';
+	$domain_ip = '';
+	$forward = '';
+	$mount_point = '';
+}
 
-// Show data fiels
 function gen_al_page(&$tpl, $reseller_id) {
 	global $cr_user_id, $alias_name, $domain_ip, $forward, $mount_point;
 
@@ -104,12 +96,11 @@ function gen_al_page(&$tpl, $reseller_id) {
 	} else {
 		$forward = 'no';
 	}
-	$tpl->assign(
-		array('DOMAIN' => $alias_name,
-			'MP' => $mount_point,
-			'FORWARD' => $forward
-			)
-		);
+	$tpl->assign(array(
+			'DOMAIN'	=> $alias_name,
+			'MP'		=> $mount_point,
+			'FORWARD'	=> $forward
+	));
 
 	generate_ip_list($tpl, $reseller_id);
 	gen_users_list($tpl, $reseller_id);
@@ -125,43 +116,35 @@ function add_domain_alias(&$sql, &$err_al) {
 
 	$query = '
 		SELECT
-			domain_ip_id
+			user_ip_id
 		FROM
-			domain
+			user_system_props
 		WHERE
-			domain_id = ?
-';
+			user_admin_id = ?
+	';
 
 	$rs = exec_query($sql, $query, array($cr_user_id));
-	$domain_ip = $rs->fields['domain_ip_id'];
+	$domain_ip = $rs->fields['user_ip_id'];
 
-	// $mount_point = "/".$mount_point;
 	// First check is the data correct
 	if (!chk_dname($alias_name)) {
-		$err_al = tr("Incorrect domain name syntax");
+		$err_al = tr('Incorrect domain name syntax');
 	} else if (selity_domain_exists($alias_name, $_SESSION['user_id'])) {
 		$err_al = tr('Domain with that name already exists on the system!');
 	} else if (!chk_mountp($mount_point) && $mount_point != '/') {
-		$err_al = tr("Incorrect mount point syntax");
+		$err_al = tr('Incorrect mount point syntax');
 	} else if ($alias_name == Config::get('BASE_SERVER_VHOST')) {
 		$err_al = tr('Master domain cannot be used!');
 	} else if ($forward != 'no') {
 		if (!chk_forward_url($forward)) {
-			$err_al = tr("Incorrect forward syntax");
+			$err_al = tr('Incorrect forward syntax');
 		}
-		if (!preg_match("/\/$/", $forward)) {
-			$forward .= "/";
+		if (!preg_match('/\/$/', $forward)) {
+			$forward .= '/';
 		}
 	} else {
 		// now lets fix the mountpoint
 		$mount_point = array_decode_idna($mount_point, true);
-
-		$res = exec_query($sql, "select domain_id from domain_aliasses where alias_name=?", array($alias_name));
-		$res2 = exec_query($sql, "select domain_id from domain where domain_name = ?", array($alias_name));
-		if ($res->RowCount() > 0 or $res2->RowCount() > 0) {
-			// we already have domain with this name
-			$err_al = tr("Domain with this name already exist");
-		}
 
 		if (mount_point_exists($dmn_id, $mount_point)) {
 			$err_al = tr('Mount point already in use!');
@@ -172,76 +155,27 @@ function add_domain_alias(&$sql, &$err_al) {
 		return;
 	}
 	// Begin add new alias domain
-	$alias_name = htmlspecialchars($alias_name, ENT_QUOTES, "UTF-8");
-	check_for_lock_file();
-	$status = Config::get('ITEM_ADD_STATUS');
+	$alias_name = htmlspecialchars($alias_name, ENT_QUOTES, 'UTF-8');
+		$status = Config::get('ITEM_ADD_STATUS');
 
 	exec_query($sql,
-		"insert into domain_aliasses(domain_id, alias_name, alias_mount, alias_status, alias_ip_id, url_forward) values (?, ?, ?, ?, ?, ?)",
+		'insert into domain_aliasses(admin_id, alias_name, alias_mount, alias_status, alias_ips, url_forward) values (?, ?, ?, ?, ?, ?)',
 		array($cr_user_id, $alias_name, $mount_point, $status, $domain_ip, $forward));
-
 		$als_id = $sql->Insert_ID();
 
-
 		$query = 'SELECT email FROM admin WHERE admin_id = ? LIMIT 1';
-		$rs = exec_query($sql, $query, who_owns_this($cr_user_id, 'dmn_id'));
+		$rs = exec_query($sql, $query, $cr_user_id);
 		$user_email = $rs->fields['email'];
 
 	// Create the 3 default addresses if wanted
-	if (Config::get('CREATE_DEFAULT_EMAIL_ADDRESSES')) client_mail_add_default_accounts($cr_user_id, $user_email, $alias_name, 'alias', $als_id);
-/*
-	if (Config::get('CREATE_DEFAULT_EMAIL_ADDRESSES')) {
-		$query = '
-			INSERT INTO mail_users
-				(mail_acc,
-				 mail_pass,
-				 mail_forward,
-				 domain_id,
-				 mail_type,
-				 sub_id,
-				 status,
-				 mail_auto_respond)
-			VALUES
-				(?, ?, ?, ?, ?, ?, ?, ?)
-';
+	if (Config::get('CREATE_DEFAULT_EMAIL_ADDRESSES'))
+		client_mail_add_default_accounts($cr_user_id, $user_email, $alias_name, 'alias', $als_id);
 
-		// create default forwarder for webmaster@alias.tld to the account's owner
-		$rs = exec_query($sql, $query, array('webmaster',
-				'_no_',
-				$user_email,
-				$cr_user_id,
-				'alias_forward',
-				$als_id,
-				Config::get('ITEM_ADD_STATUS'),
-				'_no_'));
-
-		// create default forwarder for postmaster@alias.tld to the account's reseller
-		$rs = exec_query($sql, $query, array('postmaster',
-				'_no_',
-				$_SESSION['user_email'],
-				$cr_user_id,
-				'alias_forward',
-				$als_id,
-				Config::get('ITEM_ADD_STATUS'),
-				'_no_'));
-
-		// create default forwarder for abuse@alias.tld to the account's reseller
-		$rs = exec_query($sql, $query, array('abuse',
-				'_no_',
-				$_SESSION['user_email'],
-				$cr_user_id,
-				'alias_forward',
-				$als_id,
-				Config::get('ITEM_ADD_STATUS'),
-				'_no_'));
-	}
-*/
 	send_request();
-	$admin_login = $_SESSION['user_logged'];
-	write_log("$admin_login: add domain alias: $alias_name");
+	write_log($_SESSION['user_logged'] . ': add domain alias: ' . $alias_name);
 
-	$_SESSION["aladd"] = '_yes_';
-	header("Location: alias.php");
+	set_page_message(tr('Domain alias added!'));
+	header('Location: alias.php');
 	die();
 } // End of add_domain_alias();
 
@@ -251,22 +185,23 @@ function gen_users_list(&$tpl, $reseller_id) {
 
 	$query = '
 		SELECT
-			admin_id
+			admin_id,
+			admin_name
 		FROM
 			admin
 		WHERE
-				admin_type = 'user'
-			AND
-				created_by = ?
+			admin_type = ?
+		AND
+			created_by = ?
 		ORDER BY
 			admin_name
-';
+	';
 
-	$ar = exec_query($sql, $query, array($reseller_id));
+	$ar = exec_query($sql, $query, array('user', $reseller_id));
 
 	if ($ar->RowCount() == 0) {
 		set_page_message(tr('You have no user records.'));
-		header("Location: alias.php");
+		header('Location: alias.php');
 		die();
 		$tpl->assign('USER_ENTRY', '');
 		return false;
@@ -275,38 +210,21 @@ function gen_users_list(&$tpl, $reseller_id) {
 	$i = 1;
 	while ($ad = $ar->FetchRow()) { // Process all founded users
 		$admin_id = $ad['admin_id'];
+		$admin_name = $ad['admin_name'];
 		$selected = '';
-		// Get domain data
-		$query = '
-			SELECT
-				domain_id,
-				IFNULL(domain_name, '') AS domain_name
-			FROM
-				domain
-			WHERE
-				domain_admin_id = ?
-';
-
-		$dr = exec_query($sql, $query, array($admin_id));
-		$dd = $dr->FetchRow();
-
-		$domain_id = $dd['domain_id'];
-		$domain_name = $dd['domain_name'];
 
 		if (('' == $cr_user_id) && ($i == 1))
 			$selected = 'selected';
-		else if ($cr_user_id == $domain_id)
+		else if ($cr_user_id == $admin_id)
 			$selected = 'selected';
 
-		$domain_name = decode_idna($domain_name);
+		//$domain_name = decode_idna($domain_name);
 
-		$tpl->assign(
-				array(
-					'USER' => $domain_id,
-					'USER_DOMAIN_ACCOUN' => $domain_name,
-					'SELECTED' => $selected
-				)
-			);
+		$tpl->assign(array(
+			'USER'					=> $admin_id,
+			'USER_DOMAIN_ACCOUN'	=> $admin_name,
+			'SELECTED'				=> $selected
+		));
 		$i++;
 		$tpl->parse('USER_ENTRY', '.user_entry');
 	} //End of loop

@@ -47,13 +47,13 @@ sub loadData{
 
 	my $sql = "
 		SELECT
-			`t1`.`uname`, `t1`.`upass`, `t1`.`status`, `t1`.`id`, `t2`.`domain_name`
+			`t1`.`uname`, `t1`.`upass`, `t1`.`status`, `t1`.`id`, `t2`.`admin_name`
 		FROM
 			`htaccess_users` as `t1`
 		LEFT JOIN
-			`domain` as `t2`
+			`admin` as `t2`
 		ON
-			`t1`.`dmn_id` = `t2`.`domain_id`
+			`t1`.`admin_id` = `t2`.`admin_id`
 		WHERE
 			`t1`.`id` = ?
 	";
@@ -63,7 +63,7 @@ sub loadData{
 	error("$rdata") and return 1 if(ref $rdata ne 'HASH');
 	error("No user in table htaccess_users has id = $self->{htuserId}") and return 1 unless(exists $rdata->{$self->{htuserId}});
 
-	unless($rdata->{$self->{htuserId}}->{domain_name}){
+	unless($rdata->{$self->{htuserId}}->{admin_name}){
 		local $Data::Dumper::Terse = 1;
 		error("Orphan entry: ".Dumper($rdata->{$self->{htuserId}}));
 		my @sql = (
@@ -123,7 +123,7 @@ sub buildHTTPDData{
 	$self->{httpd} = {
 		HTUSER_NAME	=> $self->{uname},
 		HTUSER_PASS	=> $self->{upass},
-		HTUSER_DMN	=> $self->{domain_name},
+		HTUSER_DMN	=> $self->{admin_name},
 	};
 
 	0;

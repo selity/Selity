@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_SETTINGS}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name="client_change_personal_frm" method="post" action="">
+
+							<div class="col2">
+								{TR_CHECK_FOR_UPDATES}:&nbsp;
+								<select name="checkforupdate">
+									<option value="0" {CHECK_FOR_UPDATES_SELECTED_OFF}>{TR_DISABLED}</option>
+									<option value="1" {CHECK_FOR_UPDATES_SELECTED_ON}>{TR_ENABLED}</option>
+							  </select>
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								{TR_LOSTPASSWORD}:&nbsp;
+								<select name="lostpassword">
+									<option value="0" {LOSTPASSWORD_SELECTED_OFF}>{TR_DISABLED}</option>
+									<option value="1" {LOSTPASSWORD_SELECTED_ON}>{TR_ENABLED}</option>
+							  </select>
+							</div>
+
+							<div class="col2">
+								{TR_LOSTPASSWORD_TIMEOUT}:&nbsp;
+								<input name="lostpassword_timeout" type="text" class="textinput" id="lostpassword_timeout" value="{LOSTPASSWORD_TIMEOUT_VALUE}" maxlength="3" />
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								{TR_PASSWD_CHARS}:&nbsp;
+								<input name="passwd_chars" type="text" class="textinput" id="passwd_chars" value="{PASSWD_CHARS}" maxlength="2" />
+							</div>
+
+							<div class="col2">
+								{TR_PASSWD_STRONG}:&nbsp;
+								<select name="passwd_strong" id="passwd_strong">
+									<option value="0" {PASSWD_STRONG_OFF}>{TR_DISABLED}</option>
+									<option value="1" {PASSWD_STRONG_ON}>{TR_ENABLED}</option>
+							  </select>
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								{TR_BRUTEFORCE}:&nbsp;
+								<select name="bruteforce" id="bruteforce">
+									<option value="0" {BRUTEFORCE_SELECTED_OFF}>{TR_DISABLED}</option>
+									<option value="1" {BRUTEFORCE_SELECTED_ON}>{TR_ENABLED}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_BRUTEFORCE_BETWEEN}:&nbsp;
+								<select name="bruteforce_between" id="bruteforce_between">
+									<option value="0" {BRUTEFORCE_BETWEEN_SELECTED_OFF}>{TR_DISABLED}</option>
+									<option value="1" {BRUTEFORCE_BETWEEN_SELECTED_ON}>{TR_ENABLED}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_BRUTEFORCE_MAX_LOGIN}:&nbsp;
+								<input name="bruteforce_max_login" type="text" class="textinput" id="bruteforce_max_login" value="{BRUTEFORCE_MAX_LOGIN_VALUE}" maxlength="3" />
+							</div>
+
+							<div class="col2">
+								{TR_BRUTEFORCE_BLOCK_TIME}:&nbsp;
+								<input name="bruteforce_block_time" type="text" class="textinput" id="bruteforce_block_time" value="{BRUTEFORCE_BLOCK_TIME_VALUE}" maxlength="3" />
+							</div>
+
+							<div class="col2">
+								{TR_BRUTEFORCE_BETWEEN_TIME}:&nbsp;
+								<input name="bruteforce_between_time" type="text" class="textinput" id="bruteforce_between_time" value="{BRUTEFORCE_BETWEEN_TIME_VALUE}" maxlength="3" />
+							</div>
+
+							<div class="col2">
+								{TR_BRUTEFORCE_MAX_CAPTCHA}:&nbsp;
+								<input name="bruteforce_max_capcha" type="text" class="textinput" id="bruteforce_max_capcha" value="{BRUTEFORCE_MAX_CAPTCHA}" maxlength="3" />
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								{TR_CREATE_DEFAULT_EMAIL_ADDRESSES}:&nbsp;
+								<select name="create_default_email_addresses" id="create_default_email_addresses">
+									<option value="0" {CREATE_DEFAULT_EMAIL_ADDRESSES_OFF}>{TR_DISABLED}</option>
+									<option value="1" {CREATE_DEFAULT_EMAIL_ADDRESSES_ON}>{TR_ENABLED}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_HARD_MAIL_SUSPENSION}:&nbsp;
+								<select name="hard_mail_suspension" id="hard_mail_suspension">
+									<option value="0" {HARD_MAIL_SUSPENSION_OFF}>{TR_DISABLED}</option>
+									<option value="1" {HARD_MAIL_SUSPENSION_ON}>{TR_ENABLED}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								{TR_USER_INITIAL_LANG}:&nbsp;
+								<select name="def_language" id="def_language">
+									<!--Repeats_:LANGUAGE:-->
+									<option value="{LANG_VALUE}" {LANG_SELECTED}>{LANG_NAME}</option>
+									<!--:LANGUAGE:_Repeats-->
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_SUPPORT_SYSTEM}:&nbsp;
+								<select name="support_system" id="support_system">
+									<option value="0" {SUPPORT_SYSTEM_SELECTED_OFF}>{TR_DISABLED}</option>
+									<option value="1" {SUPPORT_SYSTEM_SELECTED_ON}>{TR_ENABLED}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_HOSTING_PLANS_LEVEL}:&nbsp;
+								<select name="hosting_plan_level" id="hosting_plan_level">
+									<option value="admin" {HOSTING_PLANS_LEVEL_ADMIN}>{TR_ADMIN}</option>
+									<option value="reseller" {HOSTING_PLANS_LEVEL_RESELLER}>{TR_RESELLER}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_DOMAIN_ROWS_PER_PAGE}:&nbsp;
+								<input name="domain_rows_per_page" type="text" class="textinput" id="domain_rows_per_page" value="{DOMAIN_ROWS_PER_PAGE}" maxlength="3" />
+							</div>
+
+							<div class="col2">
+								{TR_LOG_LEVEL}:&nbsp;
+								<select name="log_level" id="log_level">
+									<option value="E_USER_OFF" {LOG_LEVEL_SELECTED_OFF}>{TR_E_USER_OFF}</option>
+									<option value="E_USER_ERROR" {LOG_LEVEL_SELECTED_ERROR}>{TR_E_USER_ERROR}</option>
+									<option value="E_USER_WARNING" {LOG_LEVEL_SELECTED_WARNING}>{TR_E_USER_WARNING}</option>
+									<option value="E_USER_NOTICE" {LOG_LEVEL_SELECTED_NOTICE}>{TR_E_USER_NOTICE}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								{TR_GUI_DEBUG}:&nbsp;
+								<select name="gui_debug" id="gui_debug">
+									<option value="0" {GUI_DEBUG_OFF}>{TR_DISABLED}</option>
+									<option value="1" {GUI_DEBUG_ON}>{TR_ENABLED}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								&nbsp;
+							</div>
+
+							<div class="col2">
+								<input name="Submit" type="submit" class="button" value="{TR_APPLY_CHANGES}">
+							</div>
+
+						</form>
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

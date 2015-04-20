@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel='stylesheet' href='{THEME_COLOR_PATH}/style/style.css' type='text/css' />
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+		<script type="text/javascript">
+			function action_delete(url, object) {
+				message = "{TR_MESSAGE_DELETE}"
+				if (!confirm(message.replace(/%s/, object)))
+					return false;
+				location = url;
+			}
+		</script>
+	</head>
+	<body>
+		<div id='nonFooter'>
+			<div id='page'>
+				<div class='clear'>&nbsp;</div>
+				<div id='menu'>
+					<!--Includes_:{ADMIN_TYPE}/menu:-->
+				</div>
+
+				<div class='content-wrap'>
+					<div id='main'>
+
+						<h2>{TR_HOSTING_PLANS}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<!--Section_:HP:-->
+						<div class="content-wrap">
+							<div class='col4_4'>
+								<center>
+									<b>{TR_ACTION}</b>
+								</center>
+							</div>
+						</div>
+						<div class='col4_1'>
+							<center>
+								<b>{TR_NOM}</b>
+							</center>
+						</div>
+						<div class='col4_2'>
+							<b>{TR_PLAN_NAME}</b>
+						</div>
+						<div class='col4_3'>
+							<center>
+								<b>{TR_PURCHASING}</b>
+							</center>
+						</div>
+						<!--Repeats_:HP:-->
+						<div class="content-wrap">
+							<div class='col4_4'>
+								<center>
+									<a href="hosting_plan_edit.php?hpid={HP_ID}" class="link">{TR_EDIT}</a>
+									<!--Section_:HP_ADD:-->
+									&nbsp;|&nbsp;
+									<a href="#" onclick="action_delete('hosting_plan_delete.php?hpid={HP_ID}', '{PLAN_NAME}')" class="link">{PLAN_ACTION}</a>
+									<!--:HP_ADD:_Section-->
+								</center>
+							</div>
+						</div>
+						<div class='col4_1'>
+							<center>
+								{PLAN_NOM}
+							</center>
+						</div>
+						<div class='col4_2'>
+							<a href="../orderpanel/package_info.php?user_id={RESELLER_ID}&amp;id={HP_ID}" target="_blank" title="{PLAN_SHOW}">
+								{PLAN_NAME}
+							</a>
+						</div>
+						<div class='col4_3'>
+							<center>
+								{PURCHASING}
+							</center>
+						</div>
+						<!--:HP:_Repeats-->
+						<!--:HP:_Section-->
+
+
+
+
+					<div class='clear'>&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:{ADMIN_TYPE}/left_menu:-->
+
+
+				<div class='clear'>&nbsp;</div>
+			</div>
+			<div class='clear'>&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

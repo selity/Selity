@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -34,8 +34,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_CLIENT_CHANGE_PERSONAL_DATA_PAGE_TITLE' => tr('Selity - Users/Add user'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Users/Add user'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id']),
 		)
@@ -52,8 +52,7 @@ gen_reseller_menu($tpl, Config::get('RESELLER_TEMPLATE_PATH') . '/menu_users_man
 
 gen_logged_from($tpl);
 
-$tpl->assign(
-		array(
+$tpl->assign(array(
 			'TR_ADD_USER' => tr('Add user'),
 			'TR_CORE_DATA' => tr('Core data'),
 			'TR_DOMAIN_NAME' => tr('Domain name'),
@@ -63,8 +62,7 @@ $tpl->assign(
 			'TR_NO' => tr('no'),
 			'TR_NEXT_STEP' => tr('Next step'),
 			'TR_DMN_HELP' => tr("You do not need 'www.' Selity will add it on its own.")
-			)
-	);
+));
 
 get_hp_data_list($tpl, $_SESSION['user_id']);
 
@@ -80,7 +78,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();
@@ -153,15 +151,16 @@ function check_user_data() {
 // Show empty page
 function get_empty_au1_page(&$tpl) {
 	$tpl->assign(
-		array('DMN_NAME_VALUE' => '',
+		array(
+			'DMN_NAME_VALUE' => '',
 			'CH1' => 'selected',
 			'CH2' => '',
 			'CH3' => '',
 			'CH4' => '',
 			'CHTPL1_VAL' => '',
 			'CHTPL2_VAL' => 'checked'
-			)
-		);
+		)
+	);
 	$tpl->assign('MESSAGE', '');
 } //End of get_empty_au1_page()
 
@@ -201,7 +200,7 @@ function get_hp_data_list(&$tpl, $reseller_id) {
 			t1.id,
 			t1.reseller_id,
 			t1.name,
-			t1.props,
+			t1.limits,
 			t1.status,
 			t2.admin_id,
 			t2.admin_type
@@ -227,26 +226,22 @@ function get_hp_data_list(&$tpl, $reseller_id) {
 		}
 	} else {
 		$query = '
-		SELECT
-			id,
-			name,
-			props,
-			status
-		FROM
-			hosting_plans
-		WHERE
-			reseller_id = ?
-		ORDER BY
-			name
-';
+			SELECT
+				id,
+				name,
+				limits,
+				status
+			FROM
+				hosting_plans
+			WHERE
+				reseller_id = ?
+			ORDER BY
+				name
+		';
 		$rs = exec_query($sql, $query, array($reseller_id));
 	}
 
-	/*
-	$query = "SELECT name, id FROM hosting_plans WHERE reseller_id=?;";
 
-	$res = exec_query($sql, $query, array($reseller_id));
-	*/
 	if (0 !== $rs->RowCount()) { // There are data
 		while (($data = $rs->FetchRow())) {
 			$tpl->assign(
@@ -257,8 +252,14 @@ function get_hp_data_list(&$tpl, $reseller_id) {
 			$tpl->parse('HP_ENTRY', '.hp_entry');
 		}
 	} else {
+		//$_SESSION['dmn_name'] = '';
+		$_SESSION['dmn_tpl'] = '';
+		$_SESSION['chtpl'] = '';
+		$_SESSION['step_one'] = "_yes_";
+
+		header("Location: user_add2.php");
+		die();
 		// set_page_message(tr('You have no hosting plans. Please add first hosting plan or contact your system administrator.'));
-		$tpl->assign('ADD_USER', '');
 	}
 } // End of get_hp_data_list()
 

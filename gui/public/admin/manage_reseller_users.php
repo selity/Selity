@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -51,7 +51,7 @@ function gen_user_table(&$tpl, &$sql) {
 
 	if ($rs->RecordCount() == 0) {
 		set_page_message(tr('Reseller or user list is empty!'));
-		header('Location: manage_users.php');
+		header('Location: users_show.php');
 		die();
 	}
 
@@ -280,7 +280,7 @@ function manage_reseller_limits ($dest_reseller, $src_reseller, $users, &$err) {
 			$sql_db_current, $sql_db_max,
 			$sql_user_current, $sql_user_max,
 			$traff_max, $disk_max
-			) = generate_user_props($domain_id);
+			) = get_user_props($domain_id);
 
 		calculate_reseller_dvals($dest_dmn_current, $dest_dmn_max, $src_dmn_current, $src_dmn_max, 1, $err, 'Domain', $domain_name);
 
@@ -450,8 +450,8 @@ function check_ip_sets($dest, $users, &$err) {
 
 $tpl->assign(
 	array(
-		'TR_ADMIN_MANAGE_RESELLER_USERS_PAGE_TITLE' => tr('Selity - Admin/Manage users/User assignment'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
+		'TR_PAGE_TITLE' => tr('Selity - Admin/Manage users/User assignment'),
+		'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 		'THEME_CHARSET' => tr('encoding'),
 		'ISP_LOGO' => get_logo($_SESSION['user_id'])
 		)
@@ -482,7 +482,8 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
 unset_messages();
 

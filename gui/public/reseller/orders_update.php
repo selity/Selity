@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -141,7 +141,7 @@ list ($usub_current, $usub_max,
 	$uftp_current, $uftp_max,
 	$usql_db_current, $usql_db_max,
 	$usql_user_current, $usql_user_max,
-	$utraff_max, $udisk_max) = generate_user_props($dmn_id);
+	$utraff_max, $udisk_max) = get_user_props($dmn_id);
 
 list ($rdmn_current, $rdmn_max,
 	$rsub_current, $rsub_max,

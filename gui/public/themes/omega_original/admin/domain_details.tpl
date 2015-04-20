@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_DETAILS_DOMAIN_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -142,7 +142,7 @@
 						  <tr>
 							<td>&nbsp;</td>
 							<td colspan="3"><form name="buttons" method="post" action="#">
-								<input name="Submit" type="submit" class="button" onclick="MM_goToURL('parent','manage_users.php');return document.MM_returnValue" value="  {TR_BACK}  ">
+								<input name="Submit" type="submit" class="button" onclick="MM_goToURL('parent','users_show.php');return document.MM_returnValue" value="  {TR_BACK}  ">
 							  &nbsp;&nbsp;&nbsp;
 							</form></td>
 						  </tr>

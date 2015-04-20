@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team (2007)
  *
@@ -64,20 +64,6 @@ function gen_page_message(&$tpl) {
 		$tpl->assign('MESSAGE', $_SESSION['user_page_message']);
 		unset($_SESSION['user_page_message']);
 	}
-}
-
-function check_language_exist($lang_table) {
-	$sql = Database::getInstance();
-
-	$tables = $sql->MetaTables();
-	$nlang = count($tables);
-	for ($i = 0 ; $i < $nlang; $i++) {
-		$data = $tables[$i];
-		if ($data == $lang_table) {
-			return true;
-		}
-	}
-	return false;
 }
 
 function set_page_message($message) {

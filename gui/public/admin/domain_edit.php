@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -30,16 +30,15 @@ $tpl->define_dynamic('ip_entry', 'page');
 $theme_color = Config::get('USER_INITIAL_THEME');
 
 if (Config::exists('HOSTING_PLANS_LEVEL') && strtolower(Config::get('HOSTING_PLANS_LEVEL')) !== 'admin') {
-	header("Location: manage_users.php");
+	header("Location: users_show.php");
 	die();
 }
 
 $tpl->assign(
 			array(
-				'TR_EDIT_DOMAIN_PAGE_TITLE' => tr('Selity - Admin/Edit Domain'),
-				'THEME_COLOR_PATH' => "../themes/$theme_color",
+				'TR_PAGE_TITLE' => tr('Selity - Admin/Edit Domain'),
+				'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 				'THEME_CHARSET' => tr('encoding'),
-				'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
 		);
 
@@ -84,13 +83,13 @@ if (isset($_POST['uaction']) && ('sub_data' === $_POST['uaction'])) {
 		unset($_SESSION['edit_id']);
 		$_SESSION['edit'] = '_no_';
 
-		header('Location: manage_users.php');
+		header('Location: users_show.php');
 		die();
 	}
 
 	if (check_user_data($tpl, $sql, get_reseller_id($editid), $editid)) { // Save data to db
 		$_SESSION['dedit'] = "_yes_";
-		header("Location: manage_users.php");
+		header("Location: users_show.php");
 		die();
 	}
 	load_additional_data(get_reseller_id($editid), $editid);
@@ -118,17 +117,17 @@ function get_reseller_id($domain_id) {
 	SELECT
 		a.created_by
 	FROM
-		domain d, admin a
+		admin d, admin a
 	WHERE
-		d.domain_id = ?
-		AND d.domain_admin_id = a.admin_id
+		d.admin_id = ?
+		AND d.created_by = a.admin_id
 ';
 
 	$rs	= exec_query($sql, $query, array($domain_id));
 
 	if ($rs->RecordCount() == 0) {
 		set_page_message(tr('User does not exist or you do not have permission to access this interface!'));
-		header('Location: manage_users.php');
+		header('Location: users_show.php');
 		die();
 	}
 
@@ -148,18 +147,18 @@ function load_user_data($user_id, $domain_id) {
 
 	$query = '
 		SELECT
-			domain_id
+			admin_id
 		FROM
-			domain
+			admin
 		WHERE
-			domain_id = ?
+			admin_id = ?
 ';
 
 	$rs = exec_query($sql, $query, array($domain_id));
 
 	if ($rs->RecordCount() == 0) {
 		set_page_message(tr('User does not exist or you do not have permission to access this interface!'));
-		header('Location: manage_users.php');
+		header('Location: users_show.php');
 		die();
 	}
 
@@ -170,7 +169,7 @@ function load_user_data($user_id, $domain_id) {
 		$e, $sql_db,
 		$f, $sql_user,
 		$traff, $disk
-		) = generate_user_props($domain_id);;
+		) = get_user_props($domain_id);;
 
 	load_additional_data($user_id, $domain_id);
 } //End of load_user_data()
@@ -183,25 +182,29 @@ function load_additional_data($user_id, $domain_id) {
 	// Get domain data
 	$query = '
 		SELECT
-			domain_name,
-			domain_ip_id,
-			domain_php,
-			domain_cgi,
-			domain_admin_id
+			admin_name,
+			user_ips,
+			php,
+			cgi,
+			user_admin_id
 		FROM
-			domain
+			admin
+		LEFT JOIN
+			`user_system_props`
+		ON
+			user_admin_id = admin_id
 		WHERE
-			domain_id = ?
+			admin_id = ?
 ';
 
 	$res = exec_query($sql, $query, array($domain_id));
 	$data = $res->FetchRow();
 
-	$domain_name = $data['domain_name'];
-	$domain_ip_id = $data['domain_ip_id'];
-	$php_sup = $data['domain_php'];
-	$cgi_supp = $data['domain_cgi'];
-	$domain_admin_id = $data['domain_admin_id'];
+	$domain_name = $data['admin_name'];
+	$domain_ip_id = $data['user_ips'];
+	$php_sup = $data['php'];
+	$cgi_supp = $data['cgi'];
+	$domain_admin_id = $data['user_admin_id'];
 	// Get IP of domain
 	$query = '
 		SELECT
@@ -226,7 +229,7 @@ function load_additional_data($user_id, $domain_id) {
 		WHERE
 			admin_id = ?
 		AND
-			admin_type = 'user'
+			admin_type = \'user\'
 ';
 
 	$res = exec_query($sql, $query, array($domain_admin_id));
@@ -347,7 +350,7 @@ function check_user_data(&$tpl, &$sql, $reseller_id, $user_id) {
 		$ed_error .= tr('Incorrect disk quota limit!');
 	}
 
-	// $user_props = generate_user_props($user_id);
+	// $user_props = get_user_props($user_id);
 	// $reseller_props = generate_reseller_props($reseller_id);
 	list ($usub_current, $usub_max,
 		$uals_current, $uals_max,
@@ -355,7 +358,7 @@ function check_user_data(&$tpl, &$sql, $reseller_id, $user_id) {
 		$uftp_current, $uftp_max,
 		$usql_db_current, $usql_db_max,
 		$usql_user_current, $usql_user_max,
-		$utraff_max, $udisk_max) = generate_user_props($user_id);
+		$utraff_max, $udisk_max) = get_user_props($user_id);
 
 	$previous_utraff_max = $utraff_max;
 
@@ -406,8 +409,7 @@ function check_user_data(&$tpl, &$sql, $reseller_id, $user_id) {
 		if ($previous_utraff_max != $utraff_max) {
 			$query = "UPDATE domain SET domain_status = 'change' WHERE domain_id = ?";
 			exec_query($sql, $query, array($user_id));
-			check_for_lock_file();
-			send_request();
+						send_request();
 		}
 
 		$user_props = "$usub_current;$usub_max;";
@@ -599,7 +601,8 @@ function calculate_user_dvals($data, $u, &$umax, &$r, $rmax, &$err, $obj) {
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
 unset_messages();
 

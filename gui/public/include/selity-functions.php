@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -17,20 +17,6 @@
  *   this program; if not, write to the Open Source Initiative (OSI)
  *   http://opensource.org | osi@opensource.org
  */
-
-function check_for_lock_file($wait_lock_timeout = 500000) {
-
-	set_time_limit(0);
-	// @ prevents the Warning:
-	// File(/var/log/chkrootkit.log) is not within the allowed path(s)
-	while(@file_exists(Config::get('MR_LOCK_FILE'))) {
-
-		usleep($wait_lock_timeout);
-		clearstatcache();
-		// and send header to keep connection
-		header( "Cache-Control: no-store, no-cache, must-revalidate" );
-	}
-}
 
 function read_line(&$socket) {
 	$ch = '';
@@ -131,16 +117,16 @@ function update_user_props ( $user_id, $props ) {
 
 	$query = '
 		select
-			domain_name
+			*
 		from
-			domain
+			user_system_props
 		where
-			domain_id  = ?
-		  and
-			domain_php = ?
-		  and
-			domain_cgi = ?
-';
+			user_admin_id  = ?
+		and
+			php = ?
+		and
+			cgi = ?
+	';
 
 	$rs = exec_query($sql, $query, array($user_id, $domain_php, $domain_cgi));
 
@@ -151,29 +137,28 @@ function update_user_props ( $user_id, $props ) {
 		$update_status = Config::get('ITEM_CHANGE_STATUS');
 
 		// check if we have to wait some system update
-		check_for_lock_file();
-		// ... and go update
+				// ... and go update
 
 		// update the domain
 		$query = '
-		update
-			domain
-		set
-			domain_last_modified = ?,
-			domain_mailacc_limit = ?,
-			domain_ftpacc_limit = ?,
-			domain_traffic_limit = ?,
-			domain_sqld_limit = ?,
-			domain_sqlu_limit = ?,
-			domain_status = ?,
-			domain_alias_limit = ?,
-			domain_subd_limit = ?,
-			domain_disk_limit = ?,
-			domain_php = ?,
-			domain_cgi = ?
-		where
-			domain_id  = ?
-';
+			update
+				user_system_props
+			set
+				user_last_modified = ?,
+				max_mail = ?,
+				max_ftp = ?,
+				max_traff = ?,
+				max_sqldb = ?,
+				max_sqlu = ?,
+				user_status = ?,
+				max_als = ?,
+				max_sub = ?,
+				max_disk = ?,
+				php = ?,
+				cgi = ?
+			where
+				user_admin_id  = ?
+		';
 
 		$rs = exec_query($sql, $query, array($domain_last_modified,
 										 $mail_max,
@@ -191,31 +176,31 @@ function update_user_props ( $user_id, $props ) {
 
 		// lets update all alias domains for this domain
 
-	$query = '
-		update
-			domain_aliasses
-		set
-			alias_status = ?
-		where
-			domain_id  = ?
-';
+		$query = '
+			update
+				domain_aliasses
+			set
+				alias_status = ?
+			where
+				admin_id  = ?
+		';
 
-	$rs = exec_query($sql, $query, array($update_status, $user_id));
+		$rs = exec_query($sql, $query, array($update_status, $user_id));
 
-	while (!$rs -> EOF) {
+		while (!$rs -> EOF) {
 			$rs -> MoveNext();
 		}
 
 		// lets update all subdomains for this domain
 
-	$query = '
-		update
-			subdomain
-		set
-			subdomain_status = ?
-		where
-			domain_id  = ?
-';
+		$query = '
+			update
+				subdomain_alias
+			set
+				subdomain_alias_status = ?
+			where
+				alias_id  IN (SELECT `alias_id` FROM domain_aliasses WHERE admin_id = ?)
+		';
 
 		$rs = exec_query($sql, $query, array($update_status, $user_id));
 		while (!$rs -> EOF) {
@@ -232,47 +217,37 @@ function update_user_props ( $user_id, $props ) {
 		// we have to update only the domain props and not
 		// to rebuild system entries
 
-		 $query = '
-		update
-			domain
-		set
-			domain_subd_limit = ?,
-			domain_alias_limit = ?,
-			domain_mailacc_limit = ?,
-			domain_ftpacc_limit = ?,
-			domain_sqld_limit = ?,
-			domain_sqlu_limit = ?,
-			domain_traffic_limit = ?,
-			domain_disk_limit = ?
-		where
-			domain_id = ?
+		$query = '
+			update
+				user_system_props
+			set
+				max_sub = ?,
+				max_als = ?,
+				max_mail = ?,
+				max_ftp = ?,
+				max_sqldb = ?,
+				max_sqlu = ?,
+				max_traff = ?,
+				max_disk = ?
+			where
+				user_admin_id = ?
 
-';
+		';
 
 		$rs = exec_query($sql, $query, array($sub_max,
-										   $als_max,
-										   $mail_max,
-										   $ftp_max,
-										   $sql_db_max,
-										   $sql_user_max,
-										   $traff_max,
-										   $disk_max,
-										   $user_id));
+											$als_max,
+											$mail_max,
+											$ftp_max,
+											$sql_db_max,
+											$sql_user_max,
+											$traff_max,
+											$disk_max,
+											$user_id));
   }
 
 }
 
 /* end */
-
-function escape_user_data ( $data ) {
-
-	$res_one = preg_replace("/\\\\/", "", $data);
-
-	$res = preg_replace("/'/", "\\\'", $res_one);
-
-	return $res;
-
-}
 
 function array_decode_idna($arr, $asPath = false) {
 	if ($asPath && !is_array($arr)) {
@@ -297,19 +272,15 @@ function array_encode_idna($arr, $asPath = false) {
 	return $arr;
 }
 
-function decode_idna($input)
-{
-
+function decode_idna($input){
 	return idn_to_utf8($input, IDNA_USE_STD3_RULES);
 }
 
-function encode_idna($input)
-{
+function encode_idna($input){
 	return idn_to_ascii($input);
 }
 
-function strip_html($input)
-{
+function strip_html($input){
 	$output = htmlspecialchars($input, ENT_QUOTES, "UTF-8");
 	return $output;
 }

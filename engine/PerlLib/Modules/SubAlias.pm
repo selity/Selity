@@ -32,9 +32,9 @@ use Data::Dumper;
 
 use vars qw/@ISA/;
 
-@ISA = ('Common::SimpleClass', 'Modules::Subdomain');
+@ISA = ('Common::SimpleClass', 'Modules::Abstract');
 use Common::SimpleClass;
-use Modules::Subdomain;
+use Modules::Abstract;
 
 sub _init{
 	my $self		= shift;
@@ -48,15 +48,17 @@ sub loadData{
 	my $sql = "
 		SELECT
 			`sub`.*,
-			`domain_name` AS `user_home`,
+			`alias`.`admin_id`,
+			`alias`.`admin_id`,
+			`admin_name` AS `user_home`,
 			`alias_name`,
-			`domain_admin_id`,
-			`domain_php`,
-			`domain_cgi`,
-			`domain_traffic_limit`,
-			`domain_mailacc_limit`,
-			`domain_dns`,
-			`domain`.`domain_id`,
+			`user_admin_id`,
+			`user_php`,
+			`user_cgi`,
+			`user_traffic_limit`,
+			`user_mailacc_limit`,
+			`user_dns`,
+			`admin`.`admin_id`,
 			`ips`.`ip_number`,
 			`mail_count`.`mail_on_domain`
 		FROM
@@ -66,9 +68,13 @@ sub loadData{
 		ON
 			`sub`.`alias_id` = `alias`.`alias_id`
 		LEFT JOIN
-			`domain`
+			`user_system_props` as `props`
 		ON
-			`alias`.`domain_id` = `domain`.`domain_id`
+			`alias`.`admin_id` = `props`.`user_admin_id`
+		LEFT JOIN
+			`admin`
+		ON
+			`alias`.`admin_id` = `admin`.`admin_id`
 		LEFT JOIN
 			`server_ips` AS `ips`
 		ON
@@ -156,7 +162,7 @@ sub delete{
 	my $userName	=
 	my $groupName	=
 			$main::selityConfig{SYSTEM_USER_PREFIX}.
-			($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{domain_admin_id});
+			($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{user_admin_id});
 	my $httpdGroup	= (
 			Servers::httpd->factory()->can('getRunningGroup')
 			?
@@ -171,23 +177,17 @@ sub delete{
 		FROM `domain_aliasses`
 		WHERE `alias_mount` LIKE '$self->{subdomain_alias_mount}%'
 		AND `alias_status` NOT IN ('delete', 'ordered')
-		AND `domain_id` = ?
+		AND `admin_id` = ?
 		UNION
-		SELECT `subdomain_mount` AS `mount_point`, concat('subdomain',`subdomain_id`) as 'id'
-		FROM `subdomain`
-		WHERE `subdomain_mount` LIKE '$self->{subdomain_alias_mount}%'
-		AND `subdomain_status` != 'delete'
-		AND `domain_id` = ?
 		UNION
 		SELECT `subdomain_alias_mount` AS `mount_point`, concat('subdomain_alias',`subdomain_alias_id`) as 'id'
 		FROM `subdomain_alias`
 		WHERE `subdomain_alias_mount` LIKE '$self->{subdomain_alias_mount}%'
 		AND `subdomain_alias_status` != 'delete'
-		AND `alias_id` IN (SELECT `alias_id` FROM `domain_aliasses` WHERE `domain_id` = ?)
+		AND `alias_id` IN (SELECT `alias_id` FROM `domain_aliasses` WHERE `admin_id` = ?)
 		",
-		$self->{domain_id},
-		$self->{domain_id},
-		$self->{domain_id}
+		$self->{admin_id},
+		$self->{admin_id}
 	);
 
 	my $rdata = Selity::Database->factory()->doQuery('id', @sql);
@@ -256,7 +256,7 @@ sub buildHTTPDData{
 	my $groupName	=
 	my $userName	=
 			$main::selityConfig{SYSTEM_USER_PREFIX}.
-			($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{domain_admin_id});
+			($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{user_admin_id});
 	my $hDir 		= "$main::selityConfig{'USER_HOME_DIR'}/$self->{user_home}/$self->{subdomain_alias_mount}";
 	$hDir			=~ s~/+~/~g;
 
@@ -265,7 +265,7 @@ sub buildHTTPDData{
 	error("$rdata") and return 1 if(ref $rdata ne 'HASH');
 
 	$sql			= "SELECT * FROM `php_ini` WHERE `domain_id` = ?";
-	my $phpiniData	= Selity::Database->factory()->doQuery('domain_id', $sql, $self->{domain_id});
+	my $phpiniData	= Selity::Database->factory()->doQuery('admin_id', $sql, $self->{admin_id});
 	error("$phpiniData") and return 1 if(ref $phpiniData ne 'HASH');
 
 	$sql			= "SELECT * FROM `ssl_certs` WHERE `id` = ? AND `type` = ? AND `status` = ?";
@@ -289,23 +289,23 @@ sub buildHTTPDData{
 		BASE_SERVER_VHOST			=> $main::selityConfig{'BASE_SERVER_VHOST'},
 		USER						=> $userName,
 		GROUP						=> $groupName,
-		have_php					=> $self->{domain_php},
-		have_cgi					=> $self->{domain_cgi},
+		have_php					=> $self->{user_php},
+		have_cgi					=> $self->{user_cgi},
 		have_cert					=> $haveCert,
-		BWLIMIT						=> $self->{domain_traffic_limit},
+		BWLIMIT						=> $self->{user_traffic_limit},
 		ALIAS						=> $userName.'subals'.$self->{subdomain_alias_id},
 		FORWARD						=> $self->{subdomain_alias_url_forward},
-		DISABLE_FUNCTIONS			=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{disable_functions} : $rdata->{PHPINI_DISABLE_FUNCTIONS}->{value}),
-		MAX_EXECUTION_TIME			=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{max_execution_time} : $rdata->{PHPINI_MAX_EXECUTION_TIME}->{value}),
-		MAX_INPUT_TIME				=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{max_input_time} : $rdata->{PHPINI_MAX_INPUT_TIME}->{value}),
-		MEMORY_LIMIT				=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{memory_limit} : $rdata->{PHPINI_MEMORY_LIMIT}->{value}),
-		ERROR_REPORTING				=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{error_reporting} : $rdata->{PHPINI_ERROR_REPORTING}->{value}),
-		DISPLAY_ERRORS				=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{display_errors} : $rdata->{PHPINI_DISPLAY_ERRORS}->{value}),
-		REGISTER_GLOBALS			=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{register_globals} : $rdata->{PHPINI_REGISTER_GLOBALS}->{value}),
-		POST_MAX_SIZE				=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{post_max_size} : $rdata->{PHPINI_POST_MAX_SIZE}->{value}),
-		UPLOAD_MAX_FILESIZE			=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{upload_max_filesize} : $rdata->{PHPINI_UPLOAD_MAX_FILESIZE}->{value}),
-		ALLOW_URL_FOPEN				=> (exists $phpiniData->{$self->{domain_id}} ? $phpiniData->{$self->{domain_id}}->{allow_url_fopen} : $rdata->{PHPINI_ALLOW_URL_FOPEN}->{value}),
-		PHPINI_OPEN_BASEDIR			=> (exists $phpiniData->{$self->{domain_id}}->{PHPINI_OPEN_BASEDIR} ? ':'.$phpiniData->{$self->{domain_id}}->{PHPINI_OPEN_BASEDIR} : $rdata->{PHPINI_OPEN_BASEDIR}->{value} ? ':'.$rdata->{PHPINI_OPEN_BASEDIR}->{value} : '')
+		DISABLE_FUNCTIONS			=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{disable_functions} : $rdata->{PHPINI_DISABLE_FUNCTIONS}->{value}),
+		MAX_EXECUTION_TIME			=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{max_execution_time} : $rdata->{PHPINI_MAX_EXECUTION_TIME}->{value}),
+		MAX_INPUT_TIME				=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{max_input_time} : $rdata->{PHPINI_MAX_INPUT_TIME}->{value}),
+		MEMORY_LIMIT				=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{memory_limit} : $rdata->{PHPINI_MEMORY_LIMIT}->{value}),
+		ERROR_REPORTING				=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{error_reporting} : $rdata->{PHPINI_ERROR_REPORTING}->{value}),
+		DISPLAY_ERRORS				=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{display_errors} : $rdata->{PHPINI_DISPLAY_ERRORS}->{value}),
+		REGISTER_GLOBALS			=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{register_globals} : $rdata->{PHPINI_REGISTER_GLOBALS}->{value}),
+		POST_MAX_SIZE				=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{post_max_size} : $rdata->{PHPINI_POST_MAX_SIZE}->{value}),
+		UPLOAD_MAX_FILESIZE			=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{upload_max_filesize} : $rdata->{PHPINI_UPLOAD_MAX_FILESIZE}->{value}),
+		ALLOW_URL_FOPEN				=> (exists $phpiniData->{$self->{admin_id}} ? $phpiniData->{$self->{admin_id}}->{allow_url_fopen} : $rdata->{PHPINI_ALLOW_URL_FOPEN}->{value}),
+		PHPINI_OPEN_BASEDIR			=> (exists $phpiniData->{$self->{admin_id}} && exists $phpiniData->{$self->{admin_id}}->{PHPINI_OPEN_BASEDIR} ? ':'.$phpiniData->{$self->{admin_id}}->{PHPINI_OPEN_BASEDIR} : $rdata->{PHPINI_OPEN_BASEDIR}->{value} ? ':'.$rdata->{PHPINI_OPEN_BASEDIR}->{value} : '')
 	};
 
 	0;
@@ -338,7 +338,7 @@ sub buildNAMEDData{
 	my $groupName	=
 	my $userName	=
 			$main::selityConfig{SYSTEM_USER_PREFIX}.
-			($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{domain_admin_id});
+			($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{user_admin_id});
 
 	$self->{named} = {
 		DMN_NAME		=> $self->{subdomain_alias_name}.'.'.$self->{alias_name},

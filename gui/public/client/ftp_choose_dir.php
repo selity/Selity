@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -39,7 +39,7 @@ function gen_directories(&$tpl) {
 	$path = isset($_GET['cur_dir']) ? $_GET['cur_dir'] : '';
 	$domain = $_SESSION['user_logged'];
 	// Create the virtual file system and open it so it can be used
-	$vfs = &new vfs($domain, $sql);
+	$vfs = new vfs($_SESSION['user_id'], $sql);
 	// Get the directory listing
 	$list = $vfs->ls($path);
 	if (!$list) {
@@ -51,10 +51,10 @@ function gen_directories(&$tpl) {
 	array_pop($parent);
 	$parent = implode('/', $parent);
 	$tpl->assign('ACTION_LINK', '');
-	$tpl->assign(array('ACTION' => '',
-			'ICON' => "parent",
-			'DIR_NAME' => tr('Parent Directory'),
-			'LINK' => 'ftp_choose_dir.php?cur_dir=' . $parent,
+	$tpl->assign(array('ACTION'	=> '',
+			'ICON'	=> "parent",
+			'DIR_NAME'	=> tr('Parent Directory'),
+			'LINK'	=> 'ftp_choose_dir.php?cur_dir=' . $parent,
 			));
 	$tpl->parse('DIR_ITEM', '.dir_item');
 	// Show directories only
@@ -74,42 +74,37 @@ function gen_directories(&$tpl) {
 			$image = "folder";
 		}
 		// Create the directory link
-		$tpl->assign(array('ACTION' => tr('Protect it'),
-				'PROTECT_IT' => "protected_areas_add.php?file=$dr",
-				'ICON' => $image,
-				'DIR_NAME' => $entry['file'],
-				'CHOOSE_IT' => $dr,
-				'LINK' => "ftp_choose_dir.php?cur_dir=$dr",
+		$tpl->assign(array('ACTION'	=> tr('Protect it'),
+				'PROTECT_IT'	=> "protected_areas_add.php?file=$dr",
+				'ICON'	=> $image,
+				'DIR_NAME'	=> $entry['file'],
+				'CHOOSE_IT'	=> $dr,
+				'LINK'	=> "ftp_choose_dir.php?cur_dir=$dr",
 				));
 		$tpl->parse('ACTION_LINK', 'action_link');
 		$tpl->parse('DIR_ITEM' , '.dir_item');
 	}
 }
 // functions end
-$tpl->assign(
-	array('TR_CLIENT_WEBTOOLS_PAGE_TITLE' => tr('Selity - Client/Webtools'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
-		'THEME_CHARSET' => tr('encoding'),
-		'ISP_LOGO' => get_logo($_SESSION['user_id'])
-		)
-	);
+$tpl->assign(array(
+	'TR_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
+	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
+	'THEME_CHARSET'		=> tr('encoding'),
+	'ISP_LOGO'			=> get_logo($_SESSION['user_id']),
+	'TR_DIRECTORY_TREE'	=> tr('Directory tree'),
+	'TR_DIRS'			=> tr('Directories'),
+	'TR__ACTION'		=> tr('Action'),
+	'CHOOSE'		=> tr('Choose')
+));
 
 gen_directories($tpl);
-
-$tpl->assign(
-	array('TR_DIRECTORY_TREE' => tr('Directory tree'),
-		'TR_DIRS' => tr('Directories'),
-		'TR__ACTION' => tr('Action'),
-		'CHOOSE' => tr('Choose')
-		)
-	);
 
 gen_page_message($tpl);
 
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

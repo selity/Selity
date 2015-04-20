@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -22,22 +22,21 @@ require '../include/selity-lib.php';
 
 check_login(__FILE__);
 
-$tpl = new pTemplate();
-$tpl->define_dynamic('page', Config::get('ADMIN_TEMPLATE_PATH') . '/settings.tpl');
-$tpl->define_dynamic('def_language', 'page');
+$cfg = configs::getInstance();
+$tpl = template::getInstance();
 
-$theme_color = Config::get('USER_INITIAL_THEME');
+$theme_color = $cfg->USER_INITIAL_THEME;
 
-$tpl->assign(
+$tpl->saveVariable(
 	array(
-		'TR_ADMIN_SETTINGS_PAGE_TITLE' => tr('Selity - Admin/Settings'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
-		'THEME_CHARSET' => tr('encoding'),
-		'ISP_LOGO' => get_logo($_SESSION['user_id'])
-		)
-	);
+		'TR_PAGE_TITLE'		=> tr('Selity - Admin/Settings'),
+		'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
+		'THEME_CHARSET'		=> tr('encoding'),
+		//'ISP_LOGO'		=> get_logo($_SESSION['user_id'])
+	)
+);
 
-if (isset($_POST['uaction']) && $_POST['uaction'] == 'apply') {
+if (array_key_exists('Submit', $_POST)) {
 	$lostpassword 						= $_POST['lostpassword'];
 	$lostpassword_timeout 				= clean_input($_POST['lostpassword_timeout']);
 	$passwd_chars 						= clean_input($_POST['passwd_chars']);
@@ -55,15 +54,16 @@ if (isset($_POST['uaction']) && $_POST['uaction'] == 'apply') {
 	$hosting_plan_level					= $_POST['hosting_plan_level'];
 	$domain_rows_per_page 				= clean_input($_POST['domain_rows_per_page']);
 	$checkforupdate						= $_POST['checkforupdate'];
+	$gui_debug							= $_POST['gui_debug'];
 	// change Loglevel to constant:
 	switch ($_POST['log_level']) {
-		case "E_USER_NOTICE":
+		case 'E_USER_NOTICE':
 			$log_level = E_USER_NOTICE;
 			break;
-		case "E_USER_WARNING":
+		case 'E_USER_WARNING':
 			$log_level = E_USER_WARNING;
 			break;
-		case "E_USER_ERROR":
+		case 'E_USER_ERROR':
 			$log_level = E_USER_ERROR;
 			break;
 		default:
@@ -74,142 +74,126 @@ if (isset($_POST['uaction']) && $_POST['uaction'] == 'apply') {
 			OR (!is_number($bruteforce_max_login)) OR (!is_number($bruteforce_block_time))
 			OR (!is_number($bruteforce_between_time)) OR (!is_number($bruteforce_max_capcha))
 			OR (!is_number($domain_rows_per_page))) {
-		set_page_message(tr('ERROR: Only positive numbers are allowed !'));
+		$tpl->addMessage(tr('ERROR: Only positive numbers are allowed!'));
 	} else if ($domain_rows_per_page < 1) {
 		$domain_rows_per_page = 1;
 	} else {
-		setConfig_Value('LOSTPASSWORD', $lostpassword);
-		setConfig_Value('LOSTPASSWORD_TIMEOUT', $lostpassword_timeout);
-		setConfig_Value('PASSWD_CHARS', $passwd_chars);
-		setConfig_Value('PASSWD_STRONG', $passwd_strong);
-		setConfig_Value('BRUTEFORCE', $bruteforce);
-		setConfig_Value('BRUTEFORCE_BETWEEN', $bruteforce_between);
-		setConfig_Value('BRUTEFORCE_MAX_LOGIN', $bruteforce_max_login);
-		setConfig_Value('BRUTEFORCE_BLOCK_TIME', $bruteforce_block_time);
-		setConfig_Value('BRUTEFORCE_BETWEEN_TIME', $bruteforce_between_time);
-		setConfig_Value('BRUTEFORCE_MAX_CAPTCHA', $bruteforce_max_capcha);
-		setConfig_Value('CREATE_DEFAULT_EMAIL_ADDRESSES', $create_default_email_addresses);
-		setConfig_Value('HARD_MAIL_SUSPENSION', $hard_mail_suspension);
-		setConfig_Value('USER_INITIAL_LANG', $user_initial_lang);
-		setConfig_Value('SELITY_SUPPORT_SYSTEM', $support_system);
-		setConfig_Value('HOSTING_PLANS_LEVEL', $hosting_plan_level);
-		setConfig_Value('DOMAIN_ROWS_PER_PAGE', $domain_rows_per_page);
-		setConfig_Value('LOG_LEVEL', $log_level);
-		setConfig_Value('CHECK_FOR_UPDATES', $checkforupdate);
-		set_page_message(tr('Settings saved !'));
+		$cfg->LOSTPASSWORD						= $lostpassword;
+		$cfg->LOSTPASSWORD_TIMEOUT				= $lostpassword_timeout;
+		$cfg->PASSWD_CHARS						= $passwd_chars;
+		$cfg->PASSWD_STRONG						= $passwd_strong;
+		$cfg->BRUTEFORCE						= $bruteforce;
+		$cfg->BRUTEFORCE_BETWEEN				= $bruteforce_between;
+		$cfg->BRUTEFORCE_MAX_LOGIN				= $bruteforce_max_login;
+		$cfg->BRUTEFORCE_BLOCK_TIME				= $bruteforce_block_time;
+		$cfg->BRUTEFORCE_BETWEEN_TIME			= $bruteforce_between_time;
+		$cfg->BRUTEFORCE_MAX_CAPTCHA			= $bruteforce_max_capcha;
+		$cfg->CREATE_DEFAULT_EMAIL_ADDRESSES	= $create_default_email_addresses;
+		$cfg->HARD_MAIL_SUSPENSION				= $hard_mail_suspension;
+		$cfg->USER_INITIAL_LANG					= $user_initial_lang;
+		$cfg->SELITY_SUPPORT_SYSTEM				= $support_system;
+		$cfg->HOSTING_PLANS_LEVEL				= $hosting_plan_level;
+		$cfg->DOMAIN_ROWS_PER_PAGE				= $domain_rows_per_page;
+		$cfg->LOG_LEVEL							= $log_level;
+		$cfg->CHECK_FOR_UPDATES					= $checkforupdate;
+		$cfg->GUI_DEBUG							= $gui_debug;
+		$cfg->saveAll();
+		$tpl->addMessage(tr('Settings saved!'));
 	}
 }
 
-$tpl->assign(
+$tpl->saveVariable(
 	array(
-		'LOSTPASSWORD_TIMEOUT_VALUE' => Config::get('LOSTPASSWORD_TIMEOUT'),
-		'PASSWD_CHARS' => Config::get('PASSWD_CHARS'),
-		'BRUTEFORCE_MAX_LOGIN_VALUE' => Config::get('BRUTEFORCE_MAX_LOGIN'),
-		'BRUTEFORCE_BLOCK_TIME_VALUE' => Config::get('BRUTEFORCE_BLOCK_TIME'),
-		'BRUTEFORCE_BETWEEN_TIME_VALUE' => Config::get('BRUTEFORCE_BETWEEN_TIME'),
-		'BRUTEFORCE_MAX_CAPTCHA' => Config::get('BRUTEFORCE_MAX_CAPTCHA'),
-		'DOMAIN_ROWS_PER_PAGE' => Config::get('DOMAIN_ROWS_PER_PAGE')
-		)
-	);
-$language=Config::get('USER_INITIAL_LANG');
-gen_def_language($tpl, $sql, $language);
-
-if (Config::get('LOSTPASSWORD')) {
-	$tpl->assign('LOSTPASSWORD_SELECTED_ON', 'selected="selected"');
-	$tpl->assign('LOSTPASSWORD_SELECTED_OFF', '');
-} else {
-	$tpl->assign('LOSTPASSWORD_SELECTED_ON', '');
-	$tpl->assign('LOSTPASSWORD_SELECTED_OFF', 'selected="selected"');
+		'LOSTPASSWORD_TIMEOUT_VALUE'	=> $cfg->LOSTPASSWORD_TIMEOUT,
+		'PASSWD_CHARS'					=> $cfg->PASSWD_CHARS,
+		'BRUTEFORCE_MAX_LOGIN_VALUE'	=> $cfg->BRUTEFORCE_MAX_LOGIN,
+		'BRUTEFORCE_BLOCK_TIME_VALUE'	=> $cfg->BRUTEFORCE_BLOCK_TIME,
+		'BRUTEFORCE_BETWEEN_TIME_VALUE'	=> $cfg->BRUTEFORCE_BETWEEN_TIME,
+		'BRUTEFORCE_MAX_CAPTCHA'		=> $cfg->BRUTEFORCE_MAX_CAPTCHA,
+		'DOMAIN_ROWS_PER_PAGE'			=> $cfg->DOMAIN_ROWS_PER_PAGE
+	)
+);
+$default_language = $cfg->USER_INITIAL_LANG;
+$lng = selity_language::getInstance();
+$languageList = $lng->getDisponibleLanguages();
+$old_language = $_SESSION['user_def_lang'];
+$list = array();
+asort($languageList, SORT_STRING);
+foreach ($languageList as $lang) {
+	$lng->setLanguage($lang);
+	$list[] = array('LANG_VALUE' => $lang, 'LANG_NAME'=>gettext('Localised language'), 'LANG_SELECTED' => $lang == $default_language ? 'selected' : '');
 }
+$tpl->saveRepeats(array('LANGUAGE'=>$list));
+$lng->setLanguage($old_language);
 
-if (Config::get('PASSWD_STRONG')) {
-	$tpl->assign('PASSWD_STRONG_ON', 'selected="selected"');
-	$tpl->assign('PASSWD_STRONG_OFF', '');
-} else {
-	$tpl->assign('PASSWD_STRONG_ON', '');
-	$tpl->assign('PASSWD_STRONG_OFF', 'selected="selected"');
-}
+$tpl->saveVariable(array(
+	'LOSTPASSWORD_SELECTED_ON'			=> $cfg->LOSTPASSWORD ? 'selected' : '',
+	'LOSTPASSWORD_SELECTED_OFF'			=> $cfg->LOSTPASSWORD ? '' : 'selected',
 
-if (Config::get('BRUTEFORCE')) {
-	$tpl->assign('BRUTEFORCE_SELECTED_ON', 'selected="selected"');
-	$tpl->assign('BRUTEFORCE_SELECTED_OFF', '');
-} else {
-	$tpl->assign('BRUTEFORCE_SELECTED_ON', '');
-	$tpl->assign('BRUTEFORCE_SELECTED_OFF', 'selected="selected"');
-}
+	'PASSWD_STRONG_ON'					=> $cfg->PASSWD_STRONG ? 'selected' : '',
+	'PASSWD_STRONG_OFF'					=> $cfg->PASSWD_STRONG ? '' : 'selected',
 
-if (Config::get('BRUTEFORCE_BETWEEN')) {
-	$tpl->assign('BRUTEFORCE_BETWEEN_SELECTED_ON', 'selected="selected"');
-	$tpl->assign('BRUTEFORCE_BETWEEN_SELECTED_OFF', '');
-} else {
-	$tpl->assign('BRUTEFORCE_BETWEEN_SELECTED_ON', '');
-	$tpl->assign('BRUTEFORCE_BETWEEN_SELECTED_OFF', 'selected="selected"');
-}
+	'BRUTEFORCE_SELECTED_ON'			=> $cfg->BRUTEFORCE ? 'selected' : '',
+	'BRUTEFORCE_SELECTED_OFF'			=> $cfg->BRUTEFORCE ? '' : 'selected',
 
-if (Config::get('SELITY_SUPPORT_SYSTEM')) {
-	$tpl->assign('SUPPORT_SYSTEM_SELECTED_ON', 'selected="selected"');
-	$tpl->assign('SUPPORT_SYSTEM_SELECTED_OFF', '');
-} else {
-	$tpl->assign('SUPPORT_SYSTEM_SELECTED_ON', '');
-	$tpl->assign('SUPPORT_SYSTEM_SELECTED_OFF', 'selected="selected"');
-}
+	'LOSTPASSWORD_SELECTED_ON'			=> $cfg->LOSTPASSWORD ? 'selected' : '',
+	'LOSTPASSWORD_SELECTED_OFF'			=> $cfg->LOSTPASSWORD ? '' : 'selected',
 
-if (Config::get('CREATE_DEFAULT_EMAIL_ADDRESSES')) {
-	$tpl->assign('CREATE_DEFAULT_EMAIL_ADDRESSES_ON', 'selected="selected"');
-	$tpl->assign('CREATE_DEFAULT_EMAIL_ADDRESSES_OFF', '');
-} else {
-	$tpl->assign('CREATE_DEFAULT_EMAIL_ADDRESSES_ON', '');
-	$tpl->assign('CREATE_DEFAULT_EMAIL_ADDRESSES_OFF', 'selected="selected"');
-}
+	'BRUTEFORCE_BETWEEN_SELECTED_ON'	=> $cfg->BRUTEFORCE_BETWEEN ? 'selected' : '',
+	'BRUTEFORCE_BETWEEN_SELECTED_OFF'	=> $cfg->BRUTEFORCE_BETWEEN ? '' : 'selected',
 
-if (Config::get('HARD_MAIL_SUSPENSION')) {
-	$tpl->assign('HARD_MAIL_SUSPENSION_ON', 'selected="selected"');
-	$tpl->assign('HARD_MAIL_SUSPENSION_OFF', '');
-} else {
-	$tpl->assign('HARD_MAIL_SUSPENSION_ON', '');
-	$tpl->assign('HARD_MAIL_SUSPENSION_OFF', 'selected="selected"');
-}
+	'SUPPORT_SYSTEM_SELECTED_ON'		=> $cfg->SELITY_SUPPORT_SYSTEM ? 'selected' : '',
+	'SUPPORT_SYSTEM_SELECTED_OFF'		=> $cfg->SELITY_SUPPORT_SYSTEM ? '' : 'selected',
 
-if (Config::get('HOSTING_PLANS_LEVEL') == "admin") {
-	$tpl->assign('HOSTING_PLANS_LEVEL_ADMIN', 'selected="selected"');
-	$tpl->assign('HOSTING_PLANS_LEVEL_RESELLER', '');
-} else {
-	$tpl->assign('HOSTING_PLANS_LEVEL_ADMIN', '');
-	$tpl->assign('HOSTING_PLANS_LEVEL_RESELLER', 'selected="selected"');
-}
+	'CREATE_DEFAULT_EMAIL_ADDRESSES_ON'		=> $cfg->CREATE_DEFAULT_EMAIL_ADDRESSES ? 'selected' : '',
+	'CREATE_DEFAULT_EMAIL_ADDRESSES_OFF'	=> $cfg->CREATE_DEFAULT_EMAIL_ADDRESSES ? '' : 'selected',
 
-if (Config::get('CHECK_FOR_UPDATES')) {
-	$tpl->assign('CHECK_FOR_UPDATES_SELECTED_ON', 'selected="selected"');
-	$tpl->assign('CHECK_FOR_UPDATES_SELECTED_OFF', '');
-} else {
-	$tpl->assign('CHECK_FOR_UPDATES_SELECTED_ON', '');
-	$tpl->assign('CHECK_FOR_UPDATES_SELECTED_OFF', 'selected="selected"');
-}
+	'HARD_MAIL_SUSPENSION_ON'			=> $cfg->HARD_MAIL_SUSPENSION ? 'selected' : '',
+	'HARD_MAIL_SUSPENSION_OFF'			=> $cfg->HARD_MAIL_SUSPENSION ? '' : 'selected',
 
-switch(Config::get('LOG_LEVEL')){
+	'CHECK_FOR_UPDATES_SELECTED_ON'		=> $cfg->CHECK_FOR_UPDATES ? 'selected' : '',
+	'CHECK_FOR_UPDATES_SELECTED_OFF'	=> $cfg->CHECK_FOR_UPDATES ? '' : 'selected',
+
+	'HOSTING_PLANS_LEVEL_ADMIN'			=> $cfg->HOSTING_PLANS_LEVEL ? 'selected' : '',
+	'HOSTING_PLANS_LEVEL_RESELLER'		=> $cfg->HOSTING_PLANS_LEVEL ? '' : 'selected',
+
+	'GUI_DEBUG_ON'						=> $cfg->GUI_DEBUG ? 'selected' : '',
+	'GUI_DEBUG_OFF'						=> $cfg->GUI_DEBUG ? '' : 'selected',
+));
+
+
+switch($cfg->LOG_LEVEL){
 	case E_USER_OFF:
-		$tpl->assign('LOG_LEVEL_SELECTED_OFF', 'selected="selected"');
-		$tpl->assign('LOG_LEVEL_SELECTED_NOTICE', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_WARNING', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_ERROR', '');
+		$tpl->saveRepeats(array(
+			'LOG_LEVEL_SELECTED_OFF'		=>'selected',
+			'LOG_LEVEL_SELECTED_NOTICE'		=>'',
+			'LOG_LEVEL_SELECTED_WARNING'	=>'',
+			'LOG_LEVEL_SELECTED_ERROR'		=>''
+		));
 		break;
 	case E_USER_NOTICE:
-		$tpl->assign('LOG_LEVEL_SELECTED_OFF', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_NOTICE', 'selected="selected"');
-		$tpl->assign('LOG_LEVEL_SELECTED_WARNING', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_ERROR', '');
+		$tpl->saveRepeats(array(
+			'LOG_LEVEL_SELECTED_OFF'		=>'',
+			'LOG_LEVEL_SELECTED_NOTICE'		=>'selected',
+			'LOG_LEVEL_SELECTED_WARNING'	=>'',
+			'LOG_LEVEL_SELECTED_ERROR'		=>'',
+		));
 		break;
 	case E_USER_WARNING:
-		$tpl->assign('LOG_LEVEL_SELECTED_OFF', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_NOTICE', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_WARNING', 'selected="selected"');
-		$tpl->assign('LOG_LEVEL_SELECTED_ERROR', '');
+		$tpl->saveRepeats(array(
+			'LOG_LEVEL_SELECTED_OFF'		=>'',
+			'LOG_LEVEL_SELECTED_NOTICE'		=>'',
+			'LOG_LEVEL_SELECTED_WARNING'	=>'selected',
+			'LOG_LEVEL_SELECTED_ERROR'		=>'',
+		));
 		break;
 	default:
-		$tpl->assign('LOG_LEVEL_SELECTED_OFF', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_NOTICE', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_WARNING', '');
-		$tpl->assign('LOG_LEVEL_SELECTED_ERROR', 'selected="selected"');
+		$tpl->saveRepeats(array(
+			'LOG_LEVEL_SELECTED_OFF'		=>'',
+			'LOG_LEVEL_SELECTED_NOTICE'		=>'',
+			'LOG_LEVEL_SELECTED_WARNING'	=>'',
+			'LOG_LEVEL_SELECTED_ERROR'		=>'selected',
+		));
 } // switch
 
 /*
@@ -217,54 +201,53 @@ switch(Config::get('LOG_LEVEL')){
  * static page messages.
  *
  */
-gen_admin_mainmenu($tpl, Config::get('ADMIN_TEMPLATE_PATH') . '/main_menu_settings.tpl');
-gen_admin_menu($tpl, Config::get('ADMIN_TEMPLATE_PATH') . '/menu_settings.tpl');
 
-$tpl->assign(
+$tpl->saveVariable(
 	array(
-		'TR_GENERAL_SETTINGS' => tr('General settings'),
-		'TR_SETTINGS' => tr('Settings'),
-		'TR_MESSAGE' => tr('Message'),
-		'TR_LOSTPASSWORD' => tr('Lost password'),
-		'TR_LOSTPASSWORD_TIMEOUT' => tr('Activation link expire time (minutes)'),
-		'TR_PASSWORD_SETTINGS'=> tr('Password settings') ,
-		'TR_PASSWD_STRONG'=> tr('Use strong Passwords') ,
-		'TR_PASSWD_CHARS' => tr('Password length'),
-		'TR_BRUTEFORCE' => tr('Bruteforce detection'),
-		'TR_BRUTEFORCE_BETWEEN' => tr('Block time between logins'),
-		'TR_BRUTEFORCE_MAX_LOGIN' => tr('Max number of login attempts'),
-		'TR_BRUTEFORCE_BLOCK_TIME' => tr('Blocktime (minutes)'),
-		'TR_BRUTEFORCE_BETWEEN_TIME' => tr('Block time between logins (seconds)'),
-		'TR_BRUTEFORCE_MAX_CAPTCHA' => tr('Max number of CAPTCHA validation attempts'),
-		'TR_OTHER_SETTINGS' => tr('Other settings'),
-		'TR_MAIL_SETTINGS' => tr('E-Mail settings'),
-		'TR_CREATE_DEFAULT_EMAIL_ADDRESSES' => tr('Create default E-Mail addresses'),
-		'TR_HARD_MAIL_SUSPENSION' => tr('E-Mail accounts are hard suspended'),
-		'TR_USER_INITIAL_LANG' => tr('Default language'),
-		'TR_SUPPORT_SYSTEM' => tr('Support system'),
-		'TR_ENABLED' => tr('Enabled'),
-		'TR_DISABLED' => tr('Disabled'),
-		'TR_APPLY_CHANGES' => tr('Apply changes'),
-		'TR_SERVERPORTS' => tr('Server ports'),
-		'TR_HOSTING_PLANS_LEVEL' => tr('Hosting plans available for'),
-		'TR_ADMIN' => tr('Admin'),
-		'TR_RESELLER' => tr('Reseller'),
-		'TR_DOMAIN_ROWS_PER_PAGE' => tr('Domains per page'),
-		'TR_LOG_LEVEL' => tr('Log Level'),
-		'TR_E_USER_OFF' => tr('Disabled'),
-		'TR_E_USER_NOTICE' => tr('Notices, Warnings and Errors'),
-		'TR_E_USER_WARNING' => tr('Warnings and Errors'),
-		'TR_E_USER_ERROR' => tr('Errors'),
-		'TR_CHECK_FOR_UPDATES' => tr('Check for update')
+		'TR_GENERAL_SETTINGS'				=> tr('General settings'),
+		'TR_SETTINGS'						=> tr('Settings'),
+		'TR_MESSAGE'						=> tr('Message'),
+		'TR_LOSTPASSWORD'					=> tr('Lost password'),
+		'TR_LOSTPASSWORD_TIMEOUT'			=> tr('Activation link expire time (minutes)'),
+		'TR_PASSWORD_SETTINGS'				=> tr('Password settings') ,
+		'TR_PASSWD_STRONG'					=> tr('Use strong Passwords') ,
+		'TR_PASSWD_CHARS'					=> tr('Password length'),
+		'TR_BRUTEFORCE'						=> tr('Bruteforce detection'),
+		'TR_BRUTEFORCE_BETWEEN'				=> tr('Block time between logins'),
+		'TR_BRUTEFORCE_MAX_LOGIN'			=> tr('Max number of login attempts'),
+		'TR_BRUTEFORCE_BLOCK_TIME'			=> tr('Blocktime (minutes)'),
+		'TR_BRUTEFORCE_BETWEEN_TIME'		=> tr('Block time between logins (seconds)'),
+		'TR_BRUTEFORCE_MAX_CAPTCHA'			=> tr('Max number of CAPTCHA attempts'),
+		'TR_OTHER_SETTINGS'					=> tr('Other settings'),
+		'TR_MAIL_SETTINGS'					=> tr('E-Mail settings'),
+		'TR_CREATE_DEFAULT_EMAIL_ADDRESSES'	=> tr('Create default E-Mail addresses'),
+		'TR_HARD_MAIL_SUSPENSION'			=> tr('E-Mail accounts are hard suspended'),
+		'TR_USER_INITIAL_LANG'				=> tr('Default language'),
+		'TR_SUPPORT_SYSTEM'					=> tr('Support system'),
+		'TR_ENABLED'						=> tr('Enabled'),
+		'TR_DISABLED'						=> tr('Disabled'),
+		'TR_APPLY_CHANGES'					=> tr('Apply changes'),
+		'TR_SERVERPORTS'					=> tr('Server ports'),
+		'TR_HOSTING_PLANS_LEVEL'			=> tr('Hosting plans available for'),
+		'TR_ADMIN'							=> tr('Admin'),
+		'TR_RESELLER'						=> tr('Reseller'),
+		'TR_DOMAIN_ROWS_PER_PAGE'			=> tr('Domains per page'),
+		'TR_LOG_LEVEL'						=> tr('Log Level'),
+		'TR_E_USER_OFF'						=> tr('Disabled'),
+		'TR_E_USER_NOTICE'					=> tr('Notices, Warnings and Errors'),
+		'TR_E_USER_WARNING'					=> tr('Warnings and Errors'),
+		'TR_E_USER_ERROR'					=> tr('Errors'),
+		'TR_CHECK_FOR_UPDATES'				=> tr('Check for update'),
+		'TR_GUI_DEBUG'						=> tr('GUI debug')
 		)
 	);
 
-gen_page_message($tpl);
+genAdminMainMenu();
+genAdminSettingsMenu();
 
-$tpl->parse('PAGE', 'page');
-$tpl->prnt();
+$tpl->flushOutput('admin/settings');
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -23,7 +23,7 @@ require '../include/selity-lib.php';
 check_login(__FILE__);
 
 function count_requests(&$sql, $id_name, $table){
-	$query = "select `$id_name` FROM `$table` WHERE `$id_name` NOT IN (?, ?, ?)";
+	$query = "SELECT `$id_name` FROM `$table` WHERE `$id_name` NOT IN (?, ?, ?)";
 	$rs = exec_query($sql, $query, array(Config::get('ITEM_OK_STATUS'), Config::get('ITEM_DISABLED_STATUS'), Config::get('ITEM_ORDERED_STATUS')));
 	$count = $rs->RecordCount();
 	return $count;
@@ -92,11 +92,11 @@ function get_error_aliases(&$sql, &$tpl) {
 	$ordered_status = Config::get('ITEM_ORDERED_STATUS');
 
 	$dmn_query = '
-		select
+		SELECT
 			alias_name, alias_status, alias_id
-		from
+		FROM
 			domain_aliasses
-		where
+		WHERE
 			alias_status
 		NOT IN
 			(?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -168,11 +168,11 @@ function get_error_subdomains(&$sql, &$tpl) {
 	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
 
 	$dmn_query = '
-	  select
+	  SELECT
 		  subdomain_name, subdomain_status, subdomain_id
-	  from
+	  FROM
 		  subdomain
-	  where
+	  WHERE
 		  subdomain_status
 	  NOT IN
 			(?, ?, ?, ?, ?, ?, ?, ?)
@@ -235,11 +235,11 @@ function get_error_alias_subdomains(&$sql, &$tpl) {
 	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
 
 	$dmn_query = '
-	  select
+	  SELECT
 		  subdomain_alias_name, subdomain_alias_status, subdomain_alias_id
-	  from
+	  FROM
 		  subdomain_alias
-	  where
+	  WHERE
 		  subdomain_alias_status
 	  NOT IN
 			(?, ?, ?, ?, ?, ?, ?, ?)
@@ -303,11 +303,11 @@ function get_error_mails(&$sql, &$tpl) {
 	$ordered_status = Config::get('ITEM_ORDERED_STATUS');
 
 	$dmn_query = '
-		select
+		SELECT
 			mail_acc, domain_id, mail_type, status, mail_id
-		from
+		FROM
 			mail_users
-		where
+		WHERE
 			status
 		NOT IN
 			(?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -338,37 +338,30 @@ function get_error_mails(&$sql, &$tpl) {
 		while (!$rs->EOF) {
 			$searched_id = $rs->fields['domain_id'];
 			$query = '';
-
-			if ($rs->fields['mail_type'] == 'normal_mail' || $rs->fields['mail_type'] == 'normal_forward') {
-				$query = '
-			select
-				 domain_name as domain_name
-			from
-				  domain
-			where
-				  domain_id = ?
-';
-			} else if ($rs->fields['mail_type'] == 'subdom_mail' || $rs->fields['mail_type'] == 'subdom_forward') {
-				$query = '
-			select
-				subdomain_name as domain_name
-			from
-				subdomain
-			where
-				subdomain_id = ?
-';
-			} else if ($rs->fields['mail_type'] == 'alias_mail' || $rs->fields['mail_type'] == 'alias_forward') {
-				$query = '
-			select
-				alias_name as domain_name
-			from
-				domain_aliasses
-			where
-				alias_id  = ?
-';
-			} else {
-				write_log(sprintf('FIXME: %s:%d' . "\n" . 'Unknown mail type %s',__FILE__, __LINE__, $rs->fields['mail_type']));
-				die('FIXME: ' . __FILE__ . ':' . __LINE__);
+			switch($rs->fields['mail_type']){
+				case 'normal_mail':
+				case 'normal_forward':
+				case 'normal_mail,normal_forward':
+					$query = 'SELECT `domain_name` FROM `domain` WHERE `domain_id` = ?';
+					break;
+				case 'subdom_mail':
+				case 'subdom_forward':
+				case 'subdom_mail,subdom_forward':
+					$query = ' SELECT `subdomain_name` AS `domain_name` FROM `subdomain` WHERE `subdomain_id` = ?';
+					break;
+				case 'alias_mail':
+				case 'alias_forward':
+				case 'alias_mail,alias_forward':
+					$query = 'SELECT `alias_name` AS `domain_name` FROM `domain_aliasses` WHERE `alias_id`  = ?';
+					break;
+				case 'alssub_mail':
+				case 'alssub_forward':
+				case 'alssub_mail,alssub_forward':
+					$query = ' SELECT `subdomain_alias_name` AS `domain_name` FROM `subdomain_alias` WHERE `subdomain_alias_id` = ?';
+					break;
+				default:
+					write_log(sprintf('FIXME: %s:%d' . "\n" . 'Unknown mail type %s',__FILE__, __LINE__, $rs->fields['mail_type']));
+					die('FIXME: ' . __FILE__ . ':' . __LINE__);
 			}
 
 			$sr = exec_query($sql, $query, array($searched_id));
@@ -435,8 +428,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_ADMIN_selity_debugger_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
@@ -467,8 +460,7 @@ $tpl->assign(
 
 if (isset($_GET['action']) && $exec_count > 0) {
 	if ($_GET['action'] == 'run_engine') {
-		check_for_lock_file();
-		$c = send_request();
+				$c = send_request();
 		set_page_message(tr('Daemon returned %d as status code', $c));
 	} else if ($_GET['action'] == 'change_status' && (
 			isset($_GET['id']) && isset($_GET['type']))) {
@@ -522,7 +514,7 @@ get_error_mails($sql, $tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

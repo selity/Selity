@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:{ADMIN_TYPE}/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_CHANGE_LANGUAGE}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name="client_change_pass_frm" method="post" action="personal_lang.php">
+
+							<div class="col2">
+								{TR_LANGUAGES}:&nbsp;
+								<select name="language" size="1">
+									<!--Repeats_:LANGUAGE:-->
+									<option value="{LANGUAGE}" {TR_SELECTED}>{TR_LANGUAGE}</option>
+									<!--:LANGUAGE:_Repeats-->
+								</select>
+							</div>
+
+							<div class="col2">
+								<input name="Submit" type="submit" class="button" value="{TR_UPDATE}">
+							</div>
+
+						</form>
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:{ADMIN_TYPE}/left_menu:-->
+
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -26,21 +26,22 @@ if (isset($_GET['id']) && $_GET['id'] !== '') {
 
 	$id = $_GET['id'];
 	$delete_status = Config::get('ITEM_DELETE_STATUS');
-	$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+	//$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+	$admin_id = $_SESSION['user_id'];
 
 	// ltes see the status of this thing
 	$query = '
 		select
-			status
+			`status`
 		from
-			htaccess
-	  where
-		 	id = ?
-		 and
-		 	dmn_id = ?
-';
+			`htaccess`
+		where
+			`id` = ?
+		and
+		 	`admin_id` = ?
+	';
 
-	$rs = exec_query($sql, $query, array($id, $dmn_id));
+	$rs = exec_query($sql, $query, array($id, $admin_id));
 	$status = $rs -> fields['status'];
 	$ok_status = Config::get('ITEM_OK_STATUS');
 	if ($status !== $ok_status) {
@@ -50,19 +51,18 @@ if (isset($_GET['id']) && $_GET['id'] !== '') {
 	}
 
 	$query = '
-	  update
-		  htaccess
-	  set
-		  status = '$delete_status'
-	  where
-		 	id = ?
-		 and
-		 	dmn_id = ?
-';
+		update
+			`htaccess`
+		set
+			`status` = ?
+		where
+			`id` = ?
+		and
+			`admin_id` = ?
+	';
 
-	$rs = exec_query($sql, $query, array($id, $dmn_id));
-	check_for_lock_file();
-	send_request();
+	$rs = exec_query($sql, $query, array($delete_status, $id, $admin_id));
+		send_request();
 
 	write_log($_SESSION['user_logged'].": deletes protected area with ID: ".$_GET['id']);
 	set_page_message(tr('Protected area deleted successfully!'));

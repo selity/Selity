@@ -81,7 +81,7 @@
 			libexpat1-dev
 			libsasl2-modules
 			libmcrypt4
-			locales
+			locales-all
 			lynx
 			lzma
 			make

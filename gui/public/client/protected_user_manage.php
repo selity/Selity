@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -36,8 +36,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 	array(
-		'TR_CLIENT_WEBTOOLS_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
-		'THEME_COLOR_PATH'				=> "../themes/$theme_color",
+		'TR_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
+		'THEME_COLOR_PATH'				=> '../themes/'.$theme_color,
 		'THEME_CHARSET'					=> tr('encoding'),
 		'ISP_LOGO'						=> get_logo($_SESSION['user_id'])
 	)
@@ -60,16 +60,14 @@ function gen_group_action($id, $status, $group) {
 }
 
 function gen_pusres(&$tpl, &$sql, &$dmn_id) {
-	$query = "
+	$query = '
 		SELECT
 			*
 		FROM
 			`htaccess_users`
 		WHERE
-			`dmn_id` = ?
-		ORDER BY
-			`dmn_id` DESC
-	";
+			`admin_id` = ?
+	';
 
 	$rs = exec_query($sql, $query, array($dmn_id));
 
@@ -101,16 +99,14 @@ function gen_pusres(&$tpl, &$sql, &$dmn_id) {
 }
 
 function gen_pgroups(&$tpl, &$sql, &$dmn_id) {
-	$query = "
+	$query = '
 		SELECT
 			*
 		FROM
 			`htaccess_groups`
 		WHERE
-			`dmn_id` = ?
-		ORDER BY
-			`dmn_id` DESC
-	";
+			`admin_id` = ?
+	';
 
 	$rs = exec_query($sql, $query, array($dmn_id));
 
@@ -137,17 +133,17 @@ function gen_pgroups(&$tpl, &$sql, &$dmn_id) {
 			if ($rs->fields['members'] == '') {
 				$tpl->assign('GROUP_MEMBERS', '');
 			} else {
-				$members = split(',', $rs->fields['members']);
+				$members = explode(',', $rs->fields['members']);
 
 				for ($i = 0; $i < count($members); $i++) {
-					$query = "
+					$query = '
 						select
 							`uname`
 						from
 							`htaccess_users`
 						where
 							`id` = ?
-					";
+					';
 
 					$rs_members = exec_query($sql, $query, array($members[$i]));
 
@@ -181,11 +177,8 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
-
-gen_pusres($tpl, $sql, $dmn_id);
-
-gen_pgroups($tpl, $sql, $dmn_id);
+gen_pusres($tpl, $sql, $_SESSION['user_id']);
+gen_pgroups($tpl, $sql, $_SESSION['user_id']);
 
 $tpl->assign(
 	array(
@@ -212,7 +205,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -2,316 +2,156 @@
 /**
  * Selity - A server control panel
  *
- * @copyright 	2001-2006 by moleSoftware GmbH
- * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2009-2015 by Selity
  * @link 		http://selity.org
- * @author 		ispCP Team
+ * @author 		Daniel Andreca (sci2tech@gmail.com)
  *
  * @license
- *   This program is free software; you can redistribute it and/or modify it under
- *   the terms of the MPL General Public License as published by the Free Software
- *   Foundation; either version 1.1 of the License, or (at your option) any later
- *   version.
- *   You should have received a copy of the MPL Mozilla Public License along with
- *   this program; if not, write to the Open Source Initiative (OSI)
- *   http://opensource.org | osi@opensource.org
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 
 require '../include/selity-lib.php';
 
-check_login(__FILE__);
+check_user_login();
 
-if (Config::exists('HOSTING_PLANS_LEVEL') && strtolower(Config::get('HOSTING_PLANS_LEVEL')) == 'admin') {
-	Header("Location: hosting_plan.php");
+if (strtolower(configs::getInstance()->HOSTING_PLANS_LEVEL) != $_SESSION['user_type']) {
+	header('Location: hosting_plan.php');
 	die();
 }
 
-$tpl = new pTemplate();
-$tpl->define_dynamic('page', Config::get('RESELLER_TEMPLATE_PATH') . '/hosting_plan_add.tpl');
-$tpl->define_dynamic('page_message', 'page');
-$tpl->define_dynamic('logged_from', 'page');
-
-$theme_color = Config::get('USER_INITIAL_THEME');
-
-$tpl->assign(
-		array(
-			'TR_RESELLER_MAIN_INDEX_PAGE_TITLE' => tr('Selity - Reseller/Add hosting plan'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
-			'THEME_CHARSET' => tr('encoding'),
-			'ISP_LOGO' => get_logo($_SESSION['user_id'])
-			)
-		);
-
-/*
- *
- * static page messages.
- *
- */
-
-gen_reseller_mainmenu($tpl, Config::get('RESELLER_TEMPLATE_PATH') . '/main_menu_hosting_plan.tpl');
-gen_reseller_menu($tpl, Config::get('RESELLER_TEMPLATE_PATH') . '/menu_hosting_plan.tpl');
-
-gen_logged_from($tpl);
-
-$tpl->assign(
-		array(
-			'TR_ADD_HOSTING_PLAN' => tr('Add hosting plan'),
-			'TR_HOSTING PLAN PROPS' => tr('Hosting plan properties'),
-			'TR_TEMPLATE_NAME' => tr('Template name'),
-			'TR_MAX_SUBDOMAINS' => tr('Max subdomains<br><i>(-1 disabled, 0 unlimited)</i>'),
-			'TR_MAX_ALIASES' => tr('Max aliases<br><i>(-1 disabled, 0 unlimited)</i>'),
-			'TR_MAX_MAILACCOUNTS' => tr('Mail accounts limit<br><i>(-1 disabled, 0 unlimited)</i>'),
-			'TR_MAX_FTP' => tr('FTP accounts limit<br><i>(-1 disabled, 0 unlimited)</i>'),
-			'TR_MAX_SQL' => tr('SQL databases limit<br><i>(-1 disabled, 0 unlimited)</i>'),
-			'TR_MAX_SQL_USERS' => tr('SQL users limit<br><i>(-1 disabled, 0 unlimited)</i>'),
-			'TR_MAX_TRAFFIC' => tr('Traffic limit [MB]<br><i>(0 unlimited)</i>'),
-			'TR_DISK_LIMIT' => tr('Disk limit [MB]<br><i>(0 unlimited)</i>'),
-			'TR_PHP' => tr('PHP'),
-			'TR_CGI' => tr('CGI / Perl'),
-			'TR_BACKUP_RESTORE' => tr('Backup and restore'),
-			'TR_APACHE_LOGS' => tr('Apache logfiles'),
-			'TR_AWSTATS' => tr('AwStats'),
-			'TR_YES' => tr('yes'),
-			'TR_NO' => tr('no'),
-			'TR_BILLING_PROPS' => tr('Billing Settings'),
-			'TR_PRICE' => tr('Price'),
-			'TR_SETUP_FEE' => tr('Setup fee'),
-			'TR_VALUE' => tr('Currency'),
-			'TR_PAYMENT' => tr('Payment period'),
-			'TR_STATUS' => tr('Available for purchasing'),
-			'TR_TEMPLATE_DESCRIPTON' => tr('Description'),
-			'TR_EXAMPLE' => tr('(e.g. EUR)'),
-			'TR_ADD_PLAN' => tr('Add plan')
-			)
-		);
-
-if (isset($_POST['uaction']) && ('add_plan' === $_POST['uaction'])) {
-	// Process data
-	if (check_data_correction($tpl))
-		save_data_to_db($tpl, $_SESSION['user_id']);
-
-	gen_data_ahp_page($tpl);
-} else {
-	gen_empty_ahp_page($tpl);
-}
-
-gen_page_message($tpl);
-
-$tpl->parse('PAGE', 'page');
-$tpl->prnt();
-
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
-
 // Function definitions
 
-// Generate empty form
-function gen_empty_ahp_page(&$tpl) {
-	$tpl->assign(
-			array(
-				'HP_NAME_VALUE' => '',
-				'TR_MAX_SUB_LIMITS' => '',
-				'TR_MAX_ALS_VALUES' => '',
-				'HP_MAIL_VALUE' => '',
-				'HP_FTP_VALUE' => '',
-				'HP_SQL_DB_VALUE' => '',
-				'HP_SQL_USER_VALUE' => '',
-				'HP_TRAFF_VALUE' => '',
-				'HP_PRICE' => '',
-				'HP_SETUPFEE' => '',
-				'HP_VELUE' => '',
-				'HP_PAYMENT' => '',
-				'HP_DESCRIPTION_VALUE' => '',
-		'TR_STATUS_YES'			=> '',
+function newHP() {
+	template::getInstance()->saveVariable(array(
 		'TR_STATUS_NO'			=> 'checked',
-		'TR_PHP_YES'			=> '',
 		'TR_PHP_NO'				=> 'checked',
-		'TR_CGI_YES'			=> '',
 		'TR_CGI_NO'				=> 'checked',
-		'HP_DISK_VALUE'			=> ''
+		'TR_SUPPORT_NO'			=> 'checked',
 	));
-	$tpl->assign('MESSAGE', '');
-} // End of gen_empty_hp_page()
 
-// Show last entered data for new hp
-function gen_data_ahp_page(&$tpl) {
-	global $hp_name, $description, $hp_php, $hp_cgi;
-	global $hp_sub, $hp_als, $hp_mail;
-	global $hp_ftp, $hp_sql_db, $hp_sql_user;
-	global $hp_traff, $hp_disk;
-	global $price, $setup_fee, $value, $payment, $status;
+}
 
-	$tpl->assign(
-			array(
-				'HP_NAME_VALUE' => $hp_name,
-				'TR_MAX_SUB_LIMITS' => $hp_sub,
-				'TR_MAX_ALS_VALUES' => $hp_als,
-				'HP_MAIL_VALUE' => $hp_mail,
-				'HP_FTP_VALUE' => $hp_ftp,
-				'HP_SQL_DB_VALUE' => $hp_sql_db,
-				'HP_SQL_USER_VALUE' => $hp_sql_user,
-				'HP_TRAFF_VALUE' => $hp_traff,
-				'HP_DISK_VALUE' => $hp_disk,
-				'HP_DESCRIPTION_VALUE' => $description,
-				'HP_PRICE' => $price,
-				'HP_SETUPFEE' => $setup_fee,
-				'HP_VELUE' => $value,
-				'HP_PAYMENT' => $payment
-				)
-			);
+function addHP() {
 
-	if ('_yes_' === $hp_php) {
-		$tpl->assign(array('TR_PHP_YES' => 'checked'));
+	$hp = new selity_hp();
+	$hp->setMode(configs::getInstance()->HOSTING_PLANS_LEVEL);
+
+	$hp->reseller_id	= $_SESSION['user_id'];
+	$hp->name			= clean_input($_POST['name']);
+	$hp->max_sub		= clean_input($_POST['max_sub']);
+	$hp->max_als		= clean_input($_POST['max_als']);
+	$hp->max_mail		= clean_input($_POST['max_mail']);
+	$hp->max_ftp		= clean_input($_POST['max_ftp']);
+	$hp->max_sqldb		= clean_input($_POST['max_sqldb']);
+	$hp->max_sqlu		= clean_input($_POST['max_sqlu']);
+	$hp->max_traff		= clean_input($_POST['max_traff']);
+	$hp->max_disk		= clean_input($_POST['max_disk']);
+	$hp->php			= isset($_POST['php']) ? clean_input($_POST['php']) : 'no';
+	$hp->cgi			= isset($_POST['cgi']) ? clean_input($_POST['cgi']) : 'no';
+	$hp->support		= isset($_POST['support']) ? clean_input($_POST['support']) : 'no';
+
+	$hp->description	= clean_input($_POST['description']);
+	$hp->price			= empty($_POST['price']) ? 0 : clean_input($_POST['price']);
+	$hp->setup_fee		= empty($_POST['setupfee']) ? 0 : clean_input($_POST['setupfee']);
+	$hp->value			= clean_input($_POST['currency']);
+	$hp->payment		= clean_input($_POST['payment']);
+	$hp->status			= $_POST['status'];
+
+	if ($hp->save()) {
+		set_page_message(tr('Hosting plan added!'));
+		header('Location: hosting_plan.php');
+		die();
 	} else {
-		$tpl->assign(array('TR_PHP_NO' => 'checked'));
+		template::getInstance()->addMessage($hp->get_errors());
+		template::getInstance()->saveVariable(array(
+			'HP_NAME_VALUE'			=> $hp->name,
+			'TR_MAX_SUB_LIMITS'		=> $hp->max_sub,
+			'TR_MAX_ALS_VALUES'		=> $hp->max_als,
+			'HP_MAIL_VALUE'			=> $hp->max_mail,
+			'HP_FTP_VALUE'			=> $hp->max_ftp,
+			'HP_SQL_DB_VALUE'		=> $hp->max_sqldb,
+			'HP_SQL_USER_VALUE'		=> $hp->max_sqlu,
+			'HP_TRAFF_VALUE'		=> $hp->max_traff,
+			'HP_DISK_VALUE'			=> $hp->max_disk,
+			'TR_PHP_YES'			=> $hp->php == 'yes' ? 'checked' : '',
+			'TR_PHP_NO'				=> $hp->php != 'no' ? 'checked' : '',
+			'TR_CGI_YES'			=> $hp->cgi == 'yes' ? 'checked' : '',
+			'TR_CGI_NO'				=> $hp->cgi != 'no' ? 'checked' : '',
+			'TR_SUPPORT_YES'		=> $hp->support == 'yes' ? 'checked' : '',
+			'TR_SUPPORT_NO'			=> $hp->support != 'no' ? 'checked' : '',
+
+			'HP_DESCRIPTION_VALUE'	=> $hp->description,
+			'HP_PRICE'				=> $hp->price,
+			'HP_SETUPFEE'			=> $hp->setup_fee,
+			'HP_VALUE'				=> $hp->value,
+			'HP_PAYMENT'			=> $hp->payment,
+			'TR_STATUS_YES'			=> $hp->status == 1 ? 'checked' : '',
+			'TR_STATUS_NO'			=> $hp->status != 1 ? 'checked' : '',
+		));
 	}
-	if ('_yes_' === $hp_cgi) {
-		$tpl->assign(
-			array('TR_CGI_YES' => 'checked'));
-	} else {
-		$tpl->assign(array('TR_CGI_NO' => 'checked'));
-	}
-	if ($status == 1) {
-		$tpl->assign(array('TR_STATUS_YES' => 'checked'));
-	} else
-		$tpl->assign(array('TR_STATUS_NO' => 'checked'));
-} // End of gen_data_ahp_page()
+	return true;
+}
 
-// Check correction of input data
-function check_data_correction(&$tpl) {
-	global $hp_name, $description, $hp_php, $hp_cgi;
-	global $hp_sub, $hp_als, $hp_mail;
-	global $hp_ftp, $hp_sql_db, $hp_sql_user;
-	global $hp_traff, $hp_disk;
-	global $price, $setup_fee, $value, $payment, $status;
+$cfg = configs::getInstance();
+$tpl = template::getInstance();
 
-	$ahp_error = "_off_";
+$theme_color = $cfg->USER_INITIAL_THEME;
 
-	$hp_name = clean_input($_POST['hp_name']);
-	$hp_sub = clean_input($_POST['hp_sub']);
-	$hp_als = clean_input($_POST['hp_als']);
-	$hp_mail = clean_input($_POST['hp_mail']);
-	$hp_ftp = clean_input($_POST['hp_ftp']);
-	$hp_sql_db = clean_input($_POST['hp_sql_db']);
-	$hp_sql_user = clean_input($_POST['hp_sql_user']);
-	$hp_traff = clean_input($_POST['hp_traff']);
-	$hp_disk = clean_input($_POST['hp_disk']);
-	$description = clean_input($_POST['hp_description']);
+$tpl->saveVariable(array(
+	'ADMIN_TYPE'				=> $_SESSION['user_type'],
+	'TR_PAGE_TITLE'				=> tr('Selity - Add hosting plan'),
+	'THEME_COLOR_PATH'			=> '../themes/'.$theme_color,
+	'THEME_CHARSET'				=> tr('encoding'),
+	'TR_OP_HOSTING_PLAN'		=> tr('Add hosting plan'),
+	'TR_HOSTING_PLAN_PROPS'		=> tr('Hosting plan properties'),
+	'TR_TEMPLATE_NAME'			=> tr('Template name'),
+	'TR_MAX_ALIASES'			=> tr('Max aliases&nbsp;<i>(-1 disabled, 0 unlimited)</i>'),
+	'TR_MAX_SUBDOMAINS'			=> tr('Max subdomains&nbsp;<i>(-1 disabled, 0 unlimited)</i>'),
+	'TR_MAX_MAILACCOUNTS'		=> tr('Mail accounts limit&nbsp;<i>(-1 disabled, 0 unlimited)</i>'),
+	'TR_MAX_FTP'				=> tr('FTP accounts limit&nbsp;<i>(-1 disabled, 0 unlimited)</i>'),
+	'TR_MAX_SQL'				=> tr('SQL databases limit&nbsp;<i>(-1 disabled, 0 unlimited)</i>'),
+	'TR_MAX_SQL_USERS'			=> tr('SQL users limit&nbsp;<i>(-1 disabled, 0 unlimited)</i>'),
+	'TR_MAX_TRAFFIC'			=> tr('Traffic limit [MB]&nbsp;<i>(0 unlimited)</i>'),
+	'TR_DISK_LIMIT'				=> tr('Disk limit [MB]&nbsp;<i>(0 unlimited)</i>'),
+	'TR_PHP'					=> tr('PHP'),
+	'TR_CGI'					=> tr('CGI'),
+	'TR_YES'					=> tr('yes'),
+	'TR_NO'						=> tr('no'),
+	'TR_BILLING_PROPS'			=> tr('Billing Settings'),
+	'TR_PRICE'					=> tr('Price'),
+	'TR_SETUP_FEE'				=> tr('Setup fee'),
+	'TR_VALUE'					=> tr('Currency'),
+	'TR_PAYMENT'				=> tr('Payment period'),
+	'TR_STATUS'					=> tr('Available for purchasing'),
+	'TR_TEMPLATE_DESCRIPTON'	=> tr('Description'),
+	'TR_SEND'					=> tr('Add plan')
+));
 
-	if (empty($_POST['hp_price'])) {
-		$price = 0;
-	} else {
-		$price = clean_input($_POST['hp_price']);
-	}
-	if (empty($_POST['hp_setupfee'])) {
-		$setup_fee = 0;
-	} else {
-		$setup_fee = clean_input($_POST['hp_setupfee']);
-	}
+if (array_key_exists('submit', $_POST)) {
+	addHP();
+} else {
+	newHP($tpl);
+}
 
-	$value = clean_input($_POST['hp_value']);
-	$payment = clean_input($_POST['hp_payment']);
-	$status = $_POST['status'];
+genMainMenu();
+genHPMenu();
 
-	if (isset($_POST['php']))
-		$hp_php = $_POST['php'];
+$tpl->flushOutput('common/hp_add');
 
-	if (isset($_POST['cgi']))
-		$hp_cgi = $_POST['cgi'];;
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
-	if ($hp_name == '') {
-		$ahp_error = tr('Incorrect template name length!');
-	}
-
-	if ($description == '') {
-		$ahp_error = tr('Incorrect template description length!');
-	}
-	if (!is_numeric($price)) {
-		$ahp_error = tr('Price must be a number!');
-	}
-
-	if (!is_numeric($setup_fee)) {
-		$ahp_error = tr('Setup fee must be a number!');
-	}
-
-	if (!selity_limit_check($hp_sub, -1)) {
-		$ahp_error = tr('Incorrect subdomains limit!');
-	} else if (!selity_limit_check($hp_als, -1)) {
-		$ahp_error = tr('Incorrect aliases limit!');
-	} else if (!selity_limit_check($hp_mail, -1)) {
-		$ahp_error = tr('Incorrect mail accounts limit!');
-	} else if (!selity_limit_check($hp_ftp, -1)) {
-		$ahp_error = tr('Incorrect FTP accounts limit!');
-	} else if (!selity_limit_check($hp_sql_user, -1)) {
-		$ahp_error = tr('Incorrect SQL databases limit!');
-	} else if (!selity_limit_check($hp_sql_db, -1)) {
-		$ahp_error = tr('Incorrect SQL users limit!');
-	} else if (!selity_limit_check($hp_traff, null)) {
-		$ahp_error = tr('Incorrect traffic limit!');
-	} else if (!selity_limit_check($hp_disk, null)) {
-		$ahp_error = tr('Incorrect disk quota limit!');
-	}
-
-	if ($ahp_error == '_off_') {
-		$tpl->assign('MESSAGE', '');
-		return true;
-	} else {
-		set_page_message($ahp_error);
-		// $tpl -> assign('MESSAGE', $ahp_error);
-		return false;
-	}
-} // End of check_data_correction()
-
-// Add new host plan to DB
-function save_data_to_db(&$tpl, $admin_id){
-	$sql = Database::getInstance();
-	global $hp_name, $description, $hp_php, $hp_cgi;
-	global $hp_sub, $hp_als, $hp_mail;
-	global $hp_ftp, $hp_sql_db, $hp_sql_user;
-	global $hp_traff, $hp_disk;
-	global $price, $setup_fee, $value, $payment, $status;
-
-	$err_msg = "";
-	$query = "select id from hosting_plans where name = ? and reseller_id = ?";
-	$res = exec_query($sql, $query, array($hp_name, $admin_id));
-
-	if ($res->RowCount() == 1) {
-		$tpl->assign('MESSAGE', tr('Hosting plan with entered name already exists!'));
-		// $tpl -> parse('AHP_MESSAGE', 'ahp_message');
-	} else {
-		$hp_props = "$hp_php;$hp_cgi;$hp_sub;$hp_als;$hp_mail;$hp_ftp;$hp_sql_db;$hp_sql_user;$hp_traff;$hp_disk;";
-		// this id is just for fake and is not used in reseller_limits_check.
-		$hpid = 0;
-
-		if (reseller_limits_check($sql, $err_msg, $admin_id, $hpid, $hp_props)) {
-			if (!empty($err_msg)) {
-				set_page_message($err_msg);
-				return false;
-			} else {
-				$query = '
-		insert into
-			hosting_plans(reseller_id,
-							name,
-							description,
-							props,
-							price,
-							setup_fee,
-							value,
-							payment,
-							status)
-		values (?, ?, ?, ?, ?, ?, ?, ?, ?)
-';
-				$res = exec_query($sql, $query, array($admin_id, $hp_name, $description, $hp_props, $price, $setup_fee, $value, $payment, $status));
-
-				$_SESSION['hp_added'] = '_yes_';
-				header("Location: hosting_plan.php");
-				die();
-			}
-		}
-		else {
-			set_page_message(tr("Hosting plan values exceed reseller maximum values!"));
-			return false;
-		}
-	}
-} //End of save_data_to_db()
-
+unset_messages();

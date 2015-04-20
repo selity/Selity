@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -37,25 +37,25 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 	array(
-		'THEME_COLOR_PATH'	=> "../themes/$theme_color",
+		'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
 		'THEME_CHARSET'		=> tr('encoding'),
 		'ISP_LOGO'			=> get_logo($_SESSION['user_id'])
 	)
 );
 // ** Functions
-function get_htuser_name(&$sql, &$uuser_id, &$dmn_id) {
+function get_htuser_name(&$sql, &$uuser_id, $user_id) {
 	$query = "
 		SELECT
 			`uname`
 		FROM
 			`htaccess_users`
 		WHERE
-			`dmn_id` = ?
+			`admin_id` = ?
 		AND
 			`id` = ?
 	";
 
-	$rs = exec_query($sql, $query, array($dmn_id, $uuser_id));
+	$rs = exec_query($sql, $query, array($user_id, $uuser_id));
 
 	if ($rs->RecordCount() == 0) {
 		header('Location: protected_user_manage.php');
@@ -65,16 +65,16 @@ function get_htuser_name(&$sql, &$uuser_id, &$dmn_id) {
 	}
 }
 
-function gen_user_assign(&$tpl, &$sql, &$dmn_id) {
+function gen_user_assign(&$tpl, &$sql, $user_id) {
 	if (isset($_GET['uname']) && $_GET['uname'] !== '' && is_numeric($_GET['uname'])) {
 		$uuser_id = $_GET['uname'];
 
-		$tpl->assign('UNAME', get_htuser_name($sql, $uuser_id, $dmn_id));
+		$tpl->assign('UNAME', get_htuser_name($sql, $uuser_id, $user_id));
 		$tpl->assign('UID', $uuser_id);
 	} else if (isset($_POST['nadmin_name']) && !empty($_POST['nadmin_name']) && is_numeric($_POST['nadmin_name'])) {
 		$uuser_id = $_POST['nadmin_name'];
 
-		$tpl->assign('UNAME', get_htuser_name($sql, $uuser_id, $dmn_id));
+		$tpl->assign('UNAME', get_htuser_name($sql, $uuser_id, $user_id));
 		$tpl->assign('UID', $uuser_id);
 	} else {
 		header('Location: protected_user_manage.php');
@@ -87,10 +87,10 @@ function gen_user_assign(&$tpl, &$sql, &$dmn_id) {
 		FROM
 			`htaccess_groups`
 		WHERE
-			`dmn_id` = ?
+			`admin_id` = ?
 	";
 
-	$rs = exec_query($sql, $query, array($dmn_id));
+	$rs = exec_query($sql, $query, array($user_id));
 
 	if ($rs->RecordCount() == 0) {
 		set_page_message(tr('You have no groups!'));
@@ -145,7 +145,7 @@ function gen_user_assign(&$tpl, &$sql, &$dmn_id) {
 	}
 }
 
-function add_user_to_group(&$tpl, &$sql, &$dmn_id) {
+function add_user_to_group(&$tpl, &$sql, $user_id) {
 	if (isset($_POST['uaction']) && $_POST['uaction'] == 'add' && isset($_POST['groups']) && !empty($_POST['groups']) && isset($_POST['nadmin_name']) && is_numeric($_POST['groups']) && is_numeric($_POST['nadmin_name'])) {
 		$uuser_id = clean_input($_POST['nadmin_name']);
 		$group_id = $_POST['groups'];
@@ -158,12 +158,12 @@ function add_user_to_group(&$tpl, &$sql, &$dmn_id) {
 			FROM
 				`htaccess_groups`
 			WHERE
-				`dmn_id` = ?
+				`admin_id` = ?
 			AND
 				`id` = ?
 		";
 
-		$rs = exec_query($sql, $query, array($dmn_id, $group_id));
+		$rs = exec_query($sql, $query, array($user_id, $group_id));
 
 		$members = $rs->fields['members'];
 		if ($members == '') {
@@ -183,20 +183,19 @@ function add_user_to_group(&$tpl, &$sql, &$dmn_id) {
 			WHERE
 				`id` = ?
 			AND
-				`dmn_id` = ?
+				`admin_id` = ?
 		";
 
-		$rs_update = exec_query($sql, $update_query, array($members, $change_status, $group_id, $dmn_id));
+		$rs_update = exec_query($sql, $update_query, array($members, $change_status, $group_id, $user_id));
 
-		check_for_lock_file();
-		send_request();
+				send_request();
 		set_page_message(tr('User was assigned to the %s group', $rs->fields['ugroup']));
 	} else {
 		return;
 	}
 }
 
-function delete_user_from_group(&$tpl, &$sql, &$dmn_id) {
+function delete_user_from_group(&$tpl, &$sql, $user_id) {
 	if (isset($_POST['uaction']) && $_POST['uaction'] == 'remove' && isset($_POST['groups_in']) && !empty($_POST['groups_in']) && isset($_POST['nadmin_name']) && is_numeric($_POST['groups_in']) && is_numeric($_POST['nadmin_name'])) {
 		$group_id = $_POST['groups_in'];
 		$uuser_id = clean_input($_POST['nadmin_name']);
@@ -209,12 +208,12 @@ function delete_user_from_group(&$tpl, &$sql, &$dmn_id) {
 			FROM
 				`htaccess_groups`
 			WHERE
-				`dmn_id` = ?
+				`admin_id` = ?
 			AND
 				`id` = ?
 		";
 
-		$rs = exec_query($sql, $query, array($dmn_id, $group_id));
+		$rs = exec_query($sql, $query, array($user_id, $group_id));
 
 		$members = explode(',', $rs->fields['members']);
 		$key=array_search($uuser_id,$members);
@@ -231,13 +230,12 @@ function delete_user_from_group(&$tpl, &$sql, &$dmn_id) {
 				WHERE
 					`id` = ?
 				AND
-					`dmn_id` = ?
+					`admin_id` = ?
 			";
 
-			$rs_update = exec_query($sql, $update_query, array($members, $change_status, $group_id, $dmn_id));
+			$rs_update = exec_query($sql, $update_query, array($members, $change_status, $group_id, $user_id));
 
-			check_for_lock_file();
-			send_request();
+						send_request();
 
 			set_page_message(tr('User was deleted from the %s group ', $rs->fields['ugroup']));
 		} else {
@@ -257,13 +255,11 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+add_user_to_group($tpl, $sql, $_SESSION['user_id']);
 
-add_user_to_group($tpl, $sql, $dmn_id);
+delete_user_from_group($tpl, $sql, $_SESSION['user_id']);
 
-delete_user_from_group($tpl, $sql, $dmn_id);
-
-gen_user_assign($tpl, $sql, $dmn_id);
+gen_user_assign($tpl, $sql, $_SESSION['user_id']);
 
 $tpl->assign(
 		array(
@@ -284,7 +280,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -28,11 +28,11 @@ if (isset($_GET['id'])) {
 	user_goto('sql_manage.php');
 }
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+//$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
 
 check_usr_sql_perms($sql, $db_user_id);
 
-sql_delete_user($sql, $dmn_id, $db_user_id);
+sql_delete_user($sql, $_SESSION['user_id'], $db_user_id);
 
 write_log($_SESSION['user_logged'].": deletes SQL user ".$db_user_id."!");
 set_page_message(tr('SQL user was removed successfully!'));

@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_ADMIN_ADD_RESELLER_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -73,26 +73,26 @@
 							</tr>
 							<tr>
 							  <td width="25">&nbsp;</td>
-							  <td class="content2" width="200">{TR_MAX_SUBDOMAIN_COUNT}</td>
-							  <td class="content"><input type="text" name="nreseller_max_subdomain_cnt" value="{MAX_SUBDOMAIN_COUNT}" style="width:140px" class="textinput">
+							  <td class="content2" width="200">{TR_MAX_SUB_COUNT}</td>
+							  <td class="content"><input type="text" name="nreseller_max_subdomain_cnt" value="{MAX_SUB_COUNT}" style="width:140px" class="textinput">
 							  </td>
 							</tr>
 							<tr>
 							  <td width="25">&nbsp;</td>
-							  <td class="content2" width="200">{TR_MAX_ALIASES_COUNT}</td>
-							  <td class="content"><input type="text" name="nreseller_max_alias_cnt" value="{MAX_ALIASES_COUNT}" style="width:140px" class="textinput">
+							  <td class="content2" width="200">{TR_MAX_ALS_COUNT}</td>
+							  <td class="content"><input type="text" name="nreseller_max_alias_cnt" value="{MAX_ALS_COUNT}" style="width:140px" class="textinput">
 							  </td>
 							</tr>
 							<tr>
 							  <td width="25">&nbsp;</td>
-							  <td class="content2" width="200">{TR_MAX_MAIL_USERS_COUNT}</td>
-							  <td class="content"><input type="text" name="nreseller_max_mail_cnt" value="{MAX_MAIL_USERS_COUNT}" style="width:140px" class="textinput">
+							  <td class="content2" width="200">{TR_MAX_MAIL_COUNT}</td>
+							  <td class="content"><input type="text" name="nreseller_max_mail_cnt" value="{MAX_MAIL_COUNT}" style="width:140px" class="textinput">
 							  </td>
 							</tr>
 							<tr>
 							  <td width="25">&nbsp;</td>
-							  <td class="content2" width="200">{TR_MAX_FTP_USERS_COUNT}</td>
-							  <td class="content"><input type="text" name="nreseller_max_ftp_cnt" value="{MAX_FTP_USERS_COUNT}" style="width:140px" class="textinput">
+							  <td class="content2" width="200">{TR_MAX_FTP_COUNT}</td>
+							  <td class="content"><input type="text" name="nreseller_max_ftp_cnt" value="{MAX_FTP_COUNT}" style="width:140px" class="textinput">
 							  </td>
 							</tr>
 							<tr>
@@ -109,8 +109,8 @@
 							</tr>
 							<tr>
 							  <td width="25">&nbsp;</td>
-							  <td class="content2" width="200">{TR_MAX_TRAFFIC_AMOUNT}</td>
-							  <td class="content"><input type="text" name="nreseller_max_traffic" value="{MAX_TRAFFIC_AMOUNT}" style="width:140px" class="textinput">
+							  <td class="content2" width="200">{TR_MAX_TRAFF_COUNT}</td>
+							  <td class="content"><input type="text" name="nreseller_max_traffic" value="{MAX_TRAFF_COUNT}" style="width:140px" class="textinput">
 							  </td>
 							</tr>
 							<tr>

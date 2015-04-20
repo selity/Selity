@@ -1,0 +1,55 @@
+﻿#box{
+	width:			500px;
+	position:		absolute;
+	top:			50%;
+	left:			50%;
+	margin:			-95px 0 0 -290px;
+	border:	 		1px solid #900;
+}
+
+#box a {
+	color:			#000;
+	font-weight:	bold;
+}
+
+#title{
+	padding:		5px;
+	text-align:		center;
+	background:		#B00;
+	color:			#FFF;
+	font-weight:	bold;
+	border-bottom: 	1px solid #900;
+}
+
+.wrapper{
+	float:			left;
+	width:			100%;
+	border: solid 1px blue;
+}
+
+.main{
+	float:			left;
+	width:			65%;
+	text-align:		right;
+}
+
+.left{
+	float:			left;
+	width:			33%;
+	text-align:		right;
+	padding:	 	10px 0px 10px 0px
+}
+
+.center{
+	text-align:		center;
+}
+
+.right{
+	text-align:		right;
+}
+
+input{
+	padding:		1px;
+	margin:			3px;
+	border:	 		1px solid #900;
+}

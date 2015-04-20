@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:{ADMIN_TYPE}/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_CHANGE_PASSWORD}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name="client_change_pass_frm" method="post" action="">
+
+							<div class="col2">
+								{TR_CURR_PASSWORD}:&nbsp;<input type="password" name="curr_pass" id="curr_pass" value="" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_PASSWORD}:&nbsp;<input type="password" name="pass" id="pass" value="" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_PASSWORD_REPEAT}:&nbsp;<input type="password" name="pass_rep" id="pass_rep" value="" class="textinput">
+							</div>
+
+							<div class="col2">
+								<input name="Submit" type="submit" class="button" value="{TR_UPDATE_PASSWORD}">
+							</div>
+
+						</form>
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:{ADMIN_TYPE}/left_menu:-->
+
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

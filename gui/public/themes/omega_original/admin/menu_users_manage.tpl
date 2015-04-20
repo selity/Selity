@@ -13,19 +13,19 @@
   <td style="width: 100%; background-image: url({THEME_COLOR_PATH}/images/top/menu_bg.jpg); vertical-align: top;">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
   <tr>
-	<td><a href="manage_users.php" class="submenu">{TR_MENU_OVERVIEW}</a></td>
+	<td><a href="users_show.php" class="submenu">{TR_MENU_OVERVIEW}</a></td>
   </tr>
   <tr>
 	<td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>
   </tr>
   <tr>
-	<td><a href="admin_add.php" class="submenu">{TR_MENU_ADD_ADMIN}</a></td>
+	<td><a href="users_admin_add.php" class="submenu">{TR_MENU_ADD_ADMIN}</a></td>
   </tr>
   <tr>
 	<td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>
   </tr>
   <tr>
-	<td><a href="reseller_add.php" class="submenu">{TR_MENU_ADD_RESELLER}</a></td>
+	<td><a href="users_reseller_add.php" class="submenu">{TR_MENU_ADD_RESELLER}</a></td>
   </tr>
   <tr>
 	<td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team (2007)
  *
@@ -50,13 +50,13 @@ function is_userdomain_ok($username) {
 		return true;
 	}
 
-	$query = 'SELECT domain_status FROM domain WHERE domain_admin_id=?';
+	$query = 'SELECT user_status FROM user_system_props WHERE user_admin_id=?';
 
 	$res = exec_query($sql, $query, array($udata['admin_id']));
 
 	$row = $res->FetchRow();
 
-	return ($row['domain_status'] == Config::get('ITEM_OK_STATUS'));
+	return ($row['user_status'] == Config::get('ITEM_OK_STATUS'));
 }
 
 function unblock($timeout = null, $type = 'bruteforce') {

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -36,8 +36,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_ADMIN_ADMIN_LOG_PAGE_TITLE' => tr('Selity - Admin/Admin Log'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Admin/Admin Log'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 		)
@@ -290,7 +290,7 @@ $tpl->assign(
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -18,7 +18,7 @@
  *   http://opensource.org | osi@opensource.org
  */
 
-function system_message($msg, $backButtonDestination = "") {
+function system_message($msg, $backButtonDestination = '') {
 	if (isset($_SESSION['user_theme'])) {
 		$theme_color = $_SESSION['user_theme'];
 	} else {
@@ -26,7 +26,7 @@ function system_message($msg, $backButtonDestination = "") {
 	}
 
 	if (empty($backButtonDestination)) {
-		$backButtonDestination = "javascript:history.go(-1)";
+		$backButtonDestination = 'javascript:history.go(-1)';
 	}
 
 	$tpl = new pTemplate();
@@ -46,8 +46,8 @@ function system_message($msg, $backButtonDestination = "") {
 
 	$tpl->define('page', $template);
 	$tpl->assign(array(
-		'TR_SYSTEM_MESSAGE_PAGE_TITLE'	=> tr('Selity Error'),
-		'THEME_COLOR_PATH'				=> "/themes/$theme_color",
+		'TR_PAGE_TITLE'	=> tr('Selity Error'),
+		'THEME_COLOR_PATH'				=> '/themes/'.$theme_color,
 		'THEME_CHARSET'					=> tr('encoding'),
 		'TR_BACK'						=> tr('Back'),
 		'TR_ERROR_MESSAGE'				=> tr('Error Message'),

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -72,8 +72,7 @@ function clean_html($text) {
 		'@&(iexcl|#161);@i',
 		'@&(cent|#162);@i',
 		'@&(pound|#163);@i',
-		'@&(copy|#169);@i',
-		'@&#(\d+);@e'); // handle als php
+		'@&(copy|#169);@i');
 
 	$ersetze = array ('',
 		'',
@@ -86,10 +85,11 @@ function clean_html($text) {
 		chr(161),
 		chr(162),
 		chr(163),
-		chr(169),
-		'chr(\1)');
+		chr(169));
 
 	$text = preg_replace($suche, $ersetze, $text);
+	$text = preg_replace_callback('/&#(\d+);/', function ($m) {return chr($m[1]);}, $text);
+
 	// and second one...
 	$text = strip_tags($text);
 
@@ -363,10 +363,7 @@ function chk_forward_url($url) {
 	$dom_tldpart = '[a-zA-Z]{2,5}';
 	$domain = $dom_subpart . $dom_mainpart . $dom_tldpart;
 
-	if (!preg_match("/^(http|https|ftp)\:\/\/" . $domain . "/", $url))
-		return false;
-
-	return true;
+	return preg_match("/^(http|https|ftp)\:\/\/" . $domain . "/", $url);
 }
 
 /**
@@ -379,31 +376,26 @@ function chk_forward_url($url) {
  * 										true	correct syntax
  */
 function chk_mountp($data, $num = 50) {
-	if (!preg_match("/^\/(.*)$/D", $data))
+	if (!preg_match('/^\/(.*)$/D', $data))
 		return false;
 
-	if (preg_match("/^\/htdocs$/D", $data))
+	if (preg_match('/^\/htdocs$/D', $data))
 		return false;
 
-	if (preg_match("/^\/backups$/D", $data))
+	if (preg_match('/^\/backups$/D', $data))
 		return false;
 
-	if (preg_match("/^\/cgi-bin$/D", $data))
+	if (preg_match('/^\/cgi-bin$/D', $data))
 		return false;
 
-	if (preg_match("/^\/errors$/D", $data))
+	if (preg_match('/^\/errors$/D', $data))
 		return false;
 
-	if (preg_match("/^\/logs$/D", $data))
+	if (preg_match('/^\/logs$/D', $data))
 		return false;
-
-	/*$res = explode("/", trim($data));
-	$cnt_res = count($res);
-	if ($cnt_res > 2)
-		return FALSE;*/
 
 	$match = array();
-	$count = preg_match_all("(\/[^\/]*)", $data, $match, PREG_PATTERN_ORDER);
+	$count = preg_match_all('(\/[^\/]*)', $data, $match, PREG_PATTERN_ORDER);
 
 	if (!$count)
 		return false;
@@ -465,17 +457,12 @@ function chk_subdname($subdname) {
 	if (!full_domain_check($subdname)) {
 		return false;
 	}
-
 	$match = array();
-
 	$res = preg_match_all("/\./", $subdname, $match, PREG_PATTERN_ORDER);
-
 	if ($res <= 1) {
 		return false;
 	}
-
 	$res = preg_match("/^(www|ftp|mail|ns)\./", $subdname);
-
 	return !($res == 1);
 }
 
@@ -487,31 +474,25 @@ function chk_subdname($subdname) {
  * @param bool $forcefinal Ignore the resolver's is_final value (force as yes)
  * @return numeric The id of the admin who owns the id $id of $type type
  */
-function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
+function who_owns_this($id, $type = 'user', $forcefinal = false) {
 	$sql = Database::getInstance();
 
 	$who = null;
 	// Fix $type according to type or by alias
 	switch ($type) {
-		case 'dmn_id':
-			$type = 'domain_id';
-			break;
-		case 'sub_id':
-			$type = 'subdomain_id';
-			break;
 		case 'als_id':
 			$type = 'alias_id';
 			break;
 		case 'user':
 			$type = 'client';
 			break;
-		case 'domain_uid':
+		case 'user_uid':
 			$type = 'uid';
 			break;
 		case 'ticket':
 			$type = 'ticket_id';
 			break;
-		case 'domain_gid':
+		case 'user_gid':
 			$type = 'gid';
 			break;
 		case 'sqlu_id':
@@ -538,15 +519,6 @@ function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
 		case 'sqld_name':
 			// Can't guess by type
 			$type = 'sql_database';
-			break;
-		case 'dmn':
-		case 'normal':
-		case 'domain':
-			if (!is_numeric($id)) {
-				$type = 'domain';
-			} else {
-				$type = 'domain_id';
-			}
 			break;
 		case 'als':
 		case 'alias':
@@ -593,31 +565,14 @@ function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
 	 *
 	 * NOTE: 'query' MUST be formated like: 'SELECT something FROM...' in order to correctly detect the field being selected
 	 */
-	$resolvers['domain_id'] = array();
-	$resolvers['domain_id']['query'] = 'SELECT domain_admin_id FROM domain WHERE domain_id = ? LIMIT 1;';
-	$resolvers['domain_id']['is_final'] = true;
 
 	$resolvers['alias_id'] = array();
-	$resolvers['alias_id']['query'] = 'SELECT domain_id FROM domain_aliasses WHERE alias_id = ? LIMIT 1;';
-	$resolvers['alias_id']['is_final'] = false;
-	$resolvers['alias_id']['next'] = 'dmn';
+	$resolvers['alias_id']['query'] = 'SELECT admin_id FROM domain_aliasses WHERE alias_id = ? LIMIT 1;';
+	$resolvers['alias_id']['is_final'] = true;
 
 	$resolvers['alias'] = array();
-	$resolvers['alias']['query'] = 'SELECT domain_id FROM domain_aliasses WHERE alias_name = ? LIMIT 1;';
-	$resolvers['alias']['is_final'] = false;
-	$resolvers['alias']['next'] = 'dmn';
-
-	$resolvers['subdomain_id'] = array();
-	$resolvers['subdomain_id']['query'] = 'SELECT domain_id FROM subdomain WHERE subdomain_id = ? LIMIT 1;';
-	$resolvers['subdomain_id']['is_final'] = false;
-	$resolvers['subdomain_id']['next'] = 'dmn';
-
-	$resolvers['subdomain'] = array();
-	$resolvers['subdomain']['query'] = false;
-	$resolvers['subdomain']['separator'] = '.';
-	$resolvers['subdomain']['pos'] = 1;
-	$resolvers['subdomain']['is_final'] = false;
-	$resolvers['subdomain']['next'] = 'dmn';
+	$resolvers['alias']['query'] = 'SELECT admin_id FROM domain_aliasses WHERE alias_name = ? LIMIT 1;';
+	$resolvers['alias']['is_final'] = true;
 
 	$resolvers['subdomain_alias_id'] = array();
 	$resolvers['subdomain_alias_id']['query'] = 'SELECT alias_id FROM subdomain_alias WHERE subdomain_alias_id = ? LIMIT 1;';
@@ -637,24 +592,16 @@ function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
 
 	$resolvers['reseller'] = $resolvers['admin'] = $resolvers['client'];
 
-	$resolvers['domain'] = array();
-	$resolvers['domain']['query'] = 'SELECT domain_admin_id FROM domain WHERE domain = ? LIMIT 1;';
-	$resolvers['domain']['is_final'] = true;
-
 	$resolvers['ticket_id'] = array();
 	$resolvers['ticket_id']['query'] = 'SELECT ticket_from FROM ticket WHERE ticket_id = ? LIMIT 1;';
 	$resolvers['ticket_id']['is_final'] = true;
 
 	$resolvers['uid'] = array();
-	$resolvers['uid']['query'] = 'SELECT domain_admin_id FROM domain WHERE domain_uid = ? LIMIT 1;';
+	$resolvers['uid']['query'] = 'SELECT user_admin_id FROM user_system_props WHERE user_uid = ? LIMIT 1;';
 	$resolvers['uid']['is_final'] = true;
 
 	$resolvers['gid'] = array();
-	$resolvers['gid']['query'] = 'SELECT domain_admin_id FROM domain WHERE domain_gid = ? LIMIT 1;';
-	$resolvers['gid']['is_final'] = true;
-
-	$resolvers['gid'] = array();
-	$resolvers['gid']['query'] = 'SELECT domain_admin_id FROM domain WHERE domain_gid = ? LIMIT 1;';
+	$resolvers['gid']['query'] = 'SELECT user_admin_id FROM user_system_props WHERE user_gid = ? LIMIT 1;';
 	$resolvers['gid']['is_final'] = true;
 
 	$resolvers['ftp_user'] = array();
@@ -668,9 +615,8 @@ function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
 	$resolvers['sql_user_id']['next'] = 'sqld_id';
 
 	$resolvers['sql_database_id'] = array();
-	$resolvers['sql_database_id']['query'] = 'SELECT domain_id FROM sql_database WHERE sqld_id = ? LIMIT 1;';
-	$resolvers['sql_database_id']['is_final'] = false;
-	$resolvers['sql_database_id']['next'] = 'dmn';
+	$resolvers['sql_database_id']['query'] = 'SELECT admin_id FROM sql_database WHERE `sqld_id` = ? LIMIT 1;';
+	$resolvers['sql_database_id']['is_final'] = true;
 
 	$resolvers['sql_user'] = array();
 	$resolvers['sql_user']['query'] = 'SELECT sqld_id FROM sql_user WHERE sqlu_name = ? LIMIT 1;';
@@ -678,36 +624,24 @@ function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
 	$resolvers['sql_user']['next'] = 'sqld_id';
 
 	$resolvers['sql_database'] = array();
-	$resolvers['sql_database']['query'] = 'SELECT domain_id FROM sql_database WHERE sqld_name = ? LIMIT 1;';
-	$resolvers['sql_database']['is_final'] = false;
-	$resolvers['sql_database']['next'] = 'dmn';
+	$resolvers['sql_database']['query'] = 'SELECT admin_id FROM sql_database WHERE sqld_name = ? LIMIT 1;';
+	$resolvers['sql_database']['is_final'] = true;
 
 	$resolvers['mail_id'] = array();
-	$resolvers['mail_id']['query'] = 'SELECT domain_id FROM mail_users WHERE mail_id = ? LIMIT 1;';
-	$resolvers['mail_id']['is_final'] = false;
-	$resolvers['mail_id']['next'] = 'dmn';
-
-	$resolvers['mail'] = array();
-	$resolvers['mail']['query'] = false;
-	$resolvers['mail']['separator'] = '@';
-	$resolvers['mail']['post'] = 1;
-	$resolvers['mail']['is_final'] = false;
-	$resolvers['mail']['next'] = 'dmn';
+	$resolvers['mail_id']['query'] = 'SELECT admin_id FROM mail_users WHERE mail_id = ? LIMIT 1;';
+	$resolvers['mail_id']['is_final'] = true;
 
 	$resolvers['htaccess_id'] = array();
-	$resolvers['htaccess_id']['query'] = 'SELECT dmn_id FROM htaccess WHERE id = ? LIMIT 1;';
-	$resolvers['htaccess_id']['is_final'] = false;
-	$resolvers['htaccess_id']['next'] = 'dmn';
+	$resolvers['htaccess_id']['query'] = 'SELECT admin_id FROM htaccess WHERE id = ? LIMIT 1;';
+	$resolvers['htaccess_id']['is_final'] = true;
 
 	$resolvers['htaccess_group_id'] = array();
-	$resolvers['htaccess_group_id']['query'] = 'SELECT dmn_id FROM htaccess_groups WHERE id = ? LIMIT 1;';
-	$resolvers['htaccess_group_id']['is_final'] = false;
-	$resolvers['htaccess_group_id']['next'] = 'dmn';
+	$resolvers['htaccess_group_id']['query'] = 'SELECT admin_id FROM htaccess_groups WHERE id = ? LIMIT 1;';
+	$resolvers['htaccess_group_id']['is_final'] = true;
 
 	$resolvers['htaccess_user_id'] = array();
-	$resolvers['htaccess_user_id']['query'] = 'SELECT dmn_id FROM htaccess_users WHERE id = ? LIMIT 1;';
-	$resolvers['htaccess_user_id']['is_final'] = false;
-	$resolvers['htaccess_user_id']['next'] = 'dmn';
+	$resolvers['htaccess_user_id']['query'] = 'SELECT admin_id FROM htaccess_users WHERE id = ? LIMIT 1;';
+	$resolvers['htaccess_user_id']['is_final'] = true;
 
 	$resolvers['hosting_plan_id'] = array();
 	$resolvers['hosting_plan_id']['query'] = 'SELECT reseller_id FROM hosting_plans WHERE id = ? LIMIT 1;';
@@ -717,7 +651,7 @@ function who_owns_this($id, $type = 'dmn', $forcefinal = false) {
 		$r = $resolvers[$type];
 		if ($r['query']) {
 			$matches = array();
-			if (!preg_match('/SELECT[ \t]+([a-z0-9\_]+)[ \t]+FROM/i', $r['query'], $matches)) {
+			if (!preg_match('/SELECT\s+([a-z0-9\_]+)\s+FROM/i', $r['query'], $matches)) {
 				system_message(tr('Unknown Error'));
 			}
 			$select = $matches[1];

@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_ADMIN_MANAGE_SESSIONS_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">

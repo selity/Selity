@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -23,46 +23,44 @@ require '../include/selity-lib.php';
 check_login(__FILE__);
 
 if (isset($_GET['id']) && $_GET['id'] !== '') {
-  $mail_id = $_GET['id'];
-  $item_delete_status = Config::get('ITEM_DELETE_STATUS');
-  $dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+	$mail_id = (int) $_GET['id'];
+	$item_delete_status = Config::get('ITEM_DELETE_STATUS');
 
-  $query = "
+	$query = '
 		select
 			mail_id
 		from
 			mail_users
 		where
-			domain_id = ?
+			admin_id = ?
 		and
 			mail_id = ?
-	";
+	';
 
-  $rs = exec_query($sql, $query, array($dmn_id, $mail_id));
+  $rs = exec_query($sql, $query, array($_SESSION['user_id'], $mail_id));
 
-  if ($rs -> RecordCount() == 0) {
-	user_goto('mail_catchall.php');
-  }
+	if ($rs -> RecordCount() == 0) {
+		user_goto('mail_catchall.php');
+	}
 
-  check_for_lock_file();
 
-  $query = "
+	$query = '
 		update
 			mail_users
 		set
 			status = ?
 		where
 			mail_id = ?
-	";
+	';
 
-  $rs = exec_query($sql, $query, array($item_delete_status, $mail_id));
+	$rs = exec_query($sql, $query, array($item_delete_status, $mail_id));
 
-  send_request();
-  write_log($_SESSION['user_logged'].": deletes email catch all!");
-  set_page_message(tr('Catch all account scheduled for deletion!'));
-  user_goto('mail_catchall.php');
+	send_request();
+	write_log($_SESSION['user_logged'].': deletes email catch all!');
+	set_page_message(tr('Catch all account scheduled for deletion!'));
+	user_goto('mail_catchall.php');
 
 } else {
-  user_goto('mail_catchall.php');
+	user_goto('mail_catchall.php');
 }
 

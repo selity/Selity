@@ -14,6 +14,7 @@ final class Database {
 			echo 'Connection failed: ' . $e->getMessage();
 		}
 		$this->_db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+		$this->_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 
 	public static function getInstance($connection = 'default') {

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -134,7 +134,7 @@ function substract_from_reseller_props($reseller_id, $domain_id) {
 		$sql_db_current, $sql_db_max,
 		$sql_user_current, $sql_user_max,
 		$traff_max, $disk_max
-		) = generate_user_props($domain_id);
+		) = get_user_props($domain_id);
 
 	$rdmn_current -= 1;
 

@@ -1377,10 +1377,14 @@ sub rebuild_customers_cfg {
 	use Selity::Boot;
 
 	my $tables = {
-		ssl_certs => 'status', domain => 'domain_status', domain_aliasses => 'alias_status',
-		subdomain => 'subdomain_status', subdomain_alias => 'subdomain_alias_status',
-		mail_users => 'status', htaccess => 'status',
-		htaccess_groups => 'status', htaccess_users => 'status'
+		ssl_certs => 'status',
+		user_system_props => 'user_status',
+		domain_aliasses => 'alias_status',
+		subdomain_alias => 'subdomain_alias_status',
+		mail_users => 'status',
+		htaccess => 'status',
+		htaccess_groups => 'status',
+		htaccess_users => 'status'
 	};
 
 	# Set status as 'change'

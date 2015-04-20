@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -29,29 +29,8 @@ $tpl->define_dynamic('logged_from', 'page');
 
 // page functions.
 
-function check_email_user(&$sql) {
-	$dmn_name = $_SESSION['user_logged'];
-	$mail_id = $_GET['id'];
-
-	$query = '
-		select
-		  t1.*,
-		  t2.domain_id,
-		  t2.domain_name
-		from
-		  mail_users as t1,
-		  domain as t2
-		where
-		  t1.mail_id = ?
-		and
-		  t2.domain_id = t1.domain_id
-		and
-		  t2.domain_name = ?
-';
-
-	$rs = exec_query($sql, $query, array($mail_id, $dmn_name));
-
-	if ($rs->RecordCount() == 0) {
+function check_email_user($mail_id) {
+	if (who_owns_this($mail_id, 'mail_id') != $_SESSION['user_id']) {
 		set_page_message(tr('User does not exist or you do not have permission to access this interface!'));
 		header('Location: mail_accounts.php');
 		die();
@@ -68,7 +47,7 @@ function gen_page_dynamic_data(&$tpl, &$sql, $mail_id, $read_from_db) {
 				mail_users
 			WHERE
 				mail_id = ?
-';
+		';
 		$rs = exec_query($sql, $query, array($mail_id));
 		$mail_name = $rs->fields['mail_acc'];
 
@@ -79,7 +58,6 @@ function gen_page_dynamic_data(&$tpl, &$sql, $mail_id, $read_from_db) {
 	}
 
 	$item_change_status = Config::get('ITEM_CHANGE_STATUS');
-	check_for_lock_file();
 
 	if (isset($_POST['uaction']) && $_POST['uaction'] === 'enable_arsp') {
 		if (empty($_POST['arsp_message'])) {
@@ -96,36 +74,25 @@ function gen_page_dynamic_data(&$tpl, &$sql, $mail_id, $read_from_db) {
 				`mail_auto_respond_text` = ?
 			WHERE
 				`mail_id` = ?
-';
+		';
 
 		$rs = exec_query($sql, $query, array($item_change_status, $arsp_message, $mail_id));
 
 		send_request();
-		$query = "
+		$query = '
 			SELECT
-				`mail_type`,
-				IF(`mail_type` like 'normal_%',t2.`domain_name`,
-					IF(`mail_type` like 'alias_%',t3.`alias_name`,
-						IF(`mail_type` like 'subdom_%',CONCAT(t4.`subdomain_name`,'.',t6.`domain_name`),CONCAT(t5.`subdomain_alias_name`,'.',t7.`alias_name`))
-					)
-				) AS mailbox
+				`mail_addr`
 			FROM
-				`mail_users` as t1
-			left join (domain as t2) on (t1.domain_id=t2.domain_id)
-			left join (domain_aliasses as t3) on (sub_id=alias_id)
-			left join (subdomain as t4) on (sub_id=subdomain_id)
-			left join (subdomain_alias as t5) on (sub_id=subdomain_alias_id)
-			left join (domain as t6) on (t4.domain_id=t6.domain_id)
-			left join (domain_aliasses as t7) on (t5.alias_id=t7.alias_id)
+				`mail_users`
 			WHERE
 				`mail_id` = ?
-		";
+		';
 
 		$rs = exec_query($sql, $query, array($mail_id));
-		$mail_name = $rs->fields['mailbox'];
-		write_log($_SESSION['user_logged'] . ": changes mail autoresponder: " . $mail_name);
+		$mail_name = $rs->fields['mail_addr'];
+		write_log($_SESSION['user_logged'] . ': changes mail autoresponder: ' . $mail_name);
 		set_page_message(tr('Mail account scheduler for modification!'));
-		header("Location: mail_accounts.php");
+		header('Location: mail_accounts.php');
 		exit(0);
 	} else {
 		$tpl->assign('ARSP_MESSAGE', '');
@@ -135,24 +102,24 @@ function gen_page_dynamic_data(&$tpl, &$sql, $mail_id, $read_from_db) {
 // common page data.
 
 if (isset($_GET['id'])) {
-	$mail_id = $_GET['id'];
+	$mail_id = (int) $_GET['id'];
 } else if (isset($_POST['id'])) {
-	$mail_id = $_POST['id'];
+	$mail_id = (int) $_POST['id'];
 } else {
-	header("Location: mail_accounts.php");
+	header('Location: mail_accounts.php');
 	exit(0);
 }
 
-if (isset($_SESSION['email_support']) && $_SESSION['email_support'] == "no") {
-	header("Location: index.php");
+if (isset($_SESSION['email_support']) && $_SESSION['email_support'] == 'no') {
+	header('Location: index.php');
 }
 
 $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 	array(
-		'TR_CLIENT_ENABLE_AUTORESPOND_PAGE_TITLE'	=> tr('Selity - Client/Enable Mail Auto Responder'),
-		'THEME_COLOR_PATH'							=> "../themes/$theme_color",
+		'TR_PAGE_TITLE'	=> tr('Selity - Client/Enable Mail Auto Responder'),
+		'THEME_COLOR_PATH'							=> '../themes/'.$theme_color,
 		'THEME_CHARSET'								=> tr('encoding'),
 		'ISP_LOGO'									=> get_logo($_SESSION['user_id'])
 	)
@@ -160,7 +127,7 @@ $tpl->assign(
 
 // dynamic page data.
 
-check_email_user($sql);
+check_email_user($mail_id);
 gen_page_dynamic_data($tpl, $sql, $mail_id, !isset($_POST['uaction']));
 
 // static page messages.
@@ -186,7 +153,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

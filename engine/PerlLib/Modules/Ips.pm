@@ -48,10 +48,6 @@ sub process{
 	my $rs		= 0;
 
 	my $sql = "
-		SELECT `domain_ip_id` AS `ip_id`, `ip_number` FROM `domain`
-		LEFT JOIN `server_ips` ON `domain`.`domain_ip_id` = `server_ips`.`ip_id`
-		WHERE `domain_status` != 'delete'
-		UNION
 		SELECT `alias_ip_id` AS `ip_id`, `ip_number` FROM `domain_aliasses`
 		LEFT JOIN `server_ips` ON `domain_aliasses`.`alias_ip_id` = `server_ips`.`ip_id`
 		WHERE `alias_status` NOT IN ('delete', 'ordered')
@@ -65,11 +61,6 @@ sub process{
 
 	my $sql = "
 		SELECT `ip_number` FROM `ssl_certs`
-		LEFT JOIN `domain` on `ssl_certs`.`id` = `domain`.`domain_id`
-		LEFT JOIN `server_ips` ON `domain`.`domain_ip_id` = `server_ips`.`ip_id`
-		WHERE `ssl_certs`.`type` = 'dmn'
-		UNION
-		SELECT `ip_number` FROM `ssl_certs`
 		LEFT JOIN `domain_aliasses` on `ssl_certs`.`id` = `domain_aliasses`.`alias_id`
 		LEFT JOIN `server_ips` ON `domain_aliasses`.`alias_ip_id` = `server_ips`.`ip_id`
 		WHERE `type` = 'als'
@@ -79,12 +70,6 @@ sub process{
 		LEFT JOIN `domain_aliasses` on `subdomain_alias`.`alias_id` = `domain_aliasses`.`alias_id`
 		LEFT JOIN `server_ips` ON `domain_aliasses`.`alias_ip_id` = `server_ips`.`ip_id`
 		WHERE `type` = 'alssub'
-		UNION
-		SELECT `ip_number` FROM `ssl_certs`
-		LEFT JOIN `subdomain` on `ssl_certs`.`id` = `subdomain`.`subdomain_id`
-		LEFT JOIN `domain` on `subdomain`.`domain_id` = `domain`.`domain_id`
-		LEFT JOIN `server_ips` ON `domain`.`domain_ip_id` = `server_ips`.`ip_id`
-		WHERE `type` = 'sub'
 	";
 
 	my $sslIPData = Selity::Database->factory()->doQuery('ip_number', $sql);

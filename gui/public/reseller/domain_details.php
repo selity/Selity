@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -30,8 +30,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_DETAILS_DOMAIN_PAGE_TITLE' => tr('Selity - Domain/Details'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Domain/Details'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
@@ -91,55 +91,60 @@ $tpl->parse('PAGE', 'page');
 
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
 unset_messages();
 
 // Begin function block
 
-function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
+function gen_detaildom_page(&$tpl, $user_id, $editid) {
 	$sql = Database::getInstance();
 	// Get domain data
 	$query = '
-		select
+		SELECT
 			*,
-			IFNULL(domain_disk_usage, 0) as domain_disk_usage
-		from
-			domain
-		where
-			domain_id = ?
-';
+			IFNULL(`disk_usage`, 0) as `disk_usage`
+		FROM
+			`user_system_props`
+		LEFT JOIN
+			`admin`
+		ON
+			`user_system_props`.`user_admin_id` = `admin`.`admin_id`
+		WHERE
+			`user_admin_id` = ?
+	';
 
-	$res = exec_query($sql, $query, array($domain_id));
+	$res = exec_query($sql, $query, array($editid));
 
 	$data = $res->FetchRow();
 
 	if ($res->RecordCount() <= 0) {
-		header('Location: users.php');
-		die();
+		//header('Location: users.php');
+		die('1');
 	}
 	// Get admin data
 	$created_by = $_SESSION['user_id'];
 	$res1 = exec_query($sql,
 		"select admin_name from admin where admin_id=? and created_by=?",
-		array($data['domain_admin_id'], $created_by));
+		array($data['user_admin_id'], $created_by));
 	$data1 = $res1->FetchRow();
 	if ($res1->RecordCount() <= 0) {
-		header('Location: users.php');
-		die();
+		//header('Location: users.php');
+		die('2');
 	}
 	// Get IP-info
-	$ipres = exec_query($sql, "select * from server_ips where ip_id=?", array($data['domain_ip_id']));
+	$ipres = exec_query($sql, "select * from server_ips where ip_id=?", array($data['user_ip_id']));
 	$ipdat = $ipres->FetchRow();
 	// Get staus name
-	$dstatus = translate_dmn_status($data['domain_status']);
+	$dstatus = translate_dmn_status($data['user_status']);
 
 	// Traffic diagram
 	$fdofmnth = mktime(0, 0, 0, date("m"), 1, date("Y"));
 	$ldofmnth = mktime(1, 0, 0, date("m") + 1, 0, date("Y"));
 	$res7 = exec_query($sql,
-		"select IFNULL(sum(dtraff_web),0) as dtraff_web, IFNULL(sum(dtraff_ftp), 0) as dtraff_ftp, IFNULL(sum(dtraff_mail), 0) as dtraff_mail, IFNULL(sum(dtraff_pop),0) as dtraff_pop " . "from domain_traffic where domain_id=? and dtraff_time>? and dtraff_time<?",
-		array($data['domain_id'], $fdofmnth, $ldofmnth));
+		"select IFNULL(sum(dtraff_web),0) as dtraff_web, IFNULL(sum(dtraff_ftp), 0) as dtraff_ftp, IFNULL(sum(dtraff_mail), 0) as dtraff_mail, IFNULL(sum(dtraff_pop),0) as dtraff_pop " . "from domain_traffic where admin_id=? and dtraff_time>? and dtraff_time<?",
+		array($data['admin_id'], $fdofmnth, $ldofmnth));
 	$dtraff = $res7->FetchRow();
 
 	$sumtraff = $dtraff['dtraff_web'] + $dtraff['dtraff_ftp'] + $dtraff['dtraff_mail'] + $dtraff['dtraff_pop'];
@@ -148,10 +153,10 @@ function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
 	$month = date("m");
 	$year = date("Y");
 
-	$res8 = exec_query($sql, "select * from server_ips where ip_id=?", array($data['domain_ip_id']));
+	$res8 = exec_query($sql, "select * from server_ips where ip_id=?", array($data['user_ip_id']));
 	$ipdat = $res8->FetchRow();
 
-	$domain_traffic_limit = $data['domain_traffic_limit'];
+	$domain_traffic_limit = $data['max_traff'];
 	$domain_all_traffic = $sumtraff; //$dtraff['traffic'];
 
 	$traff = ($domain_all_traffic / 1024) / 1024;
@@ -168,8 +173,8 @@ function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
 
 	list($traffic_percent, $indx, $a) = make_usage_vals($domain_all_traffic, $domain_traffic_limit * 1024 * 1024);
 	// Get disk status
-	$domdu = $data['domain_disk_usage'];
-	$domdl = $data['domain_disk_limit'];
+	$domdu = $data['disk_usage'];
+	$domdl = $data['max_disk'];
 
 	$tmp = ($domdu / 1024) / 1024;
 
@@ -187,11 +192,11 @@ function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
 
 	list($disk_percent, $dindx, $b) = make_usage_vals($domdu, $domdl * 1024 * 1024);
 	// Get current mail count
-	$res6 = exec_query($sql, "SELECT COUNT(mail_id) AS mcnt FROM mail_users WHERE domain_id = ? AND mail_type NOT RLIKE '_catchall'", array($data['domain_id']));
+	$res6 = exec_query($sql, "SELECT COUNT(mail_id) AS mcnt FROM mail_users WHERE admin_id = ? AND mail_type NOT RLIKE '_catchall'", array($data['admin_id']));
 	$dat3 = $res6->FetchRow();
-	$mail_limit = translate_limit_value($data['domain_mailacc_limit']);
+	$mail_limit = translate_limit_value($data['max_mail']);
 	// FTP stat
-	$res4 = exec_query($sql, "select gid from ftp_group where groupname=?", array($data['domain_name']));
+	$res4 = exec_query($sql, "select gid from ftp_group where groupname=?", array($data['admin_name']));
 	$ftp_gnum = $res4->RowCount();
 	if ($ftp_gnum == 0) {
 		$used_ftp_acc = 0;
@@ -202,41 +207,39 @@ function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
 
 		$used_ftp_acc = $dat2['ftp_cnt'];
 	}
-	$ftp_limit = translate_limit_value($data['domain_ftpacc_limit']);
+	$ftp_limit = translate_limit_value($data['max_ftp']);
 	// Get sql database count
-	$res = exec_query($sql, "select count(sqld_id) as dnum from sql_database where domain_id=?", array($data['domain_id']));
+	$res = exec_query($sql, "select count(sqld_id) as dnum from sql_database where admin_id=?", array($data['admin_id']));
 	$dat5 = $res->FetchRow();
-	$sql_db = translate_limit_value($data['domain_sqld_limit']);
+	$sql_db = translate_limit_value($data['max_sqldb']);
 	// Get sql users count
 	$res = exec_query($sql,
-		"select count(u.sqlu_id) as ucnt from sql_user u,sql_database d where u.sqld_id=d.sqld_id and d.domain_id=?",
-		array($data['domain_id']));
+		"select count(u.sqlu_id) as ucnt from sql_user u,sql_database d where u.sqld_id=d.sqld_id and d.admin_id=?",
+		array($data['admin_id']));
 	$dat6 = $res->FetchRow();
-	$sql_users = translate_limit_value($data['domain_sqlu_limit']);
+	$sql_users = translate_limit_value($data['max_sqlu']);
 	// Get sub domain
-	$res1 = exec_query($sql, "select count(subdomain_id) as sub_num from subdomain where domain_id=?", array($domain_id));
-	$sub_num_data = $res1->FetchRow();
-	$res1 = exec_query($sql, "SELECT COUNT(`subdomain_alias_id`) AS sub_num FROM `subdomain_alias` WHERE `alias_id` IN (SELECT `alias_id` FROM `domain_aliasses` WHERE `domain_id`=?)", array($domain_id));
+	$res1 = exec_query($sql, "SELECT COUNT(*) AS sub_num FROM `subdomain_alias` WHERE `alias_id` IN (SELECT `alias_id` FROM `domain_aliasses` WHERE `admin_id`=?)", array($data['admin_id']));
 	$alssub_num_data = $res1->FetchRow();
-	$sub_dom = translate_limit_value($data['domain_subd_limit']);
+	$sub_dom = translate_limit_value($data['max_sub']);
 	// Get domain aliases
-	$res1 = exec_query($sql, "select count(alias_id) as alias_num from domain_aliasses where domain_id=?", array($domain_id));
+	$res1 = exec_query($sql, "select count(alias_id) as alias_num from domain_aliasses where admin_id=?", array($data['admin_id']));
 	$alias_num_data = $res1->FetchRow();
 
-	$dom_alias = translate_limit_value($data['domain_alias_limit']);
+	$dom_alias = translate_limit_value($data['max_als']);
 	// Fill in the fileds
 	$tpl->assign(
 			array(
-				'DOMAIN_ID' => $data['domain_id'],
-				'VL_DOMAIN_NAME' => decode_idna($data['domain_name']),
+				'DOMAIN_ID' => $data['admin_id'],
+				'VL_DOMAIN_NAME' => decode_idna($data['admin_name']),
 				'VL_DOMAIN_IP' => $ipdat['ip_number'] . ' (' . $ipdat['ip_alias'] . ')',
 				'VL_STATUS' => $dstatus,
 
-				'VL_PHP_SUPP' => ($data['domain_php'] == 'yes')?
+				'VL_PHP_SUPP' => ($data['php'] == 'yes')?
 								tr('Enabled') : tr('Disabled'),
-				'VL_CGI_SUPP' => ($data['domain_cgi'] == 'yes')?
+				'VL_CGI_SUPP' => ($data['cgi'] == 'yes')?
 								tr('Enabled') : tr('Disabled'),
-				'VL_MYSQL_SUPP' => ($data['domain_sqld_limit'] >= 0)?
+				'VL_MYSQL_SUPP' => ($data['max_sqldb'] >= 0)?
 								tr('Enabled') : tr('Disabled'),
 
 				'VL_TRAFFIC_PERCENT' => $traffic_percent,
@@ -244,7 +247,7 @@ function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
 				'VL_TRAFFIC_LIMIT' => sizeit($domain_traffic_limit, 'MB'),
 				'VL_DISK_PERCENT' => $disk_percent,
 				'VL_DISK_USED' => $domduh,
-				'VL_DISK_LIMIT' => sizeit($data['domain_disk_limit'], 'MB'),
+				'VL_DISK_LIMIT' => sizeit($data['max_disk'], 'MB'),
 				'VL_MAIL_ACCOUNTS_USED' => $dat3['mcnt'],
 				'VL_MAIL_ACCOUNTS_LIIT' => $mail_limit,
 				'VL_FTP_ACCOUNTS_USED' => $used_ftp_acc,
@@ -253,7 +256,7 @@ function gen_detaildom_page(&$tpl, $user_id, $domain_id) {
 				'VL_SQL_DB_ACCOUNTS_LIIT' => $sql_db,
 				'VL_SQL_USER_ACCOUNTS_USED' => $dat6['ucnt'],
 				'VL_SQL_USER_ACCOUNTS_LIIT' => $sql_users,
-				'VL_SUBDOM_ACCOUNTS_USED' => $sub_num_data['sub_num']+$alssub_num_data['sub_num'],
+				'VL_SUBDOM_ACCOUNTS_USED' => $alssub_num_data['sub_num'],
 				'VL_SUBDOM_ACCOUNTS_LIIT' => $sub_dom,
 				'VL_DOMALIAS_ACCOUNTS_USED' => $alias_num_data['alias_num'],
 				'VL_DOMALIAS_ACCOUNTS_LIIT' => $dom_alias

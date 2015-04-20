@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -30,17 +30,17 @@ $tpl->define_dynamic('logged_from', 'page');
 
 // page functions.
 
-function write_error_page(&$sql, $user_id, $eid) {
+function write_error_page(&$sql, $eid) {
 	$error = stripslashes($_POST['error']);
 	$file = '/errors/' . $eid . '.html';
-	$vfs = &new vfs($_SESSION['user_logged'], $sql);
+	$vfs = new vfs($_SESSION['user_id'], $sql);
 	return $vfs->put($file, $error);
 }
 
-function update_error_page(&$sql, $user_id) {
+function update_error_page(&$sql) {
 	if (isset($_POST['uaction']) && $_POST['uaction'] === 'updt_error') {
 		$eid = intval($_POST['eid']);
-		if (in_array($eid, array(401, 402, 403, 404, 500, 503)) && write_error_page($sql, $_SESSION['user_id'], $eid)) {
+		if (in_array($eid, array(401, 402, 403, 404, 500, 503)) && write_error_page($sql, $eid)) {
 			set_page_message(tr('Custom error page was updated!'));
 		} else {
 			set_page_message(tr('System error - custom error page was NOT updated!'));
@@ -55,8 +55,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 $domain = $_SESSION['user_logged'];
 $domain = "http://www." . $domain;
 
-$tpl->assign(array('TR_CLIENT_ERROR_PAGE_TITLE' => tr('Selity - Client/Manage Error Custom Pages'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
+$tpl->assign(array('TR_PAGE_TITLE' => tr('Selity - Client/Manage Error Custom Pages'),
+		'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 		'THEME_CHARSET' => tr('encoding'),
 		'ISP_LOGO' => get_logo($_SESSION['user_id']),
 		'DOMAIN' => $domain
@@ -64,7 +64,7 @@ $tpl->assign(array('TR_CLIENT_ERROR_PAGE_TITLE' => tr('Selity - Client/Manage Er
 
 // dynamic page data.
 
-update_error_page($sql, $_SESSION['user_id']);
+update_error_page($sql);
 
 // static page messages.
 
@@ -92,7 +92,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

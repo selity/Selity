@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_CLIENT_ADD_MAIL_ACC_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -15,13 +15,6 @@
 				document.forms[0].als_id.disabled = false;
 			} else {
 				document.forms[0].als_id.disabled = true;
-			}
-		}
-		if (document.getElementsByName('sub_id') != null){
-			if(document.getElementById('dmn_type3').checked){
-				document.forms[0].sub_id.disabled = false;
-			} else {
-				document.forms[0].sub_id.disabled = true;
 			}
 		}
 		if (document.getElementsByName('als_sub_id') != null){
@@ -44,12 +37,6 @@
 		}
 		else{
 			document.forms[0].als_id.disabled = true;
-		}
-		if (document.getElementsByName('sub_id') != null && what == "subdom"){
-			document.forms[0].sub_id.disabled = false;
-		}
-		else{
-			document.forms[0].sub_id.disabled = true;
 		}
 		if (document.getElementsByName('als_sub_id') != null && what == "als_subdom"){
 			document.forms[0].als_sub_id.disabled = false;
@@ -137,13 +124,6 @@
 				  <input type="text" name="username" id="username" value="{USERNAME}" style="width:210px" class="textinput">
 				</td>
 			  </tr>
-			  <tr>
-				<td nowrap="nowrap" class="content2" width="200">
-				  <input type="radio" name="dmn_type" id="dmn_type1" value="dmn" {MAIL_DMN_CHECKED} onclick="changeDom('real');">
-				  <label for="dmn_type1">{TR_TO_MAIN_DOMAIN}</label>
-				</td>
-				<td nowrap="nowrap" class="content" colspan="2">@{DOMAIN_NAME}</td>
-			  </tr>
 			  <!-- BDP: to_alias_domain -->
 			  <tr>
 				<td nowrap="nowrap" class="content2" width="200">
@@ -157,19 +137,6 @@
 				  </select></td>
 			  </tr>
 			  <!-- EDP: to_alias_domain -->
-			  <!-- BDP: to_subdomain -->
-			  <tr>
-				<td nowrap="nowrap" class="content2" width="200">
-				  <input type="radio" name="dmn_type" id="dmn_type3" value="sub" {MAIL_SUB_CHECKED} onclick="changeDom('subdom');">
-				  <label for="dmn_type3">{TR_TO_SUBDOMAIN}</label>
-				</td>
-				<td nowrap="nowrap" class="content"><select name="sub_id">
-					<!-- BDP: sub_list -->
-					<option value="{SUB_ID}" {SUB_SELECTED}>@{SUB_NAME}</option>
-					<!-- EDP: sub_list -->
-				  </select></td>
-			  </tr>
-			  <!-- EDP: to_subdomain -->
 			  <!-- BDP: to_alias_subdomain -->
 			  <tr>
 				<td nowrap="nowrap" class="content2" width="200">

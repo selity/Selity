@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team (2007)
  *
@@ -60,7 +60,7 @@ function register_user($uname, $upass) {
 		if (!is_userdomain_ok($uname)) {
 			write_log(tr("%s's account status is not ok!", $uname));
 			system_message(tr("%s's account status is not ok!", $uname));
-			return false;
+			//return false;
 		}
 
 		$sess_id = session_id();
@@ -220,8 +220,9 @@ function change_user_interface($from_id, $to_id) {
 		$to_udata   = $rs_to->FetchRow();
 
 		if (!is_userdomain_ok($to_udata['admin_name'])) {
+			write_log(sprintf("%s's account status is not ok!", decode_idna($to_udata['admin_name'])));
 			set_page_message(tr("%s's account status is not ok!", decode_idna($to_udata['admin_name'])));
-			break;
+			//break;
 		}
 
 		$to_admin_type   = strtolower($to_udata['admin_type']);
@@ -229,8 +230,8 @@ function change_user_interface($from_id, $to_id) {
 
 		$allowed_changes = array();
 
-		$allowed_changes['admin']['admin']		 = 'manage_users.php';
-		$allowed_changes['admin']['BACK']		  = 'manage_users.php';
+		$allowed_changes['admin']['admin']		 = 'users_show.php';
+		$allowed_changes['admin']['BACK']		  = 'users_show.php';
 		$allowed_changes['admin']['reseller']	  = 'index.php';
 		$allowed_changes['admin']['user']		  = 'index.php';
 		$allowed_changes['reseller']['user']	   = 'index.php';
@@ -249,7 +250,7 @@ function change_user_interface($from_id, $to_id) {
 
 		$index = $index ? $index : $allowed_changes[$from_admin_type][$to_admin_type];
 
-	unset_user_login_data();
+		unset_user_login_data();
 
 		if (($to_admin_type != 'admin' &&
 			((isset($_SESSION['logged_from_id']) && $_SESSION['logged_from_id'] != $to_id) ||
@@ -260,10 +261,10 @@ function change_user_interface($from_id, $to_id) {
 			$_SESSION['logged_from_id'] = $from_udata['admin_id'];
 
 		}
-	if ($from_admin_type == 'user') { // Ticket 830 - remove the 'logged_from' if back from user
-		unset($_SESSION['logged_from']);  // maybe integrated in the construction above...
-		unset($_SESSION['logged_from_id']);
-	}
+		if ($from_admin_type == 'user') { // Ticket 830 - remove the 'logged_from' if back from user
+			unset($_SESSION['logged_from']);  // maybe integrated in the construction above...
+			unset($_SESSION['logged_from_id']);
+		}
 
 		// we gonna kill all sessions and globals if user get back to admin level
 		if (isset($_SESSION['admin_name']))

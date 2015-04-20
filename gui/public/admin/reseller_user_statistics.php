@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -66,8 +66,8 @@ if (!is_numeric($rid) || !is_numeric($month) || !is_numeric($year)) {
 
 $tpl->assign(
 		array(
-			'TR_ADMIN_USER_STATISTICS_PAGE_TITLE' => tr('Selity - Admin/Reseller User Statistics'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Admin/Reseller User Statistics'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 		)
@@ -218,7 +218,7 @@ function generate_domain_entry (&$tpl, $user_id, $row) {
 		$usql_db_current, $usql_db_max,
 		$usql_user_current, $usql_user_max,
 		$utraff_max, $udisk_max
-		) = generate_user_props($user_id);
+		) = get_user_props($user_id);
 
 	$utraff_max = $utraff_max * 1024 * 1024;
 
@@ -367,7 +367,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

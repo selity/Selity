@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -33,7 +33,7 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id']),
 		)
@@ -112,7 +112,7 @@ gen_logged_from($tpl);
 
 $tpl->assign(
 		array(
-			'TR_ADD_USER_PAGE_TITLE' => tr('Selity - User/Add user'),
+			'TR_PAGE_TITLE' => tr('Selity - User/Add user'),
 			'TR_MANAGE_DOMAIN_ALIAS' => tr('Manage domain alias'),
 			'TR_ADD_ALIAS' => tr('Add domain alias'),
 			'TR_DOMAIN_NAME' => tr('Domain name'),
@@ -131,7 +131,7 @@ $tpl->assign(
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 // Begin function declaration lines
@@ -179,12 +179,6 @@ function gen_al_page(&$tpl, $reseller_id) {
 		while (!$rs->EOF) {
 			$alias_name = decode_idna($rs->fields['alias_name']);
 			$alias_status = translate_dmn_status($rs->fields['alias_status']);
-
-			if ($i % 2 == 0) {
-				$page_cont = 'content';
-			} else {
-				$page_cont = 'content2';
-			}
 
 			$tpl->assign(
 				array('DOMAIN_ALIS' => $alias_name,
@@ -246,10 +240,9 @@ function add_domain_alias(&$sql, &$err_al) {
 		return;
 	}
 	// Begin add new alias domain
-	check_for_lock_file();
-	$status = Config::get('ITEM_ADD_STATUS');
+		$status = Config::get('ITEM_ADD_STATUS');
 
-	$query="insert into domain_aliasses(domain_id, alias_name, alias_mount, alias_status, alias_ip_id, url_forward) values (?, ?, ?, ?, ?, ?)";
+	$query="insert into domain_aliasses(domain_id, alias_name, alias_mount, alias_status, alias_ips, url_forward) values (?, ?, ?, ?, ?, ?)";
 	exec_query($sql, $query, array(
 									$cr_user_id,
 									$alias_name,

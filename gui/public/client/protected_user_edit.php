@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -35,14 +35,14 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 	array(
-		'TR_CLIENT_WEBTOOLS_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
-		'THEME_COLOR_PATH'				=> "../themes/$theme_color",
+		'TR_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
+		'THEME_COLOR_PATH'				=> '../themes/'.$theme_color,
 		'THEME_CHARSET'					=> tr('encoding'),
 		'ISP_LOGO'						=> get_logo($_SESSION['user_id'])
 	)
 );
 
-function pedit_user(&$tpl, &$sql, &$dmn_id, &$uuser_id) {
+function pedit_user(&$tpl, &$sql, $admin_id, &$uuser_id) {
 	if (isset($_POST['uaction']) && $_POST['uaction'] == 'modify_user') {
 		// we have user to add
 		if (isset($_POST['pass']) && isset($_POST['pass_rep'])) {
@@ -70,14 +70,13 @@ function pedit_user(&$tpl, &$sql, &$dmn_id, &$uuser_id) {
 					`upass` = ?,
 					`status` = ?
 				WHERE
-					`dmn_id` = ?
+					`admin_id` = ?
 				AND
 					`id` = ?
 			";
-			$rs = exec_query($sql, $query, array($nadmin_password, $change_status, $dmn_id, $uuser_id,));
+			$rs = exec_query($sql, $query, array($nadmin_password, $change_status, $admin_id, $uuser_id,));
 
-			check_for_lock_file();
-			send_request();
+						send_request();
 
 			$query = "
 				SELECT
@@ -85,11 +84,11 @@ function pedit_user(&$tpl, &$sql, &$dmn_id, &$uuser_id) {
 				FROM
 					`htaccess_users`
 				WHERE
-					`dmn_id` = ?
+					`admin_id` = ?
 				AND
 					`id` = ?
 			";
-			$rs = exec_query($sql, $query, array($dmn_id, $uuser_id));
+			$rs = exec_query($sql, $query, array($admin_id, $uuser_id));
 			$uname = $rs->fields['uname'];
 
 			$admin_login = $_SESSION['user_logged'];
@@ -123,7 +122,7 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+$admin_id = $_SESSION['user_id'];
 
 if (isset($_GET['uname']) && $_GET['uname'] !== '' && is_numeric($_GET['uname'])) {
 	$uuser_id = $_GET['uname'];
@@ -134,7 +133,7 @@ if (isset($_GET['uname']) && $_GET['uname'] !== '' && is_numeric($_GET['uname'])
 		FROM
 			`htaccess_users`
 		WHERE
-			`dmn_id` = '$dmn_id'
+			`admin_id` = '$admin_id'
 		AND
 			`id` = '$uuser_id'
 	";
@@ -161,7 +160,7 @@ if (isset($_GET['uname']) && $_GET['uname'] !== '' && is_numeric($_GET['uname'])
 		FROM
 			`htaccess_users`
 		WHERE
-			`dmn_id` = '$dmn_id'
+			`admin_id` = '$admin_id'
 		AND
 			`id` = '$uuser_id'
 	";
@@ -178,7 +177,7 @@ if (isset($_GET['uname']) && $_GET['uname'] !== '' && is_numeric($_GET['uname'])
 				'UID'	=> $uuser_id,
 			)
 		);
-		pedit_user($tpl, $sql, $dmn_id, $uuser_id);
+		pedit_user($tpl, $sql, $admin_id, $uuser_id);
 	}
 } else {
 	header('Location: protected_user_manage.php');
@@ -212,7 +211,7 @@ $tpl->parse('PAGE', 'page');
 
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

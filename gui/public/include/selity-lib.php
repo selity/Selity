@@ -4,21 +4,23 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright 	2012-2014 by Selity - http://selity.org
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
+ * @author 		ispCP Team
  *
  * @license
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the MPL General Public License as published by the Free Software
- * Foundation; either version 1.1 of the License, or (at your option) any later
- * version.
- * You should have received a copy of the MPL Mozilla Public License along with
- * this program; if not, write to the Open Source Initiative (OSI)
- * http://opensource.org | osi@opensource.org
+ *   This program is free software; you can redistribute it and/or modify it under
+ *   the terms of the MPL General Public License as published by the Free Software
+ *   Foundation; either version 1.1 of the License, or (at your option) any later
+ *   version.
+ *   You should have received a copy of the MPL Mozilla Public License along with
+ *   this program; if not, write to the Open Source Initiative (OSI)
+ *   http://opensource.org | osi@opensource.org
  */
 
 define('INCLUDEPATH', realpath(dirname(__FILE__)));
 require_once(INCLUDEPATH . '/selity-config.php');
+require_once('selity-library.php');
 
 session_name('Selity');
 
@@ -29,7 +31,6 @@ if (!isset($_SESSION)) {
 // setting for development edition - see all error messages
 error_reporting(E_ALL | E_NOTICE);
 
-require_once(INCLUDEPATH . '/spGzip.php');
 require_once(INCLUDEPATH . '/class.pTemplate.php');
 require_once(INCLUDEPATH . '/i18n.php');
 
@@ -117,8 +118,7 @@ Config::set('BRUTEFORCE_BETWEEN_TIME', 30);
 // true = disable, false = enable
 Config::set('MAINTENANCEMODE', false);
 // servicemode message
-Config::set('MAINTENANCEMODE_MESSAGE', tr("We are sorry, but the system is currently under maintenance.\nPlease try again later."));
-curlang(null, true); //restore language auto detection
+Config::set('MAINTENANCEMODE_MESSAGE', tr("We are sorry, but the system is currently under maintenance.\nOnly administrators can login."));
 
 // password chars
 Config::set('PASSWD_CHARS', 6);
@@ -147,7 +147,6 @@ Config::set('HARD_MAIL_SUSPENSION', true);
 // false: disable automatic serch for new version
 Config::set('CHECK_FOR_UPDATES', true);
 
-require_once(INCLUDEPATH . '/date-functions.php');
 require_once(INCLUDEPATH . '/input-checks.php');
 require_once(INCLUDEPATH . '/debug.php');
 require_once(INCLUDEPATH . '/calc-functions.php');

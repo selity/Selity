@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -33,10 +33,12 @@ $tpl->define_dynamic('traffic_table_item', 'traffic_table');
 
 $theme_color = Config::get('USER_INITIAL_THEME');
 
-$tpl->assign(array('TR_ADMIN_DOMAIN_STATISTICS_PAGE_TITLE' => tr('Selity - Domain Statistics Data'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
-		'THEME_CHARSET' => tr('encoding'),
-		'ISP_LOGO' => get_logo($_SESSION['user_id'])));
+$tpl->assign(array(
+	'TR_PAGE_TITLE' => tr('Selity - Domain Statistics Data'),
+	'THEME_COLOR_PATH' => '../themes/'.$theme_color,
+	'THEME_CHARSET' => tr('encoding'),
+	'ISP_LOGO' => get_logo($_SESSION['user_id'])
+));
 
 if (isset($_POST['domain_id'])) {
 	$domain_id = $_POST['domain_id'];
@@ -60,18 +62,17 @@ if (!is_numeric($domain_id) || !is_numeric($month) || !is_numeric($year)) {
 	die();
 }
 
-function get_domain_trafic($from, $to, $domain_id)
-{
+function get_domain_trafic($FROM, $to, $domain_id){
 	$sql = Database::getInstance();
 	$reseller_id = $_SESSION['user_id'];
 	$query = '
 		select
-		  domain_id
-		from
-		  domain
+			admin_id
+		FROM
+			admin
 		where
-			domain_id = ? and domain_created_id = ?
-';
+			admin_id = ? and created_by = ?
+	';
 
 	$rs = exec_query($sql, $query, array($domain_id, $reseller_id));
 	if ($rs->RecordCount() == 0) {
@@ -86,12 +87,12 @@ function get_domain_trafic($from, $to, $domain_id)
 			IFNULL(sum(dtraff_ftp), 0) as ftp_dr,
 			IFNULL(sum(dtraff_mail), 0) as mail_dr,
 			IFNULL(sum(dtraff_pop), 0) as pop_dr
-		from
+		FROM
 			domain_traffic
 		where
-			domain_id = ? and dtraff_time >= ? and dtraff_time <= ?
+			admin_id = ? and dtraff_time >= ? and dtraff_time <= ?
 ';
-	$rs = exec_query($sql, $query, array($domain_id, $from, $to));
+	$rs = exec_query($sql, $query, array($domain_id, $FROM, $to));
 
 	if ($rs->RecordCount() == 0) {
 		return array(0, 0, 0, 0);
@@ -139,11 +140,11 @@ function generate_page (&$tpl, $domain_id) {
 		$query = '
 			select
 				dtraff_web,dtraff_ftp,dtraff_mail,dtraff_pop,dtraff_time
-			from
+			FROM
 				domain_traffic
 			where
-				domain_id = ? and dtraff_time >= ? and dtraff_time <= ?
-';
+				admin_id = ? and dtraff_time >= ? and dtraff_time <= ?
+		';
 		$rs = exec_query($sql, $query, array($domain_id, $ftm, $ltm));
 
 		$has_data = false;
@@ -161,11 +162,6 @@ function generate_page (&$tpl, $domain_id) {
 					'POP3_TRAFFIC' => 0,
 					'ALL_TRAFFIC' => 0));
 		} else {
-			if ($counter % 2 == 0) {
-				$tpl->assign('ITEM_CLASS', 'content');
-			} else {
-				$tpl->assign('ITEM_CLASS', 'content2');
-			}
 
 			$sum_web += $web_trf;
 			$sum_ftp += $ftp_trf;
@@ -226,7 +222,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

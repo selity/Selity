@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -42,7 +42,7 @@ function gen_system_message(&$tpl, &$sql) {
 	$query = '
 		select
 			count(ticket_id) as cnum
-		from
+		FROM
 			tickets
 		where
 			(ticket_to = ? or ticket_from = ?)
@@ -50,7 +50,7 @@ function gen_system_message(&$tpl, &$sql) {
 			(ticket_status = \'1\' or ticket_status = \'4\')
 		  and
 			ticket_reply = 0
-';
+	';
 
 	$rs = exec_query($sql, $query, array($user_id, $user_id));
 
@@ -262,7 +262,7 @@ function gen_messages_table (&$tpl, $admin_id) {
 	$query = '
 		  select
 			  ticket_id
-		  from
+		  FROM
 			  tickets
 		  where
 			  (ticket_from = ? or ticket_to = ?)
@@ -296,7 +296,7 @@ function gen_messages_table (&$tpl, $admin_id) {
 
 $tpl->assign(
 		array(
-			'TR_RESELLER_MAIN_INDEX_PAGE_TITLE' => tr('Selity - Reseller/Main Index'),
+			'TR_PAGE_TITLE' => tr('Selity - Reseller/Main Index'),
 			'TR_SAVE' => tr('Save'),
 			'TR_MESSAGES' => tr('Messages'),
 			'TR_LANGUAGE' => tr('Language'),
@@ -305,7 +305,7 @@ $tpl->assign(
 			'TR_LAYOUT' => tr('Layout'),
 			'TR_TRAFFIC_USAGE' => tr('Traffic usage'),
 			'TR_DISK_USAGE' => tr ('Disk usage'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
@@ -314,7 +314,7 @@ $tpl->assign(
 // dynamic page data.
 
 generate_page_data($tpl, $_SESSION['user_id'], $_SESSION['user_logged']);
-// ko ima jump from other user interface neka esik i optica da ostanat tezi na
+// ko ima jump FROM other user interface neka esik i optica da ostanat tezi na
 // ska4ashtijat user
 if (!isset($_SESSION['logged_from']) && !isset($_SESSION['logged_from_id'])) {
 	list($user_def_lang, $user_def_layout) = get_user_gui_props($sql, $_SESSION['user_id']);
@@ -326,8 +326,6 @@ if (!isset($_SESSION['logged_from']) && !isset($_SESSION['logged_from_id'])) {
 gen_messages_table($tpl, $_SESSION['user_id']);
 
 gen_logged_from($tpl);
-
-gen_def_language($tpl, $sql, $user_def_lang);
 
 gen_def_layout($tpl, $user_def_layout);
 
@@ -344,7 +342,7 @@ $tpl->assign('LAYOUT', '');
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

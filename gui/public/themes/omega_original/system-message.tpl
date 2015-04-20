@@ -1,6 +1,6 @@
 <html>
  <head>
-  <title>{TR_SYSTEM_MESSAGE_PAGE_TITLE}</title>
+  <title>{TR_PAGE_TITLE}</title>
   <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -29,36 +29,32 @@ $tpl->define_dynamic('logged_from', 'page');
 
 $theme_color = Config::get('USER_INITIAL_THEME');
 
-$tpl->assign(
-		array(
-			'TR_EDIT_ALIAS_PAGE_TITLE' => tr('Selity - Manage Domain Alias/Edit Alias'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
-			'THEME_CHARSET' => tr('encoding'),
-			'ISP_LOGO' => get_logo($_SESSION['user_id'])
-		)
-	);
+$tpl->assign(array(
+	'TR_PAGE_TITLE'	=> tr('Selity - Manage Domain Alias/Edit Alias'),
+	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
+	'THEME_CHARSET'		=> tr('encoding'),
+	'ISP_LOGO'			=> get_logo($_SESSION['user_id'])
+));
 
 /*
  *
  * static page messages.
  *
  */
-$tpl->assign(
-		array(
-			'TR_MANAGE_DOMAIN_ALIAS' => tr('Manage domain alias'),
-			'TR_EDIT_ALIAS' => tr('Edit domain alias'),
-			'TR_ALIAS_NAME' => tr('Alias name'),
-			'TR_DOMAIN_IP' => tr('Domain IP'),
-			'TR_FORWARD' => tr('Forward to URL'),
-			'TR_MOUNT_POINT' => tr('Mount Point'),
-			'TR_MODIFY' => tr('Modify'),
-			'TR_CANCEL' => tr('Cancel'),
-			'TR_ENABLE_FWD' => tr("Enable Forward"),
-			'TR_ENABLE' => tr("Enable"),
-			'TR_DISABLE' => tr("Disable"),
-			'TR_FWD_HELP' => tr("A Forward URL has to start with 'http://'")
-		)
-	);
+$tpl->assign(array(
+	'TR_MANAGE_DOMAIN_ALIAS'	=> tr('Manage domain alias'),
+	'TR_EDIT_ALIAS'				=> tr('Edit domain alias'),
+	'TR_ALIAS_NAME'				=> tr('Alias name'),
+	'TR_DOMAIN_IP'				=> tr('Domain IP'),
+	'TR_FORWARD'				=> tr('Forward to URL'),
+	'TR_MOUNT_POINT'			=> tr('Mount Point'),
+	'TR_MODIFY'					=> tr('Modify'),
+	'TR_CANCEL'					=> tr('Cancel'),
+	'TR_ENABLE_FWD'				=> tr('Enable Forward'),
+	'TR_ENABLE'					=> tr('Enable'),
+	'TR_DISABLE'				=> tr('Disable'),
+	'TR_FWD_HELP'				=> tr('A Forward URL has to start with \'http://\'')
+));
 
 gen_client_mainmenu($tpl, Config::get('CLIENT_TEMPLATE_PATH') . '/main_menu_manage_domains.tpl');
 gen_client_menu($tpl, Config::get('CLIENT_TEMPLATE_PATH') . '/menu_manage_domains.tpl');
@@ -68,7 +64,7 @@ gen_logged_from($tpl);
 // "Modify" button has ben pressed
 if (isset($_POST['uaction']) && ($_POST['uaction'] === 'modify')) {
 	if (isset($_GET['edit_id'])) {
-		$editid = $_GET['edit_id'];
+		$editid = (int) $_GET['edit_id'];
 	} else if (isset($_SESSION['edit_ID'])) {
 		$editid = $_SESSION['edit_ID'];
 	} else {
@@ -80,25 +76,26 @@ if (isset($_POST['uaction']) && ($_POST['uaction'] === 'modify')) {
 	}
 	// Save data to db
 	if (check_fwd_data($tpl, $editid)) {
-		$_SESSION['aledit'] = "_yes_";
-		header("Location: domains_manage.php");
+		$_SESSION['aledit'] = '_yes_';
+		header('Location: domains_manage.php');
 		die();
 	}
 } else {
 	// Get user id that come for edit
 	if (isset($_GET['edit_id'])) {
-		$editid = $_GET['edit_id'];
+		$editid = (int) $_GET['edit_id'];
 	}
 
 	$_SESSION['edit_ID'] = $editid;
-	$tpl->assign('PAGE_MESSAGE', "");
+	$tpl->assign('PAGE_MESSAGE', '');
 }
 gen_editalias_page($tpl, $editid);
 
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
 unset_messages();
 
@@ -107,9 +104,9 @@ unset_messages();
 // Show user data
 function gen_editalias_page(&$tpl, $edit_id) {
 	$sql = Database::getInstance();
-	// Get data from sql
-	list($domain_id) = get_domain_default_props($sql, $_SESSION['user_id']);
-	$res = exec_query($sql, "select * from domain_aliasses where alias_id = ? and domain_id = ?", array($edit_id, $domain_id));
+	// Get data FROM sql
+	$admin_id =$_SESSION['user_id'];
+	$res = exec_query($sql, 'SELECT * FROM `domain_aliasses` WHERE `alias_id` = ? AND `admin_id` = ?', array($edit_id, $admin_id));
 
 	if ($res->RecordCount() <= 0) {
 		$_SESSION['aledit'] = '_no_';
@@ -118,7 +115,7 @@ function gen_editalias_page(&$tpl, $edit_id) {
 	}
 	$data = $res->FetchRow();
 	// Get ip-data
-	$ipres = exec_query($sql, "select * from server_ips where ip_id=?", array($data['alias_ip_id']));
+	$ipres = exec_query($sql, 'SELECT * FROM `server_ips` WHERE `ip_id`= ?', array($data['alias_ips']));
 	$ipdat = $ipres->FetchRow();
 	$ip_data = $ipdat['ip_number'] . ' (' . $ipdat['ip_alias'] . ')';
 
@@ -127,30 +124,33 @@ function gen_editalias_page(&$tpl, $edit_id) {
 	else
 		$url_forward = decode_idna($data['url_forward']);
 
-	if ($data["url_forward"] == "no") {
-		$check_en = "";
-		$check_dis = "checked=\"checked\"";
-		$url_forward = "";
+	if ($data['url_forward'] == 'no') {
+		$check_en = '';
+		$check_dis = 'checked';
+		$url_forward = '';
 	} else {
-		$check_en = "checked=\"checked\"";
+		$check_en = 'checked';
 		$check_dis = "";
 	}
 	// Fill in the fileds
-	$tpl->assign(
-			array(
-				'ALIAS_NAME' => decode_idna($data['alias_name']),
-				'DOMAIN_IP' => $ip_data,
-				'FORWARD' => $url_forward,
-				'MOUNT_POINT' => $data['alias_mount'],
-				'CHECK_EN' => $check_en,
-				'CHECK_DIS' => $check_dis,
-				'ID' => $edit_id
-			)
-		);
+	$tpl->assign(array(
+				'ALIAS_NAME'	=> decode_idna($data['alias_name']),
+				'DOMAIN_IP'		=> $ip_data,
+				'FORWARD'		=> $url_forward,
+				'MOUNT_POINT'	=> $data['alias_mount'],
+				'CHECK_EN'		=> $check_en,
+				'CHECK_DIS'		=> $check_dis,
+				'ID'			=> $edit_id
+	));
 } // End of gen_editalias_page()
 
 // Check input data
 function check_fwd_data(&$tpl, $alias_id) {
+	if(who_owns_this($alias_id, 'als') != $_SESSION['user_id']){
+		set_page_message(tr('Alias do not exists!'));
+		header('Location: domains_manage.php');
+		die();
+	}
 	$sql = Database::getInstance();
 
 	$forward_url = encode_idna($_POST['forward']);
@@ -161,46 +161,45 @@ function check_fwd_data(&$tpl, $alias_id) {
 
 	if ($status != '0') {
 		if (!chk_forward_url($forward_url)) {
-			$ed_error = tr("Incorrect forward syntax");
+			$ed_error = tr('Incorrect forward syntax');
 		}
-		if (!preg_match("/\/$/", $forward_url)) {
-			$forward_url .= "/";
+		if (!preg_match('/\/$/', $forward_url)) {
+			$forward_url .= '/';
 		}
 	}
 
 	if ($ed_error === '_off_') {
 		if ($_POST['status'] == 0) {
-			$forward_url = "no";
+			$forward_url = 'no';
 		}
 
-		$query = "
+		$query = '
 			UPDATE
-				domain_aliasses
+				`domain_aliasses`
 			SET
-				url_forward = ?,
-				alias_status = ?
+				`url_forward` = ?,
+				`alias_status` = ?
 			WHERE
-				alias_id = ?
-		";
+				`alias_id` = ?
+		';
 		exec_query($sql, $query, array($forward_url, Config::get('ITEM_CHANGE_STATUS'), $alias_id));
 
-		$query = "
+		$query = '
 			UPDATE
-				subdomain_alias
+				`subdomain_alias`
 			SET
-				subdomain_alias_status = ?
+				`subdomain_alias_status` = ?
 			WHERE
-				alias_id = ?
-		";
+				`alias_id` = ?
+		';
 		exec_query($sql, $query, array(Config::get('ITEM_CHANGE_STATUS'), $alias_id));
-
-		check_for_lock_file();
 		send_request();
 
 		$admin_login = $_SESSION['user_logged'];
-		write_log("$admin_login: change domain alias forward: " . $rs->fields['t1.alias_name']);
+		write_log($admin_login.': change domain alias forward: ' . $rs->fields['t1.alias_name']);
+		set_page_message(tr('Alias scheduled for modification!'));
 		unset($_SESSION['edit_ID']);
-		$tpl->assign('MESSAGE', "");
+
 		return true;
 	} else {
 		$tpl->assign('MESSAGE', $ed_error);

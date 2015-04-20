@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -23,84 +23,46 @@ require '../include/selity-lib.php';
 
 check_login(__FILE__);
 
-function check_email_user(&$sql) {
-	$dmn_name = $_SESSION['user_logged'];
-	$mail_id = $_GET['id'];
 
-	$query = "
-		select
-		  t1.*,
-		  t2.domain_id,
-		  t2.domain_name
-		from
-		  mail_users as t1,
-		  domain as t2
-		where
-		  t1.mail_id = ?
-		and
-		  t2.domain_id = t1.domain_id
-		and
-		  t2.domain_name = ?
-";
-
-  	$rs = exec_query($sql, $query, array($mail_id, $dmn_name));
-  	$mail_acc = $rs->fields['mail_acc'];
-
-  	if ($rs -> RecordCount() == 0) {
+if (isset($_GET['id']) && $_GET['id'] !== '') {
+	$mail_id = (int)$_GET['id'];
+	if (who_owns_this($mail_id, 'mail_id') != $_SESSION['user_id']) {
 		set_page_message(tr('User does not exist or you do not have permission to access this interface!'));
 		header('Location: mail_accounts.php');
 		die();
-  	}
-}
+	}
 
-check_email_user($sql);
-
-if (isset($_GET['id']) && $_GET['id'] !== '') {
-	$mail_id = $_GET['id'];
 	$item_change_status = Config::get('ITEM_CHANGE_STATUS');
-	check_for_lock_file();
 
-	$query = "
+	$query = '
 		update
 			mail_users
 		set
 			status = ?,
-			mail_auto_respond = 0
+			mail_auto_respond = ?
 		where
 			mail_id = ?
-	";
+	';
 
-  	$rs = exec_query($sql, $query, array($item_change_status, $mail_id));
+  	$rs = exec_query($sql, $query, array($item_change_status, 0, $mail_id));
 
 	send_request();
-	$query = "
+	$query = '
 		SELECT
-			`mail_type`,
-			IF(`mail_type` like 'normal_%',t2.`domain_name`,
-				IF(`mail_type` like 'alias_%',t3.`alias_name`,
-					IF(`mail_type` like 'subdom_%',CONCAT(t4.`subdomain_name`,'.',t6.`domain_name`),CONCAT(t5.`subdomain_alias_name`,'.',t7.`alias_name`))
-				)
-			) AS mailbox
+			`mail_addr`
 		FROM
-			`mail_users` as t1
-		left join (domain as t2) on (t1.domain_id=t2.domain_id)
-		left join (domain_aliasses as t3) on (sub_id=alias_id)
-		left join (subdomain as t4) on (sub_id=subdomain_id)
-		left join (subdomain_alias as t5) on (sub_id=subdomain_alias_id)
-		left join (domain as t6) on (t4.domain_id=t6.domain_id)
-		left join (domain_aliasses as t7) on (t5.alias_id=t7.alias_id)
+			`mail_users`
 		WHERE
 			`mail_id` = ?
-	";
+	';
 
 	$rs = exec_query($sql, $query, array($mail_id));
-	$mail_name = $rs->fields['mailbox'];
-	write_log($_SESSION['user_logged'].": disabled mail autoresponder: ".$mail_name);
+	$mail_name = $rs->fields['mail_addr'];
+	write_log($_SESSION['user_logged'].': disabled mail autoresponder: '.$mail_name);
 	set_page_message(tr('Mail account scheduled for modification!'));
 	header('Location: mail_accounts.php');
 	exit(0);
-}
-else {
+} else {
   	header('Location: mail_accounts.php');
   	exit(0);
 }

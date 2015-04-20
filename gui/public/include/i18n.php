@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -48,80 +48,6 @@ function curlang($newlang = null, $force = false) {
 
 	return ($_language !== null)? $_language : $language;
 
-}
-
-/**
- * 	Function:		tr
- * 	Description:	translates a given string into the selected language, if exists
- *
- * 	@access			public
- * 	@version		2.2
- *  @author			ispCP Team, Benedikt Heintel (2007), Raphael Geissert (2007)
- *
- * 	@param		String	$msgid			string to translate
- *  @param		Mixed	$substitution	prevent the returned string from being replaced with html entities
- * 	@return		String					translated or original string
- **/
-function tr($msgid, $substitution = false) {
-	$sql = Database::getInstance();
-	static $cache = array();
-
-	// detect whether $substitution is really $substitution or just a value to be replaced in $msgstr
-	if (!is_bool($substitution)) {
-		$substitution = false;
-	}
-
-	$lang = curlang();
-	$encoding = 'UTF-8';
-
-	if (isset($cache[$lang][$msgid])) {
-		$msgstr = $cache[$lang][$msgid];
-	} else {
-		$msgstr = $msgid;
-
-		if ($sql) {
-			if (!$substitution) {
-				// $substitution is true in this call because we need it that way and to prevent an infinite loop
-				$encoding = tr('encoding', true);
-			}
-			$rs = exec_query($sql, "SELECT `msgstr` FROM " . quoteIdentifier($lang) . " WHERE `msgid` = ?;", array($msgid), false);
-
-			if ($rs && $rs->RowCount() > 0 && $rs->fields['msgstr'] != '') {
-				$msgstr = $rs->fields['msgstr'];
-			}
-		}
-	}
-
-	if ($msgid == 'encoding' && $msgstr == 'encoding') {
-		$msgstr = $encoding;
-	}
-
-	// Detect comments and strip them if $msgid == $msgstr
-	// e.g.
-	// tr('_: This is just a comment\nReal message to translate here')
-	if ($msgid == $msgstr && substr($msgid, 0, 3) == '_: ' && count($l = explode("\n", $msgid)) > 1) {
-		unset($l[0]);
-		$msgstr = implode("\n", $l);
-	}
-
-	$cache[$lang][$msgid] = $msgstr;
-
-	// Replace values
-	if (func_num_args() > 1) {
-		$argv = func_get_args();
-		unset($argv[0]); //msgid
-
-		if (is_bool($argv[1])) {
-			unset($argv[1]);
-		}
-		$msgstr = vsprintf($msgstr, $argv);
-	}
-
-	if (!$substitution) {
-		$msgstr = replace_html(htmlentities($msgstr, ENT_COMPAT, $encoding));
-	}
-
-	return $msgstr;
 }
 
 /**

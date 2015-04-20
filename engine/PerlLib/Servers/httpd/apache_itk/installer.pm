@@ -343,7 +343,7 @@ sub vHostConf {
 	$file->copyFile($self::apacheConfig{'APACHE_SITES_DIR'}) and return 1;
 
 	## Enable required modules
-	$rs = $httpd->enableMod("cgid rewrite suexec proxy proxy_http ssl");
+	$rs = $httpd->enableMod("cgid rewrite suexec proxy proxy_http ssl authz_groupfile");
 	return $rs if $rs;
 
 	$rs = $httpd->enableSite("00_nameserver.conf");

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -51,7 +51,7 @@ if (isset($_GET['key'])) {
 		$tpl->define('page', Config::get('LOGIN_TEMPLATE_PATH') . '/lostpassword_message.tpl');
 		$tpl->assign(
 				array(
-					'TR_MAIN_INDEX_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
+					'TR_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
 					'THEME_COLOR_PATH' => "themes/$theme_color",
 					'THEME_CHARSET' => tr('encoding')
 					)
@@ -76,7 +76,7 @@ if (isset($_GET['key'])) {
 		$tpl->parse('PAGE', 'page');
 		$tpl->prnt();
 
-		if (Config::get('DUMP_GUI_DEBUG'))
+		if (configs::getInstance()->GUI_DEBUG)
 			dump_gui_debug();
 		exit(0);
 	}
@@ -93,7 +93,7 @@ if (isset($_POST['uname'])) {
 		$tpl->define('page', Config::get('LOGIN_TEMPLATE_PATH') . '/lostpassword_message.tpl');
 		$tpl->assign(
 				array(
-					'TR_MAIN_INDEX_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
+					'TR_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
 					'THEME_COLOR_PATH' => "themes/$theme_color",
 					'THEME_CHARSET' => tr('encoding')
 					)
@@ -127,7 +127,7 @@ if (isset($_POST['uname'])) {
 		$tpl->parse('PAGE', 'page');
 		$tpl->prnt();
 
-		if (Config::get('DUMP_GUI_DEBUG'))
+		if (configs::getInstance()->GUI_DEBUG)
 			dump_gui_debug();
 		exit(0);
 	}
@@ -140,7 +140,7 @@ $tpl = new pTemplate();
 $tpl->define('page', Config::get('LOGIN_TEMPLATE_PATH') . '/lostpassword.tpl');
 $tpl->assign(
 			array(
-				'TR_MAIN_INDEX_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
+				'TR_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
 				'THEME_COLOR_PATH' => Config::get('LOGIN_TEMPLATE_PATH'),
 				'THEME_CHARSET' => tr('encoding'),
 				'TR_CAPCODE' => tr('Security code'),
@@ -155,6 +155,6 @@ $tpl->assign(
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 

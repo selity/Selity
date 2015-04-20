@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -24,42 +24,26 @@ require '../include/selity-lib.php';
 check_login(__FILE__);
 
 if (isset($_GET['export_lang']) && $_GET['export_lang'] !== '') {
-  $language_table = $_GET['export_lang'];
-  $encoding  = $sql->Execute("SELECT `msgstr` FROM `$language_table` WHERE `msgid` = 'encoding';");
-  if ($encoding && $encoding->RowCount() > 0 && $encoding->fields['msgstr'] != '') {
-	  $encoding = $encoding->fields['msgstr'];
-  } else {
-	  $encoding = 'UTF-8';
-  }
-  $query = '
-			SELECT
-				msgid,
-				msgstr
-			FROM
-				$language_table
-';
+	$file = configs::getInstance()->GUI_ROOT_DIR.'/i18n/locales/'.$_GET['export_lang'].'/LC_MESSAGES/'.$_GET['export_lang'].'.mo';
 
-	$rs = exec_query($sql, $query, array());
-
-	if ($rs->RecordCount() == 0) {
-		set_page_message( tr("Incorrect data input!"));
-		header( "Location: multilanguage.php" );
+	if (!file_exists($file)) {
+		set_page_message( tr('Incorrect data input!'));
+		header( 'Location: multilanguage.php' );
 		die();
 	} else {
-		$GLOBALS['class']['output']->showSize=false;
-		header( "Content-type: text/plain; charset=".$encoding );
-		while (!$rs -> EOF) {
-			$msgid = $rs->fields['msgid'];
-			$msgstr = $rs->fields['msgstr'];
-			if ($msgid !== '' && $msgstr !== '') {
-				echo $msgid." = ".$msgstr."\n";
-			}
-			$rs -> MoveNext();
-		}
+		header('Content-Description: File Transfer');
+		header('Content-Type: application/octet-stream');
+		header('Content-Disposition: attachment; filename='.basename($file));
+		header('Content-Transfer-Encoding: binary');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		header('Content-Length: ' . filesize($file));
+		echo(file_get_contents($file));
 	}
 } else {
-	set_page_message(tr("Incorrect data input!"));
-	header( "Location: multilanguage.php" );
+	set_page_message(tr('Incorrect data input!'));
+	header( 'Location: multilanguage.php' );
 	die();
 }
 

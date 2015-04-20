@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author		ispCP Team (2007)
  *
@@ -27,14 +27,14 @@ check_login(__FILE__);
 
 if (!isset($_GET['domain_id'])) {
 
-	header( "Location: manage_users.php" );
+	header( "Location: users_show.php" );
 
 	die();
 }
 
 if (!is_numeric($_GET['domain_id'])) {
 
-	header( "Location: manage_users.php" );
+	header( "Location: users_show.php" );
 
 	die();
 
@@ -77,7 +77,7 @@ else if ($rs -> fields['domain_status'] == Config::get('ITEM_DISABLED_STATUS'))
 }
 else {
 
-	header( 'Location: manage_users.php' );
+	header( 'Location: users_show.php' );
 
 	die();
 }

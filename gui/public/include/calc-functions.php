@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -99,7 +99,13 @@ function sizeit($bytes, $from = 'B') {
  * @return string Salt for password
  */
 function generate_rand_salt($min = 46, $max = 126) {
-	if (CRYPT_BLOWFISH == 1) {
+	if (CRYPT_SHA512 == 1) {
+		$length	= 16;
+		$pre	= '$6$';
+	} elseif (CRYPT_SHA256 == 1) {
+		$length	= 16;
+		$pre	= '$5$';
+	} elseif (CRYPT_BLOWFISH == 1) {
 		$length	= 13;
 		$pre	= '$2$';
 	} elseif (CRYPT_MD5 == 1) {
@@ -141,12 +147,6 @@ function crypt_user_pass($data) {
 function crypt_user_pass_with_salt($data) {
 	$res = crypt($data, generate_rand_salt());
 	return $res;
-}
-
-function check_user_pass($crdata, $data ) {
-	$salt = get_salt_from($crdata);
-	$udata = crypt($data, $salt);
-	return ($udata == $crdata);
 }
 
 function _passgen() {

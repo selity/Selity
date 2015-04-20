@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_CLIENT_ADD_FTP_ACC_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -159,12 +159,12 @@ function OpenTree() {
 							<!-- EDP: page_message -->
 							<tr>
 							  <td nowrap="nowrap" class="content2" width="200">{TR_USERNAME}</td>
-							  <td class="content" nowrap="nowrap"><input type="text" name="username" value="{USERNAME}" style="width:170px" class="textinput"></td>
+							  <td class="content" nowrap="nowrap"><input type="text" name="ftp_username" value="{FTP_USERNAME}" style="width:170px" class="textinput"></td>
 							</tr>
 							<tr>
 							  <td nowrap="nowrap" class="content2" width="200"><input type="radio" name="dmn_type" value="dmn" onfocus="changeDom('real');" {DMN_TYPE_CHECKED}>
-								{TR_TO_MAIN_DOMAIN}</td>
-							  <td class="content" nowrap="nowrap">{FTP_SEPARATOR}{DOMAIN_NAME}</td>
+								{TR_TO_MAIN_USER}</td>
+							  <td class="content" nowrap="nowrap">{FTP_SEPARATOR}{USER_NAME}</td>
 							</tr>
 							<!-- BDP: to_alias_domain -->
 							<tr>
@@ -177,6 +177,19 @@ function OpenTree() {
 								</select></td>
 							</tr>
 							<!-- EDP: to_alias_domain -->
+
+							<!-- BDP: to_subdomain -->
+							<tr>
+							  <td nowrap="nowrap" class="content2" width="200"><input type="radio" name="dmn_type" value="sub" onfocus="changeDom('subdom');" {SUB_TYPE_CHECKED}>
+								{TR_TO_SUBDOMAIN}</td>
+							  <td class="content" nowrap="nowrap"><select name="sub_id">
+								  <!-- BDP: sub_list -->
+								  <option value="{SUB_ID}" {SUB_SELECTED}>{FTP_SEPARATOR}{SUB_NAME}</option>
+								  <!-- EDP: sub_list -->
+								</select></td>
+							</tr>
+							<!-- EDP: to_subdomain -->
+
 							<tr>
 							  <td nowrap="nowrap" class="content2" width="200">{TR_PASSWORD}</td>
 							  <td class="content" nowrap="nowrap"><input type="password" name="pass" value="" style="width:170px" class="textinput"></td>

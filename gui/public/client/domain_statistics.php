@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -57,7 +57,7 @@ function gen_page_post_data(&$tpl, $current_month, $current_year) {
 	return array($current_month, $current_year);
 }
 
-function get_domain_trafic($from, $to, $domain_id) {
+function get_domain_trafic($from, $to, $admin_id) {
 	$sql = Database::getInstance();
 
 	$query = '
@@ -69,14 +69,14 @@ function get_domain_trafic($from, $to, $domain_id) {
 		from
 			domain_traffic
 		where
-			domain_id = ?
-		  and
+			admin_id = ?
+		and
 			dtraff_time >= ?
 		  and
 			dtraff_time <= ?
 ';
 
-	$rs = exec_query($sql, $query, array($domain_id, $from, $to));
+	$rs = exec_query($sql, $query, array($admin_id, $from, $to));
 
 	if ($rs->RecordCount() == 0) {
 		return array(0, 0, 0, 0);
@@ -87,22 +87,23 @@ function get_domain_trafic($from, $to, $domain_id) {
 	}
 }
 
-function gen_dmn_traff_list(&$tpl, &$sql, $month, $year, $user_id) {
+function gen_dmn_traff_list(&$tpl, &$sql, $month, $year, $admin_id) {
 	global $web_trf, $ftp_trf, $smtp_trf, $pop_trf,
 	$sum_web, $sum_ftp, $sum_mail, $sum_pop;
 
-	$domain_admin_id = $_SESSION['user_id'];
-	$query = '
-		select
-			domain_id
-		from
-			domain
-		where
-			domain_admin_id = ?
-';
+	//$domain_admin_id = $_SESSION['user_id'];
+	//$query = '
+		//select
+			//domain_id
+		//from
+			//domain
+		//where
+			//domain_admin_id = ?
+	//';
+//
+	//$rs = exec_query($sql, $query, array($domain_admin_id));
+	//$domain_id = $rs->fields('domain_id');
 
-	$rs = exec_query($sql, $query, array($domain_admin_id));
-	$domain_id = $rs->fields('domain_id');
 	$fdofmnth = mktime(0, 0, 0, $month, 1, $year);
 	$ldofmnth = mktime(1, 0, 0, $month + 1, 0, $year);
 
@@ -129,31 +130,27 @@ function gen_dmn_traff_list(&$tpl, &$sql, $month, $year, $user_id) {
 		$ftm = mktime(0, 0, 0, $month, $i, $year);
 		$ltm = mktime(23, 59, 59, $month, $i, $year);
 		$query = '
-		select
-			dtraff_web,dtraff_ftp,dtraff_mail,dtraff_pop,dtraff_time
-		from
-			domain_traffic
-		where
-			domain_id = ?
-		  and
-			dtraff_time >= ?
-		  and
-			dtraff_time <= ?
-';
+			select
+				dtraff_web,dtraff_ftp,dtraff_mail,dtraff_pop,dtraff_time
+			from
+				domain_traffic
+			where
+				admin_id = ?
+			  and
+				dtraff_time >= ?
+			  and
+				dtraff_time <= ?
+		';
 
-		$rs = exec_query($sql, $query, array($domain_id, $ftm, $ltm));
+		$rs = exec_query($sql, $query, array($admin_id, $ftm, $ltm));
 
 		$has_data = false;
 		list($web_trf,
 			$ftp_trf,
 			$pop_trf,
-			$smtp_trf) = get_domain_trafic($ftm, $ltm, $domain_id);
+			$smtp_trf) = get_domain_trafic($ftm, $ltm, $admin_id);
 
-		if ($counter % 2 == 0) {
-			$tpl->assign('ITEM_CLASS', 'content');
-		} else {
-			$tpl->assign('ITEM_CLASS', 'content2');
-		}
+
 		$sum_web += $web_trf;
 		$sum_ftp += $ftp_trf;
 		$sum_mail += $smtp_trf;
@@ -171,10 +168,10 @@ function gen_dmn_traff_list(&$tpl, &$sql, $month, $year, $user_id) {
 				'SMTP_TRAFF' => sizeit($smtp_trf),
 				'POP_TRAFF' => sizeit($pop_trf),
 				'SUM_TRAFF' => sizeit($web_trf + $ftp_trf + $smtp_trf + $pop_trf),
-				'CONTENT' => ($i % 2 == 0) ? 'content' : 'content2'));
-		$tpl->assign(array('MONTH' => $month,
+				'CONTENT' => ($i % 2 == 0) ? 'content' : 'content2',
+				'MONTH' => $month,
 				'YEAR' => $year,
-				'DOMAIN_ID' => $domain_id,
+				//'DOMAIN_ID' => $domain_id,
 				'WEB_ALL' => sizeit($sum_web),
 				'FTP_ALL' => sizeit($sum_ftp),
 				'SMTP_ALL' => sizeit($sum_mail),
@@ -184,101 +181,23 @@ function gen_dmn_traff_list(&$tpl, &$sql, $month, $year, $user_id) {
 		$counter ++;
 	}
 
-	/*
-	$start_date = mktime(0,0,0, $month, 1, $year);
-	$end_date = mktime(0,0,0, $month + 1, 1, $year);
-	$dmn_id = get_user_domain_id($sql, $user_id);
-	$query = '
-		select
-			dtraff_time as traff_date,
-			dtraff_web as web_traff,
-			dtraff_ftp as ftp_traff,
-			dtraff_mail as smtp_traff,
-			dtraff_pop as pop_traff,
-			(dtraff_web + dtraff_ftp + dtraff_mail + dtraff_pop) as sum_traff
-		from
-			domain_traffic
-		where
-			domain_id = '$dmn_id'
-		  and
-		  	dtraff_time >= '$start_date'
-		  and
-			dtraff_time < '$end_date'
-		order by
-			dtraff_time
-';
-
-	$rs = execute_query($sql, $query);
-
-	if ($rs -> RecordCount() == 0) {
-
-		$tpl -> assign('TRAFF_LIST', '');
-
-		set_page_message(tr('Traffic accounting for the selected month is missing!'));
-
-	} else {
-
-		$web_all = 0; $ftp_all = 0; $smtp_all = 0; $pop_all = 0; $sum_all = 0; $i = 1;
-
-		while (!$rs -> EOF) {
-
-			$tpl -> assign(
-							array(
-									'DATE' => date("d.m.Y, G:i", $rs -> fields['traff_date']),
-									'WEB_TRAFF' => sizeit($rs -> fields['web_traff']),
-									'FTP_TRAFF' => sizeit($rs -> fields['ftp_traff']),
-									'SMTP_TRAFF' => sizeit($rs -> fields['smtp_traff']),
-									'POP_TRAFF' => sizeit($rs -> fields['pop_traff']),
-									'SUM_TRAFF' => sizeit($rs -> fields['sum_traff']),
-									'CONTENT' => ($i % 2 == 0) ? 'content3' : 'content2'
-
-								 )
-						  );
-
-			$tpl -> parse('TRAFF_ITEM', '.traff_item');
-
-			$web_all += $rs -> fields['web_traff'];
-
-			$ftp_all += $rs -> fields['ftp_traff'];
-
-			$smtp_all += $rs -> fields['smtp_traff'];
-
-			$pop_all += $rs -> fields['pop_traff'];
-
-			$sum_all += $rs -> fields['sum_traff'];
-
-			$rs -> MoveNext(); $i++;
-
-		}
-
-		$tpl -> assign(
-						array(
-								'WEB_ALL' => sizeit($web_all),
-								'FTP_ALL' => sizeit($ftp_all),
-								'SMTP_ALL' => sizeit($smtp_all),
-								'POP_ALL' => sizeit($pop_all),
-								'SUM_ALL' => sizeit($sum_all)
-							 )
-					  );
-
-	}
-*/
-
 }
 
 // common page data.
 
 $theme_color = Config::get('USER_INITIAL_THEME');
 
-$tpl->assign(array('TR_CLIENT_DOMAIN_STATISTICS_PAGE_TITLE' => tr('Selity - Client/Domain Statistics'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
-		'THEME_CHARSET' => tr('encoding'),
-		'ISP_LOGO' => get_logo($_SESSION['user_id'])));
+$tpl->assign(array(
+	'TR_PAGE_TITLE' => tr('Selity - Client/Domain Statistics'),
+	'THEME_COLOR_PATH' => '../themes/'.$theme_color,
+	'THEME_CHARSET' => tr('encoding'),
+	'ISP_LOGO' => get_logo($_SESSION['user_id'])
+));
 
 // dynamic page data.
 
-$current_month = date("m", time());
-$current_year = date("Y", time());
+$current_month = date('m', time());
+$current_year = date('Y', time());
 list ($current_month, $current_year) = gen_page_post_data($tpl, $current_month, $current_year);
 gen_dmn_traff_list($tpl, $sql, $current_month, $current_year, $_SESSION['user_id']);
 
@@ -291,25 +210,27 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-$tpl->assign(array('TR_DOMAIN_STATISTICS' => tr('Domain statistics'),
-		'DOMAIN_URL' => 'http://' . $_SESSION['user_logged'] . '/stats/',
-		'TR_AWSTATS' => tr('Web Stats'),
-		'TR_MONTH' => tr('Month'),
-		'TR_YEAR' => tr('Year'),
-		'TR_SHOW' => tr('Show'),
-		'TR_DATE' => tr('Date'),
-		'TR_WEB_TRAFF' => tr('WEB'),
-		'TR_FTP_TRAFF' => tr('FTP'),
-		'TR_SMTP_TRAFF' => tr('SMTP'),
-		'TR_POP_TRAFF' => tr('POP/IMAP'),
-		'TR_SUM' => tr('Sum'),
-		'TR_ALL' => tr('Total')));
+$tpl->assign(array(
+	'TR_DOMAIN_STATISTICS' => tr('Domain statistics'),
+	'DOMAIN_URL' => 'http://' . $_SESSION['user_logged'] . '/stats/',
+	'TR_AWSTATS' => tr('Web Stats'),
+	'TR_MONTH' => tr('Month'),
+	'TR_YEAR' => tr('Year'),
+	'TR_SHOW' => tr('Show'),
+	'TR_DATE' => tr('Date'),
+	'TR_WEB_TRAFF' => tr('WEB'),
+	'TR_FTP_TRAFF' => tr('FTP'),
+	'TR_SMTP_TRAFF' => tr('SMTP'),
+	'TR_POP_TRAFF' => tr('POP/IMAP'),
+	'TR_SUM' => tr('Sum'),
+	'TR_ALL' => tr('Total')
+));
 
 gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

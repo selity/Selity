@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_CLIENT_ADD_SUBDOMAIN_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -63,9 +63,7 @@ function makeUser(){
 							   <label for="subdomain_name">{TR_SUBDOMAIN_NAME}</label> <img src="{THEME_COLOR_PATH}/images/icons/help.png" width="16" height="16" onmouseover="showTip('dmn_help', event)" onmouseout="hideTip('dmn_help')" />
 							  </td>
 							  <td class="content"><input type="text" name="subdomain_name" id="subdomain_name" value="{SUBDOMAIN_NAME}" style="width:170px" class="textinput" onblur="makeUser();">
-								<input type="radio" name="dmn_type" value="dmn" {SUB_DMN_CHECKED} onClick="changeDom('real');">{DOMAIN_NAME}
 								<!-- BDP: to_alias_domain -->
-								<input type="radio" name="dmn_type" value="als" {SUB_ALS_CHECKED} onClick="changeDom('alias');">
 								<select name="als_id">
 									<!-- BDP: als_list -->
 									<option value="{ALS_ID}" {ALS_SELECTED}>.{ALS_NAME}</option>
@@ -75,8 +73,13 @@ function makeUser(){
 								</td>
 							</tr>
 							<tr>
-							  <td width="250" class="content2"><label for="subdomain_mnt_pt">{TR_DIR_TREE_SUBDOMAIN_MOUNT_POINT}</label></td>
-							  <td class="content"><input type="text" name="subdomain_mnt_pt" id="subdomain_mnt_pt" value="{SUBDOMAIN_MOUNT_POINT}" style="width:170px" class="textinput"></td>
+								<td width="250" class="content2"><label for="subdomain_mnt_pt">{TR_DIR_TREE_SUBDOMAIN_MOUNT_POINT}</label></td>
+								<td class="content"><input type="text" name="subdomain_mnt_pt" id="subdomain_mnt_pt" value="{SUBDOMAIN_MOUNT_POINT}" style="width:170px" class="textinput"></td>
+							</tr>
+							<tr>
+								<td width="250" class="content2"><label for="forward">{TR_FORWARD}</label></td>
+								<td class="content"><input name="forward" type="text" class="textinput" id="forward" style="width:170px" value="{FORWARD}">
+								</td>
 							</tr>
 							<tr>
 							  <td colspan="2">&nbsp;</td>

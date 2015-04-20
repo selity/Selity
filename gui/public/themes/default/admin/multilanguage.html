@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_MULTILANGUAGE}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<div class="content-wrap"><div class='col2_2'><b>{TR_ACTION}</b></div></div>
+						<div class='col2_1'><b>{TR_LANGUAGE}</b></div>
+
+						<script type="text/javascript">
+							function action_delete(url, language) {
+								message = "{TR_MESSAGE_DELETE}"
+								if (!confirm(message.replace(/%s/, language)))
+									return false;
+								location = url;
+							}
+						</script>
+
+						<!--Repeats_:LANGUAGE:-->
+						<div class="content-wrap"><div class='col2_2'>
+							<a href="{URL_EXPORT}" class="link" target="_blank">{TR_EXPORT}</a>
+							<a href="#" onclick="action_delete('{URL_DELETE}', '{LANG_NAME}')" class="link">{TR_UNINSTALL}</a>
+						</div></div>
+						<div class='col2_1'>
+							<input type="radio" name="default_language" value="{LANG_VALUE}" {TR_CHECKED}/>
+							{LANG_NAME}
+						</div>
+						<!--:LANGUAGE:_Repeats-->
+
+						<div class="clear">&nbsp;</div>
+						<form action="" method="post" enctype="multipart/form-data" name="set_layout" id="set_layout">
+							<br />
+							<b>{TR_INSTALL_NEW_LANGUAGE}</b>
+							<br />
+							<br />
+							{TR_LANGUAGE_FILE}:&nbsp;<input type="file" name="lang_file" class="textinput" size="60" />
+							<br />
+							<br />
+							<input name="Submit" type="submit" class="button" value="{TR_INSTALL}">
+						</form>
+						<div class="clear">&nbsp;</div>
+
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

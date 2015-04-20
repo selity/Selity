@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -22,7 +22,7 @@ require '../include/selity-lib.php';
 
 check_login(__FILE__);
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+$admin_id = $_SESSION['user_id'];
 
 
 if (isset($_GET['gname']) && $_GET['gname'] !== '' && is_numeric($_GET['gname'])){
@@ -43,12 +43,12 @@ $query = "
 	WHERE
 		`id` = ?
 	AND
-		`dmn_id` = ?
+		`admin_id` = ?
 	AND
 		`ugroup` != ?
 ";
 
-$rs = exec_query($sql, $query, array($change_status, $group_id, $dmn_id, $awstats_auth));
+$rs = exec_query($sql, $query, array($change_status, $group_id, $admin_id, $awstats_auth));
 
 
 $query = "
@@ -57,10 +57,10 @@ $query = "
 	FROM
 		`htaccess`
 	WHERE
-		`dmn_id` = ?
+		`admin_id` = ?
 ";
 
-$rs = exec_query($sql, $query, array($dmn_id));
+$rs = exec_query($sql, $query, array($admin_id));
 
 while (!$rs -> EOF) {
 
@@ -93,7 +93,6 @@ while (!$rs -> EOF) {
 	$rs -> MoveNext();
 }
 
-check_for_lock_file();
 send_request();
 
 write_log("$admin_login: deletes group ID (protected areas): $groupname");

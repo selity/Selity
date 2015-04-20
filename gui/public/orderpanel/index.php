@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -45,24 +45,22 @@ function gen_packages_list(&$tpl, &$sql, $user_id) {
 			and
 				t1.reseller_id = t2.admin_id
 			and
-				t1.status=1
+				t1.status = 1
 			order by
 				t1.id
-';
-
+		';
 		$rs = exec_query($sql, $query, array('admin'));
 	} else {
 		$query = '
-				select
-					*
-				from
-					hosting_plans
-				where
-					reseller_id = ?
-				  and
-					status = '1'
-';
-
+			select
+				*
+			from
+				hosting_plans
+			where
+				reseller_id = ?
+			and
+				status = 1
+		';
 		$rs = exec_query($sql, $query, array($user_id));
 	}
 
@@ -76,20 +74,19 @@ function gen_packages_list(&$tpl, &$sql, $user_id) {
 			}
 			$price = $rs->fields['price'];
 			if ($price == 0 || $price == '') {
-				$price = "/ " . tr('free of charge');
+				$price = '/ ' . tr('free of charge');
 			} else {
-				$price = "/ " . $price . " " . $rs->fields['value'] . " " . $rs->fields['payment'];
+				$price = '/ ' . $price . ' ' . $rs->fields['value'] . ' ' . $rs->fields['payment'];
 			}
 
-			$tpl->assign(
-				array('PACK_NAME' => $rs->fields['name'],
-					'PACK_ID' => $rs->fields['id'],
-					'USER_ID' => $user_id,
-					'PURCHASE' => tr('Purchase'),
-					'PACK_INFO' => $description,
-					'PRICE' => $price,
-					)
-				);
+			$tpl->assign(array(
+				'PACK_NAME'	=> $rs->fields['name'],
+				'PACK_ID'	=> $rs->fields['id'],
+				'USER_ID'	=> $user_id,
+				'PURCHASE'	=> tr('Purchase'),
+				'PACK_INFO'	=> $description,
+				'PRICE'	=> $price,
+			));
 
 			$tpl->parse('PURCHASE_LIST', '.purchase_list');
 
@@ -132,7 +129,7 @@ $tpl->assign(
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

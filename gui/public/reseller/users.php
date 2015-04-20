@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -33,16 +33,15 @@ $tpl->define_dynamic('scroll_prev_gray', 'page');
 $tpl->define_dynamic('scroll_prev', 'page');
 $tpl->define_dynamic('scroll_next_gray', 'page');
 $tpl->define_dynamic('scroll_next', 'page');
-$tpl->define_dynamic('edit_option', 'page');
 
 $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_CLIENT_CHANGE_PERSONAL_DATA_PAGE_TITLE' => tr('Selity - Users'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
-			'THEME_CHARSET' => tr('encoding'),
-			'ISP_LOGO' => get_logo($_SESSION['user_id']),
+			'TR_PAGE_TITLE'	=> tr('Selity - Users'),
+			'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
+			'THEME_CHARSET'	=> tr('encoding'),
+			'ISP_LOGO'	=> get_logo($_SESSION['user_id']),
 		)
 	);
 
@@ -98,27 +97,27 @@ $crnt_year = date("Y");
 
 $tpl->assign(
 		array(
-			'TR_MANAGE_USERS' => tr('Manage users'),
-			'TR_USERS' => tr('Users'),
-			'TR_USER_STATUS' => tr('Status'),
-			'TR_DETAILS' => tr('Details'),
-			'TR_SEARCH' => tr('Search'),
-			'TR_USERNAME' => tr('Username'),
-			'TR_ACTION' => tr('Actions'),
-			'TR_CREATION_DATE' => tr('Creation date'),
-			'TR_CHANGE_USER_INTERFACE' => tr('Switch to user interface'),
-			'TR_BACK' => tr('Back'),
-			'TR_TITLE_BACK' => tr('Return to previous menu'),
-			'TR_TABLE_NAME' => tr('Users list'),
-			'TR_MESSAGE_CHANGE_STATUS' => tr('Are you sure you want to change the status of %s?', true, '%s'),
-			'TR_MESSAGE_DELETE_ACCOUNT' => tr('Are you sure you want to delete %s?', true, '%s'),
-			'TR_STAT' => tr('Stats'),
-			'VL_MONTH' => $crnt_month,
-			'VL_YEAR' => $crnt_year,
-			'TR_EDIT_DOMAIN' => tr('Edit Domain'),
-			'TR_EDIT_USER' => tr('Edit User'),
-			'TR_BW_USAGE' => tr('Bandwidth'),
-			'TR_DISK_USAGE' => tr('Disk')
+			'TR_MANAGE_USERS'	=> tr('Manage users'),
+			'TR_USERS'	=> tr('Users'),
+			'TR_USER_STATUS'	=> tr('Status'),
+			'TR_DETAILS'	=> tr('Details'),
+			'TR_SEARCH'	=> tr('Search'),
+			'TR_USERNAME'	=> tr('Username'),
+			'TR_ACTION'	=> tr('Actions'),
+			'TR_CREATION_DATE'	=> tr('Creation date'),
+			'TR_CHANGE_USER_INTERFACE'	=> tr('Switch to user interface'),
+			'TR_BACK'	=> tr('Back'),
+			'TR_TITLE_BACK'	=> tr('Return to previous menu'),
+			'TR_TABLE_NAME'	=> tr('Users list'),
+			'TR_MESSAGE_CHANGE_STATUS'	=> tr('Are you sure you want to change the status of %s?', '%s'),
+			'TR_MESSAGE_DELETE_ACCOUNT'	=> tr('Are you sure you want to delete %s?', '%s'),
+			'TR_STAT'	=> tr('Stats'),
+			'VL_MONTH'	=> $crnt_month,
+			'VL_YEAR'	=> $crnt_year,
+			'TR_EDIT_DOMAIN'	=> tr('Edit Domain'),
+			'TR_EDIT_USER'	=> tr('Edit User'),
+			'TR_BW_USAGE'	=> tr('Bandwidth'),
+			'TR_DISK_USAGE'	=> tr('Disk')
 		)
 	);
 
@@ -135,7 +134,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();
@@ -183,46 +182,44 @@ function generate_users_list (&$tpl, $admin_id) {
 	$count_query = '';
 
 	if (isset($_SESSION['search_for'])) {
-		gen_manage_domain_query($search_query,
+		gen_manage_user_query($search_query,
 			$count_query,
-			$admin_id,
 			$start_index,
 			$rows_per_page,
 			$_SESSION['search_for'],
 			$_SESSION['search_common'],
-			$_SESSION['search_status']
+			$_SESSION['search_status'],
+			$admin_id
 			);
 
-		gen_manage_domain_search_options($tpl, $_SESSION['search_for'], $_SESSION['search_common'], $_SESSION['search_status']);
+		gen_user_search_options($tpl, $_SESSION['search_for'], $_SESSION['search_common'], $_SESSION['search_status']);
 	} else {
-		gen_manage_domain_query($search_query,
+		gen_manage_user_query($search_query,
 			$count_query,
-			$admin_id,
 			$start_index,
 			$rows_per_page,
-			'n/a',
-			'n/a',
-			'n/a'
+			'',
+			'',
+			'',
+			$admin_id
 			);
 
-		gen_manage_domain_search_options($tpl, 'n/a', 'n/a', 'n/a');
+		gen_user_search_options($tpl, 'n/a', 'n/a', 'n/a');
 	}
 
 	$rs = execute_query($sql, $count_query);
-
 	$records_count = $rs->fields['cnt'];
-
 	$rs = execute_query($sql, $search_query);
 
 	if ($records_count == 0) {
 		if (isset($_SESSION['search_for'])) {
 			$tpl->assign(
 				array(
-					'USERS_LIST' => '',
-					'SCROLL_PREV' => '',
-					'SCROLL_NEXT' => '',
-					'TR_VIEW_DETAILS' => tr('View aliases'),
-					'SHOW_DETAILS' => tr("Show")
+					'USERS_LIST'	=> '',
+					'SCROLL_PREV'	=> '',
+					'SCROLL_NEXT'	=> '',
+					'TR_VIEW_DETAILS'	=> tr('View aliases'),
+					'SHOW_DETAILS'	=> tr("Show")
 					)
 				);
 
@@ -236,11 +233,11 @@ function generate_users_list (&$tpl, $admin_id) {
 		} else {
 			$tpl->assign(
 				array(
-					'USERS_LIST' => '',
-					'SCROLL_PREV' => '',
-					'SCROLL_NEXT' => '',
-					'TR_VIEW_DETAILS' => tr('View aliases'),
-					'SHOW_DETAILS' => tr("Show")
+					'USERS_LIST'	=> '',
+					'SCROLL_PREV'	=> '',
+					'SCROLL_NEXT'	=> '',
+					'TR_VIEW_DETAILS'	=> tr('View aliases'),
+					'SHOW_DETAILS'	=> tr("Show")
 					)
 				);
 
@@ -254,8 +251,8 @@ function generate_users_list (&$tpl, $admin_id) {
 		} else {
 			$tpl->assign(
 				array(
-					'SCROLL_PREV_GRAY' => '',
-					'PREV_PSI' => $prev_si
+					'SCROLL_PREV_GRAY'	=> '',
+					'PREV_PSI'	=> $prev_si
 					)
 				);
 		}
@@ -267,47 +264,33 @@ function generate_users_list (&$tpl, $admin_id) {
 		} else {
 			$tpl->assign(
 				array(
-					'SCROLL_NEXT_GRAY' => '',
-					'NEXT_PSI' => $next_si
+					'SCROLL_NEXT_GRAY'	=> '',
+					'NEXT_PSI'	=> $next_si
 					)
 				);
 		}
 		$i = 1;
 
 		while (!$rs->EOF) {
-			if ($rs->fields['domain_status'] == Config::get('ITEM_OK_STATUS')) {
+			if ($rs->fields['user_status'] == Config::get('ITEM_OK_STATUS')) {
 				$status_icon = "ok.png";
-			} else if ($rs->fields['domain_status'] == Config::get('ITEM_DISABLED_STATUS')) {
+			} else if ($rs->fields['user_status'] == Config::get('ITEM_DISABLED_STATUS')) {
 				$status_icon = "disabled.png";
-			} else if ($rs->fields['domain_status'] == Config::get('ITEM_ADD_STATUS') || $rs->fields['domain_status'] == Config::get('ITEM_CHANGE_STATUS') || $rs->fields['domain_status'] == Config::get('ITEM_TOENABLE_STATUS') || $rs->fields['domain_status'] == Config::get('ITEM_RESTORE_STATUS') || $rs->fields['domain_status'] == Config::get('ITEM_TODISABLED_STATUS') || $rs->fields['domain_status'] == Config::get('ITEM_DELETE_STATUS')) {
+			} else if ($rs->fields['user_status'] == Config::get('ITEM_ADD_STATUS') || $rs->fields['user_status'] == Config::get('ITEM_CHANGE_STATUS') || $rs->fields['user_status'] == Config::get('ITEM_TOENABLE_STATUS') || $rs->fields['user_status'] == Config::get('ITEM_RESTORE_STATUS') || $rs->fields['user_status'] == Config::get('ITEM_TODISABLED_STATUS') || $rs->fields['user_status'] == Config::get('ITEM_DELETE_STATUS')) {
 				$status_icon = "reload.png";
 			} else {
 				$status_icon = "error.png";
 			}
-			$status_url = $rs->fields['domain_id'];
+			$status_url = $rs->fields['admin_id'];
 
 			$tpl->assign(
 				array(
-					'STATUS_ICON' => $status_icon,
-					'URL_CHANGE_STATUS' => $status_url,
+					'STATUS_ICON'	=> $status_icon,
+					'URL_CHANGE_STATUS'	=> $status_url,
 					)
 				);
 
-			$admin_name = decode_idna($rs->fields['domain_name']);
-
-			if ($i % 2 == 0) {
-				$tpl->assign(
-					array(
-						'CLASS_TYPE_ROW' => 'content',
-						)
-					);
-			} else {
-				$tpl->assign(
-					array(
-						'CLASS_TYPE_ROW' => 'content2',
-						)
-					);
-			}
+			$admin_name = decode_idna($rs->fields['admin_name']);
 
 			$dom_created = $rs->fields['domain_created'];
 
@@ -320,18 +303,18 @@ function generate_users_list (&$tpl, $admin_id) {
 
 			$tpl->assign(
 				array(
-					'CREATION_DATE' => $dom_created,
-					'DOMAIN_ID' => $rs->fields['domain_id'],
-					'NAME' => $admin_name,
-					'ACTION' => tr('Delete'),
-					'USER_ID' => $rs->fields['domain_admin_id'],
-					'CHANGE_INTERFACE' => tr('Switch'),
-					'DISK_LIMIT' => $rs->fields['domain_disk_limit'],
-					'DISK_USAGE' => round($rs->fields['domain_disk_usage'] / 1024 / 1024,1)
+					'CREATION_DATE'	=> $dom_created,
+					'DOMAIN_ID'	=> $rs->fields['admin_id'],
+					'NAME'	=> $admin_name,
+					'ACTION'	=> tr('Delete'),
+					'USER_ID'	=> $rs->fields['user_admin_id'],
+					'CHANGE_INTERFACE'	=> tr('Switch'),
+					'DISK_LIMIT'	=> $rs->fields['max_disk'],
+					'DISK_USAGE'	=> round($rs->fields['disk_usage'] / 1024 / 1024,1)
 					)
 				);
 
-			gen_domain_details($tpl, $sql, $rs->fields['domain_id']);
+			gen_domain_details($tpl, $sql, $rs->fields['admin_id']);
 			$tpl->parse('USER_ENTRY', '.user_entry');
 			$i ++;
 			$rs->MoveNext();
@@ -360,7 +343,7 @@ function check_externel_events(&$tpl) {
 		unset($_SESSION["edit"]);
 	} else if (isset($_SESSION["user_has_domain"])) {
 		if ($_SESSION["user_has_domain"] == '_yes_') {
-			set_page_message(tr('This user has domain record !<br>First remove the domain from the system!'));
+			set_page_message(tr('This user has domain record !<br>First remove the domain FROM the system!'));
 		}
 
 		unset($_SESSION["user_has_domain"]);

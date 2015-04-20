@@ -1,0 +1,55 @@
+<html>
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/index.css" type="text/css" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div id="box">
+					<div id="title">{TR_LOGIN_INFO}</div>
+					<!--Section_:PageMessage:-->
+						<div id='PageMessage'>
+							{PageMessage}
+						</div>
+					<!--:PageMessage:_Section-->
+					<!--Section_:NoPageMessage:-->
+						<div id='NoPageMessage'>
+							&nbsp;
+						</div>
+					<!--:NoPageMessage:_Section-->
+					<form name="frm" action="index.php" method="post">
+						<div class="left">
+							<div class="center">
+								<img src="{THEME_COLOR_PATH}/style/images/logo.png" width="72" height="72" alt="">
+							<br />
+							<!--Section_:LOSTPW:-->
+							<a class="login" href="lostpassword.php">{TR_LOSTPW}</a>
+							<!--:LOSTPW:_Section-->
+							</div>
+						</div>
+						<div class="main">
+							<div>
+								{TR_USERNAME}:<input type="text" name="uname" id="uname" value="" maxlength="255" style="width:150px" tabindex="1">
+							</div>
+							<div class="clear">&nbsp;</div>
+							<div>
+								{TR_PASSWORD}:
+								<input type="password" name="upass" id="upass" value="" maxlength="255" style="width:150px" tabindex="2">
+							</div>
+							<div class="clear">&nbsp;</div>
+							<div>
+								<input type="submit" name="Submit" class="button" value="{TR_LOGIN}" style="width:150px" tabindex="3">
+							</div>
+							<div class="clear">&nbsp;</div>
+						</div>
+					</form>
+					<div class="clear">&nbsp;</div>
+				</div>
+			</div>
+		</div>
+		<div class="clear">&nbsp;</div>
+<!--Includes_:footer:-->
+	</body>
+</html>

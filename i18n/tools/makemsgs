@@ -68,31 +68,12 @@ fi
 -d "Selity" \
 --keyword="tr" \
 --no-location \
-${GUI}/library/i18n.php \
-${GUI}/library/iMSCP/*.php \
-${GUI}/library/iMSCP/*/*.php \
-${GUI}/library/resources/i18n/zend.php \
-${GUI}/library/iMSCP/View/Helpers/Functions/*.php \
+${GUI}/library/selity/*.php \
 ${GUI}/public/*.php \
 ${GUI}/public/*/*.php \
 --from-code=utf-8 \
 -p ../po \
 -o "Selity.pot"
-
-# XML files
-/usr/bin/xgettext \
---foreign-user \
---language=Glade \
--d "Selity" \
---copyright-holder="Selity Team - All rights reserved" \
---package-name="selity" \
---package-version="1.0.3.0" \
---msgid-bugs-address="i18n@selity.org" \
---keyword="label" \
---no-location \
-${GUI}/themes/*/*/*.xml \
--p ../po \
--o "Selity.pot" -j -s
 
 sed --in-place '/#. Please ignore this entry/d' ../po/Selity.pot
 sed --in-place 's/msgid "encoding"/#. Please ignore this entry\nmsgid "encoding"/' ../po/Selity.pot

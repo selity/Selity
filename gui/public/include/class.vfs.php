@@ -3,7 +3,7 @@
  * Selity - A server control panel
  *
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -46,7 +46,7 @@ class vfs {
 	 *
 	 * @var string
 	 */
-	var $_domain = '';
+	var $_user_id = '';
 
 	/**
 	 * FTP connection handle
@@ -80,30 +80,25 @@ class vfs {
 	 * Create a new Virtual File System
 	 *
 	 * Creates a new Virtual File System object for the
-	 * specified domain.
+	 * specified user.
 	 *
-	 * Warning! $domain parameter is not sanitized, so this is
+	 * Warning! $user_id parameter is not sanitized, so this is
 	 * left as work for the caller.
 	 *
-	 * @param string $domain Domain name of the new VFS.
+	 * @param string $user_id user_id of the new VFS.
 	 * @param resource $db Adodb database resource.
 	 * @return vfs
 	 */
-	function vfs($domain, &$db) {
-		// Sort of php4 destructor
-		register_shutdown_function(array(&$this, "__destruct"));
-		return $this->__construct($domain, $db);
-	}
 
 	/**
 	 * PHP5 constructor
 	 *
-	 * @param string $domain Domain name of the new VFS.
+	 * @param string $user_id user of the new VFS.
 	 * @param resource $db Adodb database resource.
 	 * @return vfs
 	 */
-	function __construct($domain, &$db) {
-		$this->_domain = $domain;
+	function __construct($user_id, &$db) {
+		$this->_user_id = $user_id;
 		$this->_db = &$db;
 
 		if (!defined("VFS_TMP_DIR")) {
@@ -141,16 +136,22 @@ class vfs {
 	 * @return boolean Returns TRUE on succes or FALSE on failure.
 	 */
 	function _createTmpUser() {
-		// Get domain data
-		$query = 'select domain_uid, domain_gid
-				  from   domain
-				  where  domain_name = ?';
-		$rs = exec_query($this->_db, $query, array($this->_domain));
+		// Get user data
+		$query = '
+			SELECT
+				`user_uid`, `user_gid`, `admin_name`
+			from
+				`user_system_props`
+			LEFT JOIN `admin` ON `admin_id` = `user_admin_id`
+			WHERE
+				`user_admin_id` = ?'
+		;
+		$rs = exec_query($this->_db, $query, array($this->_user_id));
 		if (!$rs) {
 			return false;
 		}
 		// Generate a random userid and password
-		$user = uniqid('tmp_') . '@' . $this->_domain;
+		$user = uniqid('tmp_') . '@' . $this->_user_id;
 		$this->_passwd = uniqid('tmp_', true);
 		$passwd = crypt_user_pass_with_salt($this->_passwd);
 		// Create the temporary user
@@ -159,9 +160,9 @@ class vfs {
 				(userid, passwd, uid, gid, shell, homedir)
 			values
 				(?, ?, ?, ?, ?, ?)
-';
-		$rs = exec_query($this->_db, $query, array($user, $passwd, $rs->fields['domain_uid'], $rs->fields['domain_gid'],
-				Config::get('CMD_SHELL'), Config::get('FTP_HOMEDIR') . '/' . $this->_domain
+		';
+		$rs = exec_query($this->_db, $query, array($user, $passwd, $rs->fields['user_uid'], $rs->fields['user_gid'],
+				Config::get('CMD_SHELL'), Config::get('FTP_HOMEDIR') . '/' . $rs->fields['admin_name']
 				));
 		if (!$rs) {
 			return false;
@@ -177,10 +178,7 @@ class vfs {
 	 * @return Returns TRUE on succes or FALSE on failure.
 	 */
 	function _removeTmpUser() {
-		$query = '
-			delete from ftp_users
-			where  userid = ?
-';
+		$query = 'delete from ftp_users where  userid = ?';
 		$rs = exec_query($this->_db, $query, array($this->_user));
 
 		return $rs ? true : false;
@@ -206,14 +204,14 @@ class vfs {
 			return false;
 		}
 		// 'localhost' for testing purposes. I have to study if a better
-		// $this->_domain would work on all situations
-		$this->_handle = @ftp_connect('localhost');
+		// $this->_user_id would work on all situations
+		$this->_handle = ftp_connect('localhost');
 		if (!is_resource($this->_handle)) {
 			$this->close();
 			return false;
 		}
 		// Perform actual login
-		$response = @ftp_login($this->_handle, $this->_user, $this->_passwd);
+		$response = ftp_login($this->_handle, $this->_user, $this->_passwd);
 		if (!$response) {
 			$this->close();
 			return false;
@@ -388,14 +386,14 @@ if (!function_exists('file_put_contents')) {
 		// Get the data size
 		$length = strlen($content);
 		// Open the file for writing
-		if (($fh = @fopen($filename, 'wb')) === false) {
+		if (($fh = fopen($filename, 'wb')) === false) {
 			user_error('file_put_contents() failed to open stream: Permission denied',
 				E_USER_WARNING);
 			return false;
 		}
 		// Write to the file
 		$bytes = 0;
-		if (($bytes = @fwrite($fh, $content)) === false) {
+		if (($bytes = fwrite($fh, $content)) === false) {
 			$errormsg = sprintf('file_put_contents() Failed to write %d bytes to %s',
 				$length,
 				$filename);
@@ -403,7 +401,7 @@ if (!function_exists('file_put_contents')) {
 			return false;
 		}
 		// Close the handle
-		@fclose($fh);
+		fclose($fh);
 		// Check all the data was written
 		if ($bytes != $length) {
 			$errormsg = sprintf('file_put_contents() Only %d of %d bytes written, possibly out of free disk space.',

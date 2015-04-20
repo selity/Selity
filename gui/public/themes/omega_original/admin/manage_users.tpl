@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_ADMIN_MANAGE_USERS_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -164,7 +164,7 @@ function sbmt(form, uaction) {
 	<td width="27" align="right">&nbsp;</td>
   </tr>
   <tr>
-	<td><form action="manage_users.php" method="post" name="search_user" id="search_user">
+	<td><form action="users_show.php" method="post" name="search_user" id="search_user">
 	  <table width="100%" cellpadding="5" cellspacing="5">
 		<tr>
 		  <td width="25">&nbsp;</td>
@@ -246,13 +246,13 @@ function sbmt(form, uaction) {
 		  <img src="{THEME_COLOR_PATH}/images/icons/flip/prev_gray.gif" width="20" height="20" border="0" />
 		  <!-- EDP: scroll_prev_gray -->
 		  <!-- BDP: scroll_prev -->
-		  <a href="manage_users.php?psi={PREV_PSI}"><img src="{THEME_COLOR_PATH}/images/icons/flip/prev.gif" width="20" height="20" border="0" /></a>
+		  <a href="users_show.php?psi={PREV_PSI}"><img src="{THEME_COLOR_PATH}/images/icons/flip/prev.gif" width="20" height="20" border="0" /></a>
 		  <!-- EDP: scroll_prev -->
 		  <!-- BDP: scroll_next_gray -->
 		  &nbsp;<img src="{THEME_COLOR_PATH}/images/icons/flip/next_gray.gif" width="20" height="20" border="0" />
 		  <!-- EDP: scroll_next_gray -->
 		  <!-- BDP: scroll_next -->
-		  &nbsp;<a href="manage_users.php?psi={NEXT_PSI}"><img src="{THEME_COLOR_PATH}/images/icons/flip/next.gif" width="20" height="20" border="0" /></a>
+		  &nbsp;<a href="users_show.php?psi={NEXT_PSI}"><img src="{THEME_COLOR_PATH}/images/icons/flip/next.gif" width="20" height="20" border="0" /></a>
 		  <!-- EDP: scroll_next -->
 	  </div></td>
 	<td>&nbsp;</td>

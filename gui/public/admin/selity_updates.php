@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -31,14 +31,12 @@ $tpl->define_dynamic('hosting_plans', 'page');
 $tpl->define_dynamic('update_message', 'page');
 $tpl->define_dynamic('update_infos', 'page');
 
-$tpl->assign(
-	array(
-		'TR_ADMIN_SELITY_UPDATES_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
-		'THEME_CHARSET' => tr('encoding'),
-		'ISP_LOGO' => get_logo($_SESSION['user_id'])
-		)
-	);
+$tpl->assign(array(
+	'TR_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
+	'THEME_COLOR_PATH' => '../themes/'.$theme_color,
+	'THEME_CHARSET' => tr('encoding'),
+	'ISP_LOGO' => get_logo($_SESSION['user_id'])
+));
 
 /* BEGIN common functions */
 function get_update_infos(&$tpl) {
@@ -99,7 +97,8 @@ get_update_infos($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG')) dump_gui_debug();
+if (configs::getInstance()->GUI_DEBUG)
+	dump_gui_debug();
 
 unset_messages();
 

@@ -47,7 +47,7 @@ sub loadData{
 
 	my $sql = "
 		SELECT
-			`t2`.`id`, `t2`.`ugroup`, `t2`.`status`, `t2`.`users`, `t3`.`domain_name`
+			`t2`.`id`, `t2`.`ugroup`, `t2`.`status`, `t2`.`users`, `t3`.`admin_name`
 		FROM
 			(
 				SELECT * from `htaccess_groups`,
@@ -68,14 +68,14 @@ sub loadData{
 								),
 								')\$'
 							)
-						) GROUP BY `dmn_id`
+						) GROUP BY `admin_id`
 					), '') as `users`
 				) as t1
 			) as t2
 		LEFT JOIN
-			`domain` AS `t3`
+			`admin` AS `t3`
 		ON
-			`t2`.`dmn_id` = `t3`.`domain_id`
+			`t2`.`admin_id` = `t3`.`admin_id`
 		WHERE `id` = ?
 	";
 
@@ -84,7 +84,7 @@ sub loadData{
 	error("$rdata") and return 1 if(ref $rdata ne 'HASH');
 	error("No group in table htaccess_groups has id = $self->{htgroupId}") and return 1 unless(exists $rdata->{$self->{htgroupId}});
 
-	unless($rdata->{$self->{htgroupId}}->{domain_name}){
+	unless($rdata->{$self->{htgroupId}}->{admin_name}){
 		local $Data::Dumper::Terse = 1;
 		error("Orphan entry: ".Dumper($rdata->{$self->{htgroupId}}));
 		my @sql = (
@@ -144,7 +144,7 @@ sub buildHTTPDData{
 	$self->{httpd} = {
 		HTGROUP_NAME	=> $self->{ugroup},
 		HTGROUP_USERS	=> $self->{users},
-		HTGROUP_DMN		=> $self->{domain_name},
+		HTGROUP_DMN		=> $self->{admin_name},
 	};
 
 	0;

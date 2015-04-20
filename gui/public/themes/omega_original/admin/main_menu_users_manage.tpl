@@ -10,9 +10,9 @@
 	<td width="30">&nbsp;</td>
 	<td><table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr>
-	  <td class="menu"><div align="center"><a href="manage_users.php" onmouseover="MM_swapImage('manage_users','','{THEME_COLOR_PATH}/images/icons/manage_users_a.gif',1)" onmouseout="MM_swapImgRestore()"><img src="{THEME_COLOR_PATH}/images/icons/manage_users_a.gif" name="manage_users" width="47" height="46" border="0" id="manage_users" /></a></div></td>
+	  <td class="menu"><div align="center"><a href="users_show.php" onmouseover="MM_swapImage('manage_users','','{THEME_COLOR_PATH}/images/icons/manage_users_a.gif',1)" onmouseout="MM_swapImgRestore()"><img src="{THEME_COLOR_PATH}/images/icons/manage_users_a.gif" name="manage_users" width="47" height="46" border="0" id="manage_users" /></a></div></td>
   </tr><tr>
-	<td class="menu"><div align="center"><a href="manage_users.php" class="menu_active" onmouseover="MM_swapImage('manage_users','','{THEME_COLOR_PATH}/images/icons/manage_users_a.gif',1)" onmouseout="MM_swapImgRestore()">{TR_MENU_MANAGE_USERS}</a></div></td>
+	<td class="menu"><div align="center"><a href="users_show.php" class="menu_active" onmouseover="MM_swapImage('manage_users','','{THEME_COLOR_PATH}/images/icons/manage_users_a.gif',1)" onmouseout="MM_swapImgRestore()">{TR_MENU_MANAGE_USERS}</a></div></td>
   </tr>
 <!-- BDP: hosting_plans -->
 </table></td>

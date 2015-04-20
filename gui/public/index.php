@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -25,22 +25,18 @@ if (isset($_GET['logout'])) {
 }
 
 do_session_timeout();
-
 init_login();
 
 if (isset($_POST['uname']) && isset($_POST['upass']) && !empty($_POST['uname']) && !empty($_POST['upass'])) {
 
 	$uname = encode_idna($_POST['uname']);
-
 	check_input(trim($_POST['uname']));
 	check_input(trim($_POST['upass']));
-
 	if (register_user($uname, $_POST['upass'])) {
 		redirect_to_level_page();
 	}
-
 	header('Location: index.php');
-	exit();
+	die();
 }
 
 if (check_user_login()) {
@@ -51,56 +47,37 @@ if (check_user_login()) {
 
 shall_user_wait();
 
-$theme_color = isset($_SESSION['user_theme']) ? $_SESSION['user_theme'] : Config::get('USER_INITIAL_THEME');
+$cfg = configs::getInstance();
+$theme_color = isset($_SESSION['user_theme']) ? $_SESSION['user_theme'] : $cfg->USER_INITIAL_THEME;
+$tpl = template::getInstance();
 
-$tpl = new pTemplate();
-
-if ((Config::get('MAINTENANCEMODE') || databaseUpdate::getInstance()->checkUpdateExists()) && !isset($_GET['admin'])) {
-
-	$tpl->define('page', Config::get('LOGIN_TEMPLATE_PATH') . '/maintenancemode.tpl');
-
-	$tpl->assign(
-			array(
-				'TR_PAGE_TITLE' => tr('Selity'),
-				'THEME_COLOR_PATH' => Config::get('LOGIN_TEMPLATE_PATH'),
-				'THEME_CHARSET' => tr('encoding'),
-				'TR_MESSAGE' => nl2br(Config::get('MAINTENANCEMODE_MESSAGE')),
-				'TR_ADMINLOGIN' => tr('Administrator login')
-				)
-			);
-
-} else {
-
-	$tpl->define('page', Config::get('LOGIN_TEMPLATE_PATH') . '/index.tpl');
-
-	$tpl->assign(
-			array(
-				'TR_MAIN_INDEX_PAGE_TITLE' => tr('Selity'),
-				'THEME_COLOR_PATH' => Config::get('LOGIN_TEMPLATE_PATH'),
-				'THEME_CHARSET' => tr('encoding'),
-				'TR_LOGIN' => tr('Login'),
-				'TR_USERNAME' => tr('Username'),
-				'TR_PASSWORD' => tr('Password'),
-				'TR_LOGIN_INFO' => tr('Please enter your login information'),
-				// @todo: make this configurable by selity-lib
-				'TR_SSL_LINK' => isset($_SERVER['HTTPS']) ? 'http://'.htmlentities($_SERVER['HTTP_HOST']) : 'https://'.htmlentities($_SERVER['HTTP_HOST']),
-				'TR_SSL_IMAGE' => isset($_SERVER['HTTPS']) ? 'lock.png' : 'unlock.png',
-				'TR_SSL_DESCRIPTION' => !isset($_SERVER['HTTPS']) ? tr('Secure Connection') : tr('Normal Connection')
-				)
-			);
-
+if ($cfg->MAINTENANCEMODE || databaseUpdate::getInstance()->checkUpdateExists()) {
+	$tpl->addMessage(nl2br($cfg->MAINTENANCEMODE_MESSAGE));
 }
 
-if (Config::get('LOSTPASSWORD')) {
-	$tpl->assign('TR_LOSTPW', tr('Lost password'));
-} else {
-	$tpl->assign('TR_LOSTPW', '');
+
+$tpl->saveVariable(array(
+	'TR_PAGE_TITLE'		=> tr('Selity'),
+	'THEME_COLOR_PATH'	=> $cfg->LOGIN_TEMPLATE_PATH,
+	'THEME_CHARSET'		=> tr('encoding'),
+	'TR_LOGIN'			=> tr('Login'),
+	'TR_USERNAME'		=> tr('Username'),
+	'TR_PASSWORD'		=> tr('Password'),
+	'TR_LOGIN_INFO'		=> tr('Please enter your login information'),
+));
+
+
+if ($cfg->LOSTPASSWORD) {
+	$tpl->saveVariable(array('TR_LOSTPW' => tr('Lost password')));
+	$tpl->saveSection('LOSTPW');
 }
 
-gen_page_message($tpl);
+if (isset($_SESSION['user_page_message'])) {
+	$tpl->addMessage($_SESSION['user_page_message']);
+	unset($_SESSION['user_page_message']);
+}
 
-$tpl->parse('PAGE', 'page');
-$tpl->prnt();
+$tpl->flushOutput('login');
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();

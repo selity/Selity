@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={THEME_CHARSET}">
-<title>{TR_RESELLER_MAIN_INDEX_PAGE_TITLE}</title>
+<title>{TR_PAGE_TITLE}</title>
   <meta name="robots" content="noindex">
   <meta name="robots" content="nofollow">
 <link href="{THEME_COLOR_PATH}/css/selity.css" rel="stylesheet" type="text/css">
@@ -103,17 +103,17 @@
 							<tr>
 							  <td width="25">&nbsp;</td>
 							  <td class="content2" width="193">{TR_PHP}</td>
-							  <td class="content"><input type="radio" {DISABLED} name="php" value="_yes_" {TR_PHP_YES}>
+							  <td class="content"><input type="radio" {DISABLED} name="php" value="yes" {TR_PHP_YES}>
 								{TR_YES}
-								<input type="radio" {DISABLED} name="php" value="_no_" {TR_PHP_NO}>
+								<input type="radio" {DISABLED} name="php" value="no" {TR_PHP_NO}>
 								{TR_NO}</td>
 							</tr>
 							<tr>
 							  <td width="25">&nbsp;</td>
 							  <td class="content2" width="193">{TR_CGI}</td>
-							  <td class="content"><input type="radio" {DISBLED} name="cgi" value="_yes_" {TR_CGI_YES}>
+							  <td class="content"><input type="radio" {DISBLED} name="cgi" value="yes" {TR_CGI_YES}>
 								{TR_YES}
-								<input type="radio" {DISBLED} name="cgi" value="_no_" {TR_CGI_NO}>
+								<input type="radio" {DISBLED} name="cgi" value="no" {TR_CGI_NO}>
 								{TR_NO}</td>
 							</tr>
 							<tr>

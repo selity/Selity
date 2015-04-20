@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  *
  * @license
@@ -24,7 +24,7 @@ check_login(__FILE__);
 /* do we have a proper delete_id ? */
 
 if (!isset($_GET['delete_id']) or !is_numeric($_GET['delete_id'])) {
-	header( "Location: manage_users.php" );
+	header( "Location: users_show.php" );
 	die();
 }
 
@@ -43,7 +43,7 @@ if ($local_admin_type == 'admin' || $local_admin_type == 'reseller') {
 		/* this user have domain ! */
 		$hdomain = 1;
 		$_SESSION['hdomain'] = 1;
-		header("Location: manage_users.php");
+		header("Location: users_show.php");
 		die();
 	}
 }
@@ -75,15 +75,14 @@ if ($local_admin_type == 'admin') {
 	remove_users_common_properties($delete_id);
 
 } else if ($local_admin_type == 'user') {
-	rm_rf_user_account($delete_id);
-	check_for_lock_file();
-	send_request();
+	//rm_rf_user_account($delete_id);
+		//send_request();
 }
 
 	$user_logged= $_SESSION['user_logged'];
 	$local_admin_name = $_GET['delete_username'];
 	write_log("$user_logged: deletes user $local_admin_name, $local_admin_type, $delete_id!");
 	$_SESSION['user_deleted'] = 1;
-	header("Location: manage_users.php");
+	header("Location: users_show.php");
 	die();
 

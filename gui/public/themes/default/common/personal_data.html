@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:{ADMIN_TYPE}/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_CHANGE_PERSONAL_DATA}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name="client_change_personal_frm" method="post" action="">
+
+							<div class="col2">
+								{TR_FIRST_NAME}:&nbsp;<input type="text" name="fname" value="{FIRST_NAME}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_LAST_NAME}:&nbsp;<input type="text" name="lname" value="{LAST_NAME}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_GENDER}:&nbsp;
+								<select name="gender" size="1">
+									<option value="M" {VL_MALE}>{TR_MALE}</option>
+									<option value="F" {VL_FEMALE}>{TR_FEMALE}</option>
+									<option value="U" {VL_UNKNOWN}>{TR_UNKNOWN}</option>
+								</select>
+							</div>
+
+							<div class="col2">
+								{TR_COMPANY}:&nbsp;<input type="text" name="firm" value="{FIRM}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_STREET_1}:&nbsp;<input type="text" name="street1" value="{STREET_1}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_STREET_2}:&nbsp;<input type="text" name="street2" value="{STREET_2}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_ZIP_POSTAL_CODE}:&nbsp;<input type="text" name="zip" value="{ZIP}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_CITY}:&nbsp;<input type="text" name="city" value="{CITY}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_STATE}:&nbsp;<input type="text" name="state" value="{STATE}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_COUNTRY}:&nbsp;<input type="text" name="country" value="{COUNTRY}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_EMAIL}:&nbsp;<input type="text" name="email" value="{EMAIL}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_PHONE}:&nbsp;<input type="text" name="phone" value="{PHONE}" class="textinput">
+							</div>
+
+							<div class="col2">
+								{TR_FAX}:&nbsp;<input type="text" name="fax" value="{FAX}" class="textinput">
+							</div>
+
+							<div class="col2">
+								<input name="Submit" type="submit" class="button" value="{TR_UPDATE_DATA}">
+							</div>
+
+						</form>
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:{ADMIN_TYPE}/left_menu:-->
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

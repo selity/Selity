@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_ADD_RESELLER}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name="" method="post" action="">
+							<input name="submit" type="submit" class="button" style="display:none;">
+
+							<div class="col1">
+								<b>{TR_CORE_DATA}</b>
+							</div>
+
+							<!--Section_:EDIT:-->
+							<div class="content-wrap">
+								<div class='col2_2'>
+									{USERNAME}
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_USERNAME}:
+							</div>
+							<!--:EDIT:_Section-->
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="email" value="{EMAIL}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_EMAIL}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="password" name="pass" value="{GENPAS}" class="textinput">
+									<input name="genpass" type="submit" class="button" value="{TR_GENPAS}">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_PASSWORD}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="password" name="pass_rep" value="{GENPAS}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_PASSWORD_REPEAT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_usr" value="{MAX_USR_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_USER_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_als" value="{MAX_ALS_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG}, {TR_DISABLED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_ALS_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_sub" value="{MAX_SUB_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG}, {TR_DISABLED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_SUB_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_mail" value="{MAX_MAIL_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG}, {TR_DISABLED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_MAIL_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_ftp" value="{MAX_FTP_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG}, {TR_DISABLED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_FTP_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_sqldb" value="{MAX_SQLDB_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG}, {TR_DISABLED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_SQLDB_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_sqlu" value="{MAX_SQLU_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG}, {TR_DISABLED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_SQLU_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_traffic" value="{MAX_TRAFF_COUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_TRAFF_COUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="max_disk" value="{MAX_DISK_AMOUNT}" class="textinput">
+									<i>({TR_UNLIMITED_MSG})</i>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_MAX_DISK_AMOUNT}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="radio" name="php" value="yes" {PHP_YES}>{TR_YES}
+									<input type="radio" name="php" value="no" {PHP_NO}>{TR_NO}
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_PHP}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="radio" name="cgi" value="yes" {CGI_YES}>{TR_YES}
+									<input type="radio" name="cgi" value="no"{CGI_NO}>{TR_NO}
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_CGI}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="radio" name="support" value="yes" {SUPPORT_YES}>{TR_YES}
+									<input type="radio" name="support" value="no"{SUPPORT_NO}>{TR_NO}
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_SUPPORT}:
+							</div>
+
+							<div class="clear">&nbsp;</div>
+
+
+<!-- //////////////////////-->
+							<div class="col1">
+								<b>{TR_RESELLER_IPS}</b>
+							</div>
+						<div class="content-wrap">
+							<div class='col2_2'>
+								<b>{TR_IP_NUMBER}</b>
+							</div>
+						</div>
+						<div class='col2_1'>
+							<center><b>{TR_IP_ASSIGN}</b></center>
+						</div>
+						<div class="clear">&nbsp;</div>
+
+						<!--Repeats_:IPS:-->
+						<div class="content-wrap">
+							<div class='col2_2'>
+								{IP_NUMBER}
+							</div>
+						</div>
+						<div class='col2_1'>
+							<input type="checkbox" name="ip[]" value="{IP_ID}" {IP_CHK} />
+						</div>
+						<div class="clear">&nbsp;</div>
+						<!--:IPS:_Repeats-->
+
+<!-- //////////////////////-->
+
+							<div class="col1">
+								<b>{TR_PERSONAL_DATA}</b>
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="fname" value="{FIRST_NAME}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_FIRST_NAME}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="lname" value="{LAST_NAME}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_LAST_NAME}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<select name="gender" size="1">
+										<option value="M" {VL_MALE}>{TR_MALE}</option>
+										<option value="F" {VL_FEMALE}>{TR_FEMALE}</option>
+										<option value="U" {VL_UNKNOWN}>{TR_UNKNOWN}</option>
+									</select>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_GENDER}:
+							</div>
+
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="firm" value="{FIRM}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_COMPANY}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="street1" value="{STREET_1}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_STREET_1}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="street2" value="{STREET_2}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_STREET_2}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="zip" value="{ZIP}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_ZIP}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="city" value="{CITY}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_CITY}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="state" value="{STATE}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_STATE}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="country" value="{COUNTRY}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_COUNTRY}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="phone" value="{PHONE}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_PHONE}:
+							</div>
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="fax" value="{FAX}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_FAX}:
+							</div>
+
+							<!--Section_:EDIT:-->
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="checkbox" name="send_data" {SEND_DATA_CHK}>
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_SEND_DATA}:
+							</div>
+							<!--:EDIT:_Section-->
+
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input name="submit" type="submit" class="button" value="{TR_SUBMIT}">
+								</div>
+							</div>
+							<div class='col2_1'>
+								&nbsp;
+							</div>
+
+						</form>
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -31,21 +31,20 @@ $tpl->define_dynamic('logged_from', 'page');
 
 function send_backup_restore_request(&$sql, $user_id) {
 	if (isset($_POST['uaction']) && $_POST['uaction'] === 'bk_restore') {
-		check_for_lock_file();
 
 		$query = '
 		UPDATE
-			domain
+			user_system_props
 		SET
-			domain_status = 'restore'
+			user_status = ?
 		WHERE
-			domain_admin_id = ?
+			user_admin_id = ?
 ';
 
-		$rs = exec_query($sql, $query, array($user_id));
+		$rs = exec_query($sql, $query, array('restore', $user_id));
 
 		send_request();
-		write_log($_SESSION['user_logged'] . ": restore backup files.");
+		write_log($_SESSION['user_logged'] . ': restore backup files.');
 		set_page_message(tr('Backup archive scheduled for restoring!'));
 	}
 }
@@ -56,8 +55,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_CLIENT_BACKUP_PAGE_TITLE' => tr('Selity - Client/Daily Backup'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Client/Daily Backup'),
+			'THEME_COLOR_PATH' => '../themes/$theme_color',
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
@@ -76,17 +75,17 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-if (Config::get('ZIP') == "gzip") {
-	$name = "backup_YYYY_MM_DD.tar.gz";
+if (Config::get('ZIP') == 'gzip') {
+	$name = 'backup_YYYY_MM_DD.tar.gz';
 } else {
-	$name = "backup_YYYY_MM_DD.tar.bz2";
+	$name = 'backup_YYYY_MM_DD.tar.bz2';
 }
 
 $tpl->assign(
 		array(
 			'TR_BACKUP' => tr('Backup'),
 			'TR_DAILY_BACKUP' => tr('Daily backup'),
-			'TR_DOWNLOAD_DIRECTION' => tr("Instructions to download today's backup"),
+			'TR_DOWNLOAD_DIRECTION' => tr('Instructions to download today\'s backup'),
 			'TR_FTP_LOG_ON' => tr('Login with your FTP account'),
 			'TR_SWITCH_TO_BACKUP' => tr('Switch to backups/ directory'),
 			'TR_DOWNLOAD_FILE' => tr('Download the files stored in this directory'),
@@ -103,7 +102,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

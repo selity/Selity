@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -52,8 +52,7 @@ if ($res->RowCount() !== 1) {
 } else {
 	// delete the user
 	rm_rf_user_account ($usid);
-	check_for_lock_file();
-	send_request();
+		send_request();
 	set_page_message(tr('User terminated!'));
 	header("Location: users.php");
 	die();

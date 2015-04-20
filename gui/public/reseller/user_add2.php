@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -36,12 +36,12 @@ if (Config::exists('HOSTING_PLANS_LEVEL') && Config::get('HOSTING_PLANS_LEVEL') 
 
 $tpl->assign(
 	array(
-		'TR_CLIENT_CHANGE_PERSONAL_DATA_PAGE_TITLE' => tr('Selity - User/Add user(step2)'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
+		'TR_PAGE_TITLE' => tr('Selity - User/Add user(step2)'),
+		'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 		'THEME_CHARSET' => tr('encoding'),
 		'ISP_LOGO' => get_logo($_SESSION['user_id'])
-		)
-	);
+	)
+);
 
 /*
  * static page messages.
@@ -87,7 +87,7 @@ if(!get_pageone_param()){
 if (isset($_POST['uaction']) && ("user_add2_nxt" === $_POST['uaction']) && (!isset($_SESSION['step_one']))) {
 	if (check_user_data($tpl)) {
 		$_SESSION["step_two_data"] = "$dmn_name;0;";
-		$_SESSION["ch_hpprops"] = "$hp_php;$hp_cgi;$hp_sub;$hp_als;$hp_mail;$hp_ftp;$hp_sql_db;$hp_sql_user;$hp_traff;$hp_disk;";
+		$_SESSION["ch_hpprops"] = "$max_php;$max_cgi;$max_sub;$max_als;$max_mail;$max_ftp;$max_sqldb;$max_sqlu;$hp_traff;$hp_disk;";
 
 		if (reseller_limits_check($sql, $ehp_error, $_SESSION['user_id'], 0, $_SESSION["ch_hpprops"])) {
 			header("Location: user_add3.php");
@@ -106,7 +106,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 // unset_messages();
@@ -119,38 +119,38 @@ function get_pageone_param() {
 	global $dmn_chp;
 	global $dmn_pt;
 
-	if (isset($_SESSION['dmn_name'])){
-		$dmn_name = $_SESSION['dmn_name'];
-	} else {
-		return false;
-	}
+	//if (isset($_SESSION['dmn_name'])){
+		//$dmn_name = $_SESSION['dmn_name'];
+	//} else {
+		//return false;
+	//}
 
 	return true;
 } // End of get_pageone_param()
 
 // Show page with initial data fileds
 function get_init_au2_page(&$tpl){
-	global $hp_name, $hp_php, $hp_cgi;
-	global $hp_sub, $hp_als, $hp_mail;
-	global $hp_ftp, $hp_sql_db, $hp_sql_user;
+	global $hp_name, $max_php, $max_cgi;
+	global $max_sub, $max_als, $max_mail;
+	global $max_ftp, $max_sqldb, $max_sqlu;
 	global $hp_traff, $hp_disk;
 
 	$tpl->assign(
 			array(
 				'VL_TEMPLATE_NAME' => $hp_name,
 				'MAX_DMN_CNT' => '',
-				'MAX_SUBDMN_CNT' => $hp_sub,
-				'MAX_DMN_ALIAS_CNT' => $hp_als,
-				'MAX_MAIL_CNT' => $hp_mail,
-				'MAX_FTP_CNT' => $hp_ftp,
-				'MAX_SQL_CNT' => $hp_sql_db,
-				'VL_MAX_SQL_USERS' => $hp_sql_user,
+				'MAX_SUBDMN_CNT' => $max_sub,
+				'MAX_DMN_ALIAS_CNT' => $max_als,
+				'MAX_MAIL_CNT' => $max_mail,
+				'MAX_FTP_CNT' => $max_ftp,
+				'MAX_SQL_CNT' => $max_sqldb,
+				'VL_MAX_SQL_USERS' => $max_sqlu,
 				'VL_MAX_TRAFFIC' => $hp_traff,
 				'VL_MAX_DISK_USAGE' => $hp_disk
 			)
 		);
 
-	if ("_yes_" === $hp_php) {
+	if ("_yes_" === $max_php) {
 		$tpl->assign(
 			array(
 				'VL_PHPY' => 'checked',
@@ -165,7 +165,7 @@ function get_init_au2_page(&$tpl){
 				)
 			);
 	}
-	if ("_yes_" === $hp_cgi) {
+	if ("_yes_" === $max_cgi) {
 		$tpl->assign(
 			array(
 				'VL_CGIY' => 'checked',
@@ -184,33 +184,33 @@ function get_init_au2_page(&$tpl){
 
 // Get data for hosting plan
 function get_hp_data($hpid, $admin_id) {
-	global $hp_name, $hp_php, $hp_cgi;
-	global $hp_sub, $hp_als, $hp_mail;
-	global $hp_ftp, $hp_sql_db, $hp_sql_user;
+	global $hp_name, $max_php, $max_cgi;
+	global $max_sub, $max_als, $max_mail;
+	global $max_ftp, $max_sqldb, $max_sqlu;
 	global $hp_traff, $hp_disk;
 	$sql = Database::getInstance();
 
-	$query = "select name, props from hosting_plans where reseller_id = ? and id = ?";
+	$query = "select name, limits from hosting_plans where reseller_id = ? and id = ?";
 
 	$res = exec_query($sql, $query, array($admin_id, $hpid));
 
 	if (0 !== $res->RowCount()) {
 		$data = $res->FetchRow();
 
-		$props = $data['props'];
+		$props = $data['limits'];
 
-		list($hp_php, $hp_cgi, $hp_sub, $hp_als, $hp_mail, $hp_ftp, $hp_sql_db, $hp_sql_user, $hp_traff, $hp_disk) = explode(";", $props);
+		list($max_php, $max_cgi, $max_sub, $max_als, $max_mail, $max_ftp, $max_sqldb, $max_sqlu, $hp_traff, $hp_disk) = explode(";", $props);
 
 		$hp_name = $data['name'];
 	} else {
-		$hp_php = '';
-		$hp_cgi = '';
-		$hp_sub = '';
-		$hp_als = '';
-		$hp_mail = '';
-		$hp_ftp = '';
-		$hp_sql_db = '';
-		$hp_sql_user = '';
+		$max_php = '';
+		$max_cgi = '';
+		$max_sub = '';
+		$max_als = '';
+		$max_mail = '';
+		$max_ftp = '';
+		$max_sqldb = '';
+		$max_sqlu = '';
 		$hp_traff = '';
 		$hp_disk = '';
 		$hp_name = 'Custom';
@@ -219,9 +219,9 @@ function get_hp_data($hpid, $admin_id) {
 
 // Check validity of input data
 function check_user_data(&$tpl) {
-	global $hp_name, $hp_php, $hp_cgi;
-	global $hp_sub, $hp_als, $hp_mail;
-	global $hp_ftp, $hp_sql_db, $hp_sql_user;
+	global $hp_name, $max_php, $max_cgi;
+	global $max_sub, $max_als, $max_mail;
+	global $max_ftp, $max_sqldb, $max_sqlu;
 	global $hp_traff, $hp_disk, $hp_dmn;
 	$sql = Database::getInstance();
 	global $dmn_chp;
@@ -235,22 +235,22 @@ function check_user_data(&$tpl) {
 		$hp_dmn = clean_input($_POST['nreseller_max_domain_cnt']);
 
 	if (isset($_POST['nreseller_max_subdomain_cnt']))
-		$hp_sub = clean_input($_POST['nreseller_max_subdomain_cnt']);
+		$max_sub = clean_input($_POST['nreseller_max_subdomain_cnt']);
 
 	if (isset($_POST['nreseller_max_alias_cnt']))
-		$hp_als = clean_input($_POST['nreseller_max_alias_cnt']);
+		$max_als = clean_input($_POST['nreseller_max_alias_cnt']);
 
-	if (isset($_POST['nreseller_max_mail_cnt']))
-		$hp_mail = clean_input($_POST['nreseller_max_mail_cnt']);
+	if (isset($_POST['nreseller_max_mail']))
+		$max_mail = clean_input($_POST['nreseller_max_mail']);
 
-	if (isset($_POST['nreseller_max_ftp_cnt']) || $hp_ftp == -1)
-		$hp_ftp = clean_input($_POST['nreseller_max_ftp_cnt']);
+	if (isset($_POST['nreseller_max_ftp']) || $max_ftp == -1)
+		$max_ftp = clean_input($_POST['nreseller_max_ftp']);
 
-	if (isset($_POST['nreseller_max_sql_db_cnt']))
-		$hp_sql_db = clean_input($_POST['nreseller_max_sql_db_cnt']);
+	if (isset($_POST['nreseller_max_sqldb']))
+		$max_sqldb = clean_input($_POST['nreseller_max_sqldb']);
 
-	if (isset($_POST['nreseller_max_sql_user_cnt']))
-		$hp_sql_user = clean_input($_POST['nreseller_max_sql_user_cnt']);
+	if (isset($_POST['nreseller_max_sqlu']))
+		$max_sqlu = clean_input($_POST['nreseller_max_sqlu']);
 
 	if (isset($_POST['nreseller_max_traffic']))
 		$hp_traff = clean_input($_POST['nreseller_max_traffic']);
@@ -259,34 +259,34 @@ function check_user_data(&$tpl) {
 		$hp_disk = clean_input($_POST['nreseller_max_disk']);
 
 	if (isset($_POST['php']))
-		$hp_php = $_POST['php'];
+		$max_php = $_POST['php'];
 
 	if (isset($_POST['cgi']))
-		$hp_cgi = $_POST['cgi'];
+		$max_cgi = $_POST['cgi'];
 
 	// Begin checking...
-	if (!selity_limit_check($hp_sub, -1)) {
+	if (!selity_limit_check($max_sub, -1)) {
 		set_page_message(tr('Incorrect subdomains limit!'));
 	}
-	if (!selity_limit_check($hp_als, -1)) {
+	if (!selity_limit_check($max_als, -1)) {
 		set_page_message(tr('Incorrect aliases limit!'));
 	}
-	if (!selity_limit_check($hp_mail, -1)) {
+	if (!selity_limit_check($max_mail, -1)) {
 		set_page_message(('Incorrect mail accounts limit!'));
 	}
-	if (!selity_limit_check($hp_ftp, -1)) {
+	if (!selity_limit_check($max_ftp, -1)) {
 		set_page_message(tr('Incorrect FTP accounts limit!'));
 	}
-	if (!selity_limit_check($hp_sql_db, -1)) {
+	if (!selity_limit_check($max_sqldb, -1)) {
 		set_page_message(tr('Incorrect SQL databases limit!'));
 	}
-	else if ($hp_sql_user != -1 && $hp_sql_db == -1) {
+	else if ($max_sqlu != -1 && $max_sqldb == -1) {
 		set_page_message(tr('SQL users limit is <i>disabled</i>!'));
 	}
-	if (!selity_limit_check($hp_sql_user, -1)) {
+	if (!selity_limit_check($max_sqlu, -1)) {
 		set_page_message(tr('Incorrect SQL users limit!'));
 	}
-	else if ($hp_sql_user == -1 &&  $hp_sql_db!= -1) {
+	else if ($max_sqlu == -1 &&  $max_sqldb!= -1) {
 		set_page_message(tr('SQL databases limit is not <i>disabled</i>!'));
 	}
 	if (!selity_limit_check($hp_traff, null)) {
@@ -304,19 +304,5 @@ function check_user_data(&$tpl) {
 		$tpl->assign('MESSAGE', $ehp_error);
 		return false;
 	}
-} //End of check_user_data()
-
-// Check is hosting plan with this name already exists!
-function check_hosting_plan_name($admin_id) {
-	global $hp_name;
-	$sql = Database::getInstance();
-
-	$query = "select id from hosting_plans where name = ? and reseller_id = ?";
-	$res = exec_query($sql, $query, array($hp_name, $admin_id));
-	if ($res->RowCount() !== 0) {
-		return false;
-	}
-
-	return true;
-} // End of check_hosting_plan_name()
+}
 

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team (2007)
  *
@@ -22,18 +22,37 @@ require '../include/selity-lib.php';
 
 check_login(__FILE__);
 
-$theme_color = Config::get('USER_INITIAL_THEME');
-
-if(isset($_GET['del_id']) && !empty($_GET['del_id']))
-	$del_id = $_GET['del_id'];
-else{
+if(isset($_GET['del_id']) && !empty($_GET['del_id'])){
+	$del_id = (int) $_GET['del_id'];
+} else {
 	$_SESSION['orderaldel'] = '_no_';
-	header("Location: domains_manage.php");
+	header('Location: domains_manage.php');
 	die();
 }
 
-$query = "DELETE FROM domain_aliasses WHERE alias_id='".$del_id."'";
-$rs = exec_query($sql, $query);
-header("Location: domains_manage.php");
+$query = '
+	DELETE FROM
+		`domain_aliasses`
+	WHERE
+		`alias_id` = ?
+	AND
+		`admin_id` = ?
+	AND
+		`alias_status` = ?
+';
+$rs = mysql::getInstance()->doQuery(
+	$query,
+	$del_id,
+	$_SESSION['user_id'],
+	Config::get('ITEM_ORDERED_STATUS')
+);
+
+if($rs->countRows()) {
+	set_page_message(tr('Order for domain alias deleted.'));
+} else {
+	set_page_message(tr('Order not found. Nothing been deleted.'));
+}
+
+header('Location: domains_manage.php');
 die();
 

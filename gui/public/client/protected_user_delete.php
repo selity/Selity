@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -22,7 +22,7 @@ require '../include/selity-lib.php';
 
 check_login(__FILE__);
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+$admin_id =$_SESSION['user_id'];
 
 if (isset($_GET['uname']) && $_GET['uname'] !== '' && is_numeric($_GET['uname'])){
 	$uuser_id = $_GET['uname'];
@@ -37,12 +37,12 @@ $query = "
 	FROM
 		`htaccess_users`
 	WHERE
-		`dmn_id` = ?
+		`admin_id` = ?
 	AND
 		`id` = ?
 ";
 
-$rs = exec_query($sql, $query, array($dmn_id, $uuser_id));
+$rs = exec_query($sql, $query, array($admin_id, $uuser_id));
 $uname = $rs->fields['uname'];
 
 $change_status = Config::get('ITEM_DELETE_STATUS');
@@ -55,10 +55,10 @@ $query = "
 	WHERE
 		`id` = ?
 	AND
-		`dmn_id` = ?
+		`admin_id` = ?
 ";
 
-$rs = exec_query($sql, $query, array($change_status, $uuser_id, $dmn_id));
+$rs = exec_query($sql, $query, array($change_status, $uuser_id, $admin_id));
 
 // lets delete this user if assignet to a group
 $query = "
@@ -68,9 +68,9 @@ $query = "
 	FROM
 		`htaccess_groups`
 	WHERE
-		`dmn_id` = ?
+		`admin_id` = ?
 ";
-$rs = exec_query($sql, $query, array($dmn_id));
+$rs = exec_query($sql, $query, array($admin_id));
 
  if ($rs -> RecordCount() !== 0) {
 
@@ -104,10 +104,10 @@ $query = "
 	FROM
 		`htaccess`
 	WHERE
-		`dmn_id` = ?
+		`admin_id` = ?
 ";
 
-$rs = exec_query($sql, $query, array($dmn_id));
+$rs = exec_query($sql, $query, array($admin_id));
 
 while (!$rs -> EOF) {
 	$ht_id = $rs -> fields['id'];
@@ -140,7 +140,6 @@ while (!$rs -> EOF) {
 	$rs -> MoveNext();
 }
 
-check_for_lock_file();
 send_request();
 
 write_log("$admin_login: deletes user ID (protected areas): $uname");

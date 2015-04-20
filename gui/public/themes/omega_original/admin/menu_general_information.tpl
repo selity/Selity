@@ -19,19 +19,19 @@
 	 <td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>
 	</tr>
 	<tr>
-	 <td><a href="password_change.php" class="submenu">{TR_MENU_CHANGE_PASSWORD}</a></td>
+	 <td><a href="personal_pass.php" class="submenu">{TR_MENU_CHANGE_PASSWORD}</a></td>
 	</tr>
 	<tr>
 	 <td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>
 	</tr>
 	<tr>
-	 <td><a href="personal_change.php" class="submenu">{TR_MENU_CHANGE_PERSONAL_DATA}</a></td>
+	 <td><a href="personal_data.php" class="submenu">{TR_MENU_CHANGE_PERSONAL_DATA}</a></td>
 	</tr>
 	<tr>
 	 <td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>
 	</tr>
 	<tr>
-	 <td><a href="language.php" class="submenu">{TR_MENU_LANGUAGE}</a></td>
+	 <td><a href="personal_lang.php" class="submenu">{TR_MENU_LANGUAGE}</a></td>
 	</tr>
 	<tr>
 	 <td height="3" width="193"><img src="{THEME_COLOR_PATH}/images/top/menu_separator.jpg" height="3" width="193" /></td>

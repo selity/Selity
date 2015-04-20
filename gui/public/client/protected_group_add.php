@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -35,14 +35,14 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 	array(
-		'TR_CLIENT_WEBTOOLS_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
-		'THEME_COLOR_PATH'				=> "../themes/$theme_color",
+		'TR_PAGE_TITLE'	=> tr('Selity - Client/Webtools'),
+		'THEME_COLOR_PATH'				=> '../themes/'.$theme_color,
 		'THEME_CHARSET'					=> tr('encoding'),
 		'ISP_LOGO'						=> get_logo($_SESSION['user_id'])
 	)
 );
 
-function padd_group(&$tpl, &$sql, $dmn_id) {
+function padd_group(&$tpl, &$sql, $admin_id) {
 	if (isset($_POST['uaction']) && $_POST['uaction'] == 'add_group') {
 		// we have user to add
 		if (isset($_POST['groupname'])) {
@@ -61,24 +61,22 @@ function padd_group(&$tpl, &$sql, $dmn_id) {
 				where
 					`ugroup` = ?
 				and
-					`dmn_id` = ?
+					`admin_id` = ?
 			";
 
-			$rs = exec_query($sql, $query, array($groupname, $dmn_id));
+			$rs = exec_query($sql, $query, array($groupname, $admin_id));
 
 			if ($rs->RecordCount() == 0) {
 				$change_status = Config::get('ITEM_ADD_STATUS');
 
 				$query = "
 					insert into `htaccess_groups`
-						(dmn_id, ugroup, status)
+						(admin_id, ugroup, status)
 					values
 						(?, ?, ?)
 				";
 
-				$rs = exec_query($sql, $query, array($dmn_id, $groupname, $change_status));
-
-				check_for_lock_file();
+				$rs = exec_query($sql, $query, array($admin_id, $groupname, $change_status));
 				send_request();
 
 				$admin_login = $_SESSION['user_logged'];
@@ -111,7 +109,7 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-padd_group($tpl, $sql, get_user_domain_id($sql, $_SESSION['user_id']));
+padd_group($tpl, $sql, $_SESSION['user_id']);
 
 $tpl->assign(
 	array(
@@ -139,7 +137,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel='stylesheet' href='{THEME_COLOR_PATH}/style/style.css' type='text/css' />
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+	</head>
+	<body>
+		<div id='nonFooter'>
+			<div id='page'>
+				<div class='clear'>&nbsp;</div>
+				<div id='menu'>
+					<!--Includes_:{ADMIN_TYPE}/menu:-->
+				</div>
+
+				<div class='content-wrap'>
+					<div id='main'>
+
+						<h2>{TR_OP_HOSTING_PLAN}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<form name='hpadd' method='post' action=''>
+
+							<div class='col1'>
+								{TR_HOSTING_PLAN_PROPS}
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_name'>{TR_TEMPLATE_NAME}:&nbsp;</label>
+								<input type='text' name='name' value='{HP_NAME_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_description'>{TR_TEMPLATE_DESCRIPTON}:&nbsp;</label>
+								<textarea name='description' class='textinput2'>{HP_DESCRIPTION_VALUE}</textarea>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_als'>{TR_MAX_ALIASES}:&nbsp;</label>
+								<input type='text' name='max_als' value='{TR_MAX_ALS_VALUES}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_sub'>{TR_MAX_SUBDOMAINS}:&nbsp;</label>
+								<input type='text' name='max_sub' value='{TR_MAX_SUB_LIMITS}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_mail'>{TR_MAX_MAILACCOUNTS}:&nbsp;</label>
+								<input type='text' name='max_mail' value='{HP_MAIL_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_ftp'>{TR_MAX_FTP}:&nbsp;</label>
+								<input type='text' name='max_ftp' value='{HP_FTP_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_sqldb'>{TR_MAX_SQL}:&nbsp;</label>
+								<input type='text' name='max_sqldb' value='{HP_SQL_DB_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_sqlu'>{TR_MAX_SQL_USERS}:&nbsp;</label>
+								<input type='text' name='max_sqlu' value='{HP_SQL_USER_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_traff'>{TR_MAX_TRAFFIC}:&nbsp;</label>
+								<input type='text' name='max_traff' value='{HP_TRAFF_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='max_disk'>{TR_DISK_LIMIT}:&nbsp;</label>
+								<input type='text' name='max_disk' value='{HP_DISK_VALUE}' class='textinput'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='php'>{TR_PHP}:&nbsp;</label>
+								<div>
+									<input type='radio' name='php' value='yes' {TR_PHP_YES}>
+									{TR_YES}
+									<input type='radio' name='php' value='no' {TR_PHP_NO}>
+									{TR_NO}
+								</div>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='cgi'>{TR_CGI}:&nbsp;</label>
+								<div>
+									<input type='radio' name='cgi' value='yes' {TR_CGI_YES}>
+									{TR_YES}
+									<input type='radio' name='cgi' value='no' {TR_CGI_NO}>
+									{TR_NO}
+								</div>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='cgi'>{TR_SUPPORT}:&nbsp;</label>
+								<div>
+									<input type='radio' name='support' value='yes' {TR_SUPPORT_YES}>
+									{TR_YES}
+									<input type='radio' name='support' value='no' {TR_SUPPORT_NO}>
+									{TR_NO}
+								</div>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col1'>
+								{TR_BILLING_PROPS}
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='price'>{TR_PRICE}:&nbsp;</label>
+								<input name='price' type='text' class='textinput' id='price' value='{HP_PRICE}'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='setupfee'>{TR_SETUP_FEE}:&nbsp;</label>
+								<input name='setupfee' type='text' class='textinput' id='setupfee' value='{HP_SETUPFEE}'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='currency'>{TR_VALUE}:&nbsp;</label>
+								<input name='currency' type='text' class='textinput' id='currency' value='{HP_CURRENCY}'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='payment'>{TR_PAYMENT}:&nbsp;</label>
+								<input name='payment' type='text' class='textinput' id='payment' value='{HP_PAYMENT}'>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<div class='col2'>
+								<label for='status'>{TR_STATUS}:&nbsp;</label>
+								<div>
+									<input type='radio' name='status' value='1' {TR_STATUS_YES}>
+									{TR_YES}
+									<input type='radio' name='status' value='0' {TR_STATUS_NO}>
+									{TR_NO}
+								</div>
+							</div>
+							<div class='clear'>&nbsp;</div>
+
+							<!--Section_:HP_ADD:-->
+							<div class='col2'>
+								<div>
+									<input name='submit' type='submit' class='button' value='{TR_SEND}' />
+								</div>
+							</div>
+							<!--:HP_ADD:_Section-->
+
+						</form>
+
+					<div class='clear'>&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:{ADMIN_TYPE}/left_menu:-->
+
+
+				<div class='clear'>&nbsp;</div>
+			</div>
+			<div class='clear'>&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

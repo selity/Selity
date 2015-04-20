@@ -48,7 +48,7 @@ sub loadData{
 	my $sql = "
 		SELECT
 			`t3`.`id`, `t3`.`auth_type`, `t3`.`auth_name`, `t3`.`path`, `t3`.`status`,
-			`t3`.`users`, `t3`.`groups`, `t4`.`domain_name`, `t4`.`domain_admin_id`
+			`t3`.`users`, `t3`.`groups`, `t4`.`admin_name`, `t4`.`admin_id`
 		FROM
 			(
 				SELECT * from `htaccess`,
@@ -69,7 +69,7 @@ sub loadData{
 								),
 								')\$'
 							)
-						) GROUP BY `dmn_id`
+						) GROUP BY `admin_id`
 					), '') as `users`
 				) as t1,
 				(
@@ -89,14 +89,14 @@ sub loadData{
 								),
 								')\$'
 							)
-						) GROUP BY `dmn_id`
+						) GROUP BY `admin_id`
 					), '') as `groups`
 				) as t2
 			) as t3
 		LEFT JOIN
-			`domain` AS `t4`
+			`admin` AS `t4`
 		ON
-			`t3`.`dmn_id` = `t4`.`domain_id`
+			`t3`.`admin_id` = `t4`.`admin_id`
 		WHERE
 			`t3`.`id` = ?
 	";
@@ -106,7 +106,7 @@ sub loadData{
 	error("$rdata") and return 1 if(ref $rdata ne 'HASH');
 	error("No record in table htaccess has id = $self->{htaccessId}") and return 1 unless(exists $rdata->{$self->{htaccessId}});
 
-	unless($rdata->{$self->{htaccessId}}->{domain_name}){
+	unless($rdata->{$self->{htaccessId}}->{admin_name}){
 		local $Data::Dumper::Terse = 1;
 		error("Orphan entry: ".Dumper($rdata->{$self->{htaccessId}}));
 		my @sql = (
@@ -166,10 +166,10 @@ sub buildHTTPDData{
 	my $groupName	=
 	my $userName	=
 						$main::selityConfig{SYSTEM_USER_PREFIX}.
-						($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{domain_admin_id});
+						($main::selityConfig{SYSTEM_USER_MIN_UID} + $self->{admin_id});
 
-	my $hDir 		= "$main::selityConfig{'USER_HOME_DIR'}/$self->{domain_name}";
-	my $pathDir 		= "$main::selityConfig{'USER_HOME_DIR'}/$self->{domain_name}/$self->{path}";
+	my $hDir 		= "$main::selityConfig{'USER_HOME_DIR'}/$self->{admin_name}";
+	my $pathDir 		= "$main::selityConfig{'USER_HOME_DIR'}/$self->{admin_name}/$self->{path}";
 	$pathDir			=~ s~/+~/~g;
 	$hDir			=~ s~/+~/~g;
 
@@ -180,7 +180,7 @@ sub buildHTTPDData{
 		AUTH_NAME	=> $self->{auth_name},
 		AUTH_PATH	=> $pathDir,
 		HOME_PATH	=> $hDir,
-		DMN_NAME	=> $self->{domain_name},
+		DMN_NAME	=> $self->{admin_name},
 		HTUSERS		=> $self->{users},
 		HTGROUPS	=> $self->{groups},
 

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -87,7 +87,6 @@ function gen_db_user_list(&$tpl, &$sql, $db_id) {
 }
 
 function gen_db_list(&$tpl, &$sql, $user_id) {
-	$dmn_id = get_user_domain_id($sql, $user_id);
 
 	$query = "
 		SELECT
@@ -95,12 +94,12 @@ function gen_db_list(&$tpl, &$sql, $user_id) {
 		FROM
 			`sql_database`
 		WHERE
-			`domain_id` = ?
+			`admin_id` = ?
 		ORDER BY
 			`sqld_name`
 	";
 
-	$rs = exec_query($sql, $query, array($dmn_id));
+	$rs = exec_query($sql, $query, array($user_id));
 
 	if ($rs->RecordCount() == 0) {
 		set_page_message(tr('Database list is empty!'));
@@ -133,8 +132,8 @@ if (isset($_SESSION['sql_support']) && $_SESSION['sql_support'] == "no") {
 $theme_color = Config::get('USER_INITIAL_THEME');
 $tpl->assign(
 		array(
-			'TR_CLIENT_MANAGE_SQL_PAGE_TITLE' => tr('Selity - Client/Manage SQL'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Client/Manage SQL'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
@@ -175,7 +174,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -29,9 +29,8 @@ $tpl->define_dynamic('page_message', 'page');
 $tpl->define_dynamic('logged_from', 'page');
 
 function gen_error_page_data(&$tpl, &$sql, $user_id, $eid) {
-	$domain = $_SESSION['user_logged'];
 	// Check if we already have an error page
-	$vfs = &new vfs($domain, $sql);
+	$vfs = new vfs($user_id, $sql);
 	$error = $vfs->get('/errors/' . $eid . '.html');
 	if (false !== $error) {
 		// We already have an error page, return it
@@ -48,8 +47,8 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 	array(
-		'TR_CLIENT_ERROR_PAGE_TITLE' => tr('Selity - Client/Manage Error Custom Pages'),
-		'THEME_COLOR_PATH' => "../themes/$theme_color",
+		'TR_PAGE_TITLE' => tr('Selity - Client/Manage Error Custom Pages'),
+		'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 		'THEME_CHARSET' => tr('encoding'),
 		'ISP_LOGO' => get_logo($_SESSION['user_id'])
 		)
@@ -97,7 +96,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -38,14 +38,14 @@ $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
 		array(
-			'TR_CLIENT_WEBTOOLS_PAGE_TITLE' => tr('Selity - Client/Webtools'),
-			'THEME_COLOR_PATH' => "../themes/$theme_color",
+			'TR_PAGE_TITLE' => tr('Selity - Client/Webtools'),
+			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
 			'THEME_CHARSET' => tr('encoding'),
 			'ISP_LOGO' => get_logo($_SESSION['user_id'])
 			)
 		);
 
-function protect_area(&$tpl, &$sql, $dmn_id) {
+function protect_area(&$tpl, &$sql, $admin_id) {
 	if (!isset($_POST['uaction']) || $_POST['uaction'] != 'protect_it') {
 		return ;
 	}
@@ -68,7 +68,7 @@ function protect_area(&$tpl, &$sql, $dmn_id) {
 	$path = clean_input($_POST['other_dir'], false);
 	$domain = $_SESSION['user_logged'];
 	// We need to use the virtual file system
-	$vfs = &new vfs($domain, $sql);
+	$vfs = new vfs($_SESSION['user_id'], $sql);
 	$res = $vfs->exists($path);
 	if (!$res) {
 		set_page_message(tr("%s doesn't exist", $path));
@@ -122,14 +122,14 @@ function protect_area(&$tpl, &$sql, $dmn_id) {
 		FROM
 			`htaccess`
 		WHERE
-			`dmn_id` = ?
+			`admin_id` = ?
  		AND
 			(`path` = ?
 		OR
 			`path` = ?);
 ';
 
-	$rs = exec_query($sql, $query, array($dmn_id, $path, $alt_path));
+	$rs = exec_query($sql, $query, array($admin_id, $path, $alt_path));
 	$toadd_status = Config::get('ITEM_ADD_STATUS');
 	$tochange_status = Config::get('ITEM_CHANGE_STATUS');
 
@@ -145,24 +145,22 @@ function protect_area(&$tpl, &$sql, $dmn_id) {
 				`path` = ?,
 				`status` = ?
 			WHERE
-				`id` = '$update_id';
-';
+				`id` = ?;
+		';
 
-		check_for_lock_file();
-		send_request();
-		$rs = exec_query($sql, $query, array($user_id, $group_id, $area_name, $path, $tochange_status));
+				send_request();
+		$rs = exec_query($sql, $query, array($user_id, $group_id, $area_name, $path, $tochange_status, $update_id));
 		set_page_message(tr('Protected area updated successfully!'));
 	} else {
 		$query = '
 			INSERT INTO `htaccess`
-				(dmn_id, user_id, group_id, auth_type, auth_name, path, status)
+				(admin_id, user_id, group_id, auth_type, auth_name, path, status)
 			VALUES
 				(?, ?, ?, ?, ?, ?, ?);
 ';
 
-		check_for_lock_file();
-		send_request();
-		$rs = exec_query($sql, $query, array($dmn_id, $user_id, $group_id, 'Basic' , $area_name, $path, $toadd_status));
+				send_request();
+		$rs = exec_query($sql, $query, array($admin_id, $user_id, $group_id, 'Basic' , $area_name, $path, $toadd_status));
 		set_page_message(tr('Protected area created successfully!'));
 	}
 
@@ -170,7 +168,7 @@ function protect_area(&$tpl, &$sql, $dmn_id) {
 	die();
 }
 
-function gen_protect_it(&$tpl, &$sql, &$dmn_id) {
+function gen_protect_it(&$tpl, &$sql, $admin_id) {
 	if (!isset($_GET['id'])) {
 		$edit = 'no';
 		$type = 'user';
@@ -196,12 +194,12 @@ function gen_protect_it(&$tpl, &$sql, &$dmn_id) {
 			FROM
 				`htaccess`
 			WHERE
-				`dmn_id` = ?
+				`admin_id` = ?
 			AND
 				`id` = ?;
 ';
 
-		$rs = exec_query($sql, $query, array($dmn_id, $ht_id));
+		$rs = exec_query($sql, $query, array($admin_id, $ht_id));
 
 		if ($rs->RecordCount() == 0) {
 			header('Location: protected_areas_add.php');
@@ -267,10 +265,10 @@ function gen_protect_it(&$tpl, &$sql, &$dmn_id) {
 		FROM
 			`htaccess_users`
 		WHERE
-			`dmn_id` = ?;
+			`admin_id` = ?;
 ';
 
-	$rs = exec_query($sql, $query, array($dmn_id));
+	$rs = exec_query($sql, $query, array($admin_id));
 
 	if ($rs->RecordCount() == 0) {
 		$tpl->assign(
@@ -283,7 +281,7 @@ function gen_protect_it(&$tpl, &$sql, &$dmn_id) {
 		$tpl->parse('USER_ITEM', 'user_item');
 	} else {
 		while (!$rs->EOF) {
-			$usr_id = split(',', $user_id);
+			$usr_id = explode(',', $user_id);
 			for ($i = 0; $i < count($usr_id); $i++) {
 				if ($edit == 'yes' && $usr_id[$i] == $rs->fields['id']) {
 					$i = count($usr_id) + 1;
@@ -313,10 +311,10 @@ function gen_protect_it(&$tpl, &$sql, &$dmn_id) {
 		FROM
 			`htaccess_groups`
 		WHERE
-			`dmn_id` = ?
+			`admin_id` = ?
 ';
 
-	$rs = exec_query($sql, $query, array($dmn_id));
+	$rs = exec_query($sql, $query, array($admin_id));
 
 	if ($rs->RecordCount() == 0) {
 		$tpl->assign(
@@ -329,7 +327,7 @@ function gen_protect_it(&$tpl, &$sql, &$dmn_id) {
 		$tpl->parse('GROUP_ITEM', 'group_item');
 	} else {
 		while (!$rs->EOF) {
-			$grp_id = split(',', $group_id);
+			$grp_id = explode(',', $group_id);
 			for ($i = 0; $i < count($grp_id); $i++) {
 				if ($edit == 'yes' && $grp_id[$i] == $rs->fields['id']) {
 					$i = count($grp_id) + 1;
@@ -365,11 +363,9 @@ gen_logged_from($tpl);
 
 check_permissions($tpl);
 
-$dmn_id = get_user_domain_id($sql, $_SESSION['user_id']);
+protect_area($tpl, $sql, $_SESSION['user_id']);
 
-protect_area($tpl, $sql, $dmn_id);
-
-gen_protect_it($tpl, $sql, $dmn_id);
+gen_protect_it($tpl, $sql, $_SESSION['user_id']);
 
 $tpl->assign(
 		array(
@@ -396,7 +392,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

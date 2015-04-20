@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -35,8 +35,8 @@ $tpl->define_dynamic('no_mails', 'page');
 $theme_color = Config::get('USER_INITIAL_THEME');
 
 $tpl->assign(
-	array('TR_CLIENT_MANAGE_USERS_PAGE_TITLE'	=> tr('Selity - Client/Manage Users'),
-		'THEME_COLOR_PATH' 						=> "../themes/$theme_color",
+	array('TR_PAGE_TITLE'	=> tr('Selity - Client/Manage Users'),
+		'THEME_COLOR_PATH' 						=> '../themes/'.$theme_color,
 		'THEME_CHARSET'							=> tr('encoding'),
 		'ISP_LOGO'								=> get_logo($_SESSION['user_id'])
 	)
@@ -46,36 +46,22 @@ $tpl->assign(
 
 function gen_user_mail_action($mail_id, $mail_status) {
 	if ($mail_status === Config::get('ITEM_OK_STATUS')) {
-		return array(tr('Delete'), "mail_delete.php?id=$mail_id", tr('Edit'), "mail_edit.php?id=$mail_id");
+		return array(tr('Delete'), 'mail_delete.php?id='.$mail_id, tr('Edit'), 'mail_edit.php?id='.$mail_id);
 	} else {
 		return array(tr('N/A'), '#', tr('N/A'), '#');
 	}
 }
 
 function gen_user_mail_auto_respond(&$tpl, $mail_id, $mail_type, $mail_status, $mail_auto_respond) {
-// 	if (preg_match('/_mail/', $mail_type) == 1) {
 		if ($mail_status === Config::get('ITEM_OK_STATUS')) {
-			if ($mail_auto_respond == false) {
-				$tpl->assign(
-					array(
-						'AUTO_RESPOND_DISABLE'			=> tr('Enable'),
-						'AUTO_RESPOND_DISABLE_SCRIPT'	=> "mail_autoresponder_enable.php?id=$mail_id",
-						'AUTO_RESPOND_EDIT'				=> '',
-						'AUTO_RESPOND_EDIT_SCRIPT'		=> '',
-						'AUTO_RESPOND_VIS'				=> 'inline'
-					)
-				);
-			} else {
-				$tpl->assign(
-					array(
-						'AUTO_RESPOND_DISABLE'			=> tr('Disable'),
-						'AUTO_RESPOND_DISABLE_SCRIPT'	=> "mail_autoresponder_disable.php?id=$mail_id",
-						'AUTO_RESPOND_EDIT'				=> tr('Edit'),
-						'AUTO_RESPOND_EDIT_SCRIPT'		=> "mail_autoresponder_edit.php?id=$mail_id",
-						'AUTO_RESPOND_VIS'				=> 'inline'
-					)
-				);
-			}
+			$tpl->assign(array(
+				'AUTO_RESPOND_DISABLE'			=> $mail_auto_respond == false ? tr('Enable') : tr('Disable'),
+				'AUTO_RESPOND_DISABLE_SCRIPT'	=> $mail_auto_respond == false ? 'mail_autoresponder_enable.php?id='.$mail_id : 'mail_autoresponder_disable.php?id='.$mail_id,
+				'AUTO_RESPOND_EDIT'				=> $mail_auto_respond == false ? '' : tr('Edit'),
+				'AUTO_RESPOND_EDIT_SCRIPT'		=> $mail_auto_respond == false ? '' : 'mail_autoresponder_edit.php?id='.$mail_id,
+				'AUTO_RESPOND_VIS'				=> 'inline',
+			));
+
 		} else {
 			$tpl->assign(
 				array(
@@ -87,176 +73,9 @@ function gen_user_mail_auto_respond(&$tpl, $mail_id, $mail_type, $mail_status, $
 				)
 			);
 		}
-// 	} else {
-// 		$tpl->assign(
-// 			array(
-// 				'AUTO_RESPOND_DISABLE'			=> tr('Please wait for update'),
-// 				'AUTO_RESPOND_DISABLE_SCRIPT'	=> '',
-// 				'AUTO_RESPOND_EDIT'				=> '',
-// 				'AUTO_RESPOND_EDIT_SCRIPT'		=> '',
-// 				'AUTO_RESPOND_VIS'				=> 'none'
-// 			)
-// 		);
-// 	}
 }
 
-function gen_page_dmn_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
-	$dmn_query ="
-		SELECT
-			`mail_id`, `mail_acc`, `mail_type`, `status`, `mail_auto_respond`, CONCAT( LEFT(`mail_forward`, 50), IF( LENGTH(`mail_forward`) > 50, '...', '') ) as 'mail_forward'
-		FROM
-			`mail_users`
-		WHERE
-			`domain_id` = ?
-		AND
-			`sub_id` = 0
-		AND
-			(`mail_type` LIKE '%".MT_NORMAL_MAIL."%' OR `mail_type` LIKE '%".MT_NORMAL_FORWARD."%')
-		ORDER BY
-			`mail_acc` ASC,
-			`mail_type` DESC
-	";
-
-	$rs = exec_query($sql, $dmn_query, array($dmn_id));
-	if ($rs->RecordCount() == 0) {
-		return 0;
-	} else {
-		global $counter;
-		while (!$rs->EOF) {
-			if ($counter % 2 == 0) {
-				$tpl->assign('ITEM_CLASS', 'content');
-			} else {
-				$tpl->assign('ITEM_CLASS', 'content2');
-			}
-
-			list($mail_delete, $mail_delete_script, $mail_edit, $mail_edit_script) = gen_user_mail_action($rs->fields['mail_id'], $rs->fields['status']);
-
-			$mail_acc = decode_idna($rs->fields['mail_acc']);
-			$show_dmn_name = decode_idna($dmn_name);
-
-			$mail_types = explode(',', $rs->fields['mail_type']);
-			$mail_type = '';
-
-			foreach ($mail_types as $type) {
-				$mail_type .= user_trans_mail_type($type);
-				if (strpos($type, '_forward') !== false) $mail_type .= ': ' . str_replace(array("\r\n", "\n", "\r"), ", ", $rs->fields['mail_forward']);
-				$mail_type .= '<br />';
-			}
-
-			$tpl->assign(
-				array(
-					'MAIL_ACC'			=> $mail_acc . "@" . $show_dmn_name,
-					'MAIL_TYPE'			=> $mail_type,
-					'MAIL_STATUS'		=> translate_dmn_status($rs->fields['status']),
-					'MAIL_DELETE'		=> $mail_delete,
-					'MAIL_DELETE_SCRIPT'=> $mail_delete_script,
-					'MAIL_EDIT'			=> $mail_edit,
-					'MAIL_EDIT_SCRIPT'	=> $mail_edit_script
-				)
-			);
-
-			gen_user_mail_auto_respond($tpl,
-				$rs->fields['mail_id'],
-				$rs->fields['mail_type'],
-				$rs->fields['status'],
-				$rs->fields['mail_auto_respond']);
-
-			$tpl->parse('MAIL_ITEM', '.mail_item');
-
-			$rs->MoveNext();
-			$counter ++;
-		}
-
-		return $rs->RecordCount();
-	}
-}
-
-function gen_page_sub_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
-	$sub_query = "
-		SELECT
-			t1.`subdomain_id` AS sub_id,
-			t1.`subdomain_name` AS sub_name,
-			t2.`mail_id`,
-			t2.`mail_acc`,
-			t2.`mail_type`,
-			t2.`status`,
-			t2.`mail_auto_respond`,
-			CONCAT( LEFT(t2.`mail_forward`, 50), IF( LENGTH(t2.`mail_forward`) > 50, '...', '') ) as 'mail_forward'
-		FROM
-			`subdomain` AS t1,
-			`mail_users` AS t2
-		WHERE
-			t1.`domain_id` = ?
-		AND
-			t2.`domain_id` = ?
-		AND
-			(t2.`mail_type` LIKE '%".MT_SUBDOM_MAIL."%' OR t2.`mail_type` LIKE '%".MT_SUBDOM_FORWARD."%')
-		AND
-			t1.`subdomain_id` = t2.`sub_id`
-		ORDER BY
-			t2.`mail_acc` ASC,
-			t2.`mail_type` DESC
-	";
-
-	$rs = exec_query($sql, $sub_query, array($dmn_id, $dmn_id));
-
-	if ($rs->RecordCount() == 0) {
-		return 0;
-	} else {
-		global $counter;
-		while (!$rs->EOF) {
-			if ($counter % 2 == 0) {
-				$tpl->assign('ITEM_CLASS', 'content');
-			} else {
-				$tpl->assign('ITEM_CLASS', 'content2');
-			}
-
-			list($mail_delete, $mail_delete_script, $mail_edit, $mail_edit_script) = gen_user_mail_action($rs->fields['mail_id'], $rs->fields['status']);
-
-			$mail_acc = decode_idna($rs->fields['mail_acc']);
-
-			$show_sub_name = decode_idna($rs->fields['sub_name']);
-			$show_dmn_name = decode_idna($dmn_name);
-
-			$mail_types = explode(',', $rs->fields['mail_type']);
-			$mail_type = '';
-
-			foreach ($mail_types as $type) {
-				$mail_type .= user_trans_mail_type($type);
-				if (strpos($type, '_forward') !== false) $mail_type .= ': ' . str_replace(array("\r\n", "\n", "\r"), ", ", $rs->fields['mail_forward']);
-				$mail_type .= '<br />';
-			}
-
-
-			$tpl->assign(
-				array(
-					'MAIL_ACC'			=> $mail_acc . "@" . $show_sub_name . "." . $show_dmn_name,
-					'MAIL_TYPE'			=> $mail_type,
-					'MAIL_STATUS'		=> translate_dmn_status($rs->fields['status']),
-					'MAIL_DELETE'		=> $mail_delete,
-					'MAIL_DELETE_SCRIPT'=> $mail_delete_script,
-					'MAIL_EDIT'			=> $mail_edit,
-					'MAIL_EDIT_SCRIPT'	=> $mail_edit_script
-				)
-			);
-
-			gen_user_mail_auto_respond($tpl,
-				$rs->fields['mail_id'],
-				$rs->fields['mail_type'],
-				$rs->fields['status'],
-				$rs->fields['mail_auto_respond']);
-
-			$tpl->parse('MAIL_ITEM', '.mail_item');
-
-			$rs->MoveNext();
-			$counter ++;
-		}
-
-		return $rs->RecordCount();
-	}
-}
-
-function gen_page_als_sub_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
+function gen_page_als_sub_mail_list(&$tpl, &$sql, $admin_id) {
 	$sub_query = '
 		SELECT
 			t1.`mail_id`,
@@ -271,7 +90,7 @@ function gen_page_als_sub_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
 		LEFT JOIN (`subdomain_alias` as t2) ON (t1.`sub_id`=t2.`subdomain_alias_id`)
 		LEFT JOIN (`domain_aliasses` as t3) ON (t2.`alias_id`=t3.`alias_id`)
 		WHERE
-			t1.`domain_id` = ?
+			t1.`admin_id` = ?
 		AND
 			(t1.`mail_type` LIKE \'%'.MT_ALSSUB_MAIL.'%\' OR t1.`mail_type` LIKE \'%'.MT_ALSSUB_FORWARD.'%\')
 		ORDER BY
@@ -279,18 +98,13 @@ function gen_page_als_sub_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
 			t1.`mail_type` DESC
 	';
 
-	$rs = exec_query($sql, $sub_query, array($dmn_id));
+	$rs = exec_query($sql, $sub_query, array($admin_id));
 
 	if ($rs->RecordCount() == 0) {
 		return 0;
 	} else {
 		global $counter;
 		while (!$rs->EOF) {
-			if ($counter % 2 == 0) {
-				$tpl->assign('ITEM_CLASS', 'content');
-			} else {
-				$tpl->assign('ITEM_CLASS', 'content2');
-			}
 
 			list($mail_delete, $mail_delete_script, $mail_edit, $mail_edit_script) = gen_user_mail_action($rs->fields['mail_id'], $rs->fields['status']);
 
@@ -336,7 +150,7 @@ function gen_page_als_sub_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
 	}
 }
 
-function gen_page_als_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
+function gen_page_als_mail_list(&$tpl, &$sql, $admin_id) {
 	$als_query = "
 		SELECT
 			t1.`alias_id` AS als_id,
@@ -351,9 +165,9 @@ function gen_page_als_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
 			`domain_aliasses` AS t1,
 			`mail_users` AS t2
 		WHERE
-			t1.`domain_id` = ?
+			t1.`admin_id` = ?
 		AND
-			t2.`domain_id` = ?
+			t2.`admin_id` = ?
 		AND
 			t1.`alias_id` = t2.`sub_id`
 		AND
@@ -363,22 +177,17 @@ function gen_page_als_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
 			t2.`mail_type` DESC
 	";
 
-	$rs = exec_query($sql, $als_query, array($dmn_id, $dmn_id));
+	$rs = exec_query($sql, $als_query, array($admin_id, $admin_id));
 
 	if ($rs->RecordCount() == 0) {
 		return 0;
 	} else {
 		global $counter;
 		while (!$rs->EOF) {
-			if ($counter % 2 == 0) {
-				$tpl->assign('ITEM_CLASS', 'content');
-			} else {
-				$tpl->assign('ITEM_CLASS', 'content2');
-			}
+
 			list($mail_delete, $mail_delete_script, $mail_edit, $mail_edit_script) = gen_user_mail_action($rs->fields['mail_id'], $rs->fields['status']);
 
 			$mail_acc = decode_idna($rs->fields['mail_acc']);
-			$show_dmn_name = decode_idna($dmn_name);
 
 			$show_als_name = decode_idna($rs->fields['als_name']);
 
@@ -420,58 +229,35 @@ function gen_page_als_mail_list(&$tpl, &$sql, $dmn_id, $dmn_name) {
 }
 
 function gen_page_lists(&$tpl, &$sql, $user_id) {
-	list($dmn_id,
-		$dmn_name,
-		$dmn_gid,
-		$dmn_uid,
-		$dmn_created_id,
-		$dmn_created,
-		$dmn_last_modified,
-		$dmn_mailacc_limit,
-		$dmn_ftpacc_limit,
-		$dmn_traff_limit,
-		$dmn_sqld_limit,
-		$dmn_sqlu_limit,
-		$dmn_status,
-		$dmn_als_limit,
-		$dmn_subd_limit,
-		$dmn_ip_id,
-		$dmn_disk_limit,
-		$dmn_disk_usage,
-		$dmn_php,
-		$dmn_cgi) = get_domain_default_props($sql, $user_id);
 
-	$dmn_mails = gen_page_dmn_mail_list($tpl, $sql, $dmn_id, $dmn_name);
-	$sub_mails = gen_page_sub_mail_list($tpl, $sql, $dmn_id, $dmn_name);
-	$alssub_mails = gen_page_als_sub_mail_list($tpl, $sql, $dmn_id, $dmn_name);
-	$als_mails = gen_page_als_mail_list($tpl, $sql, $dmn_id, $dmn_name);
-	$total_mails = $dmn_mails + $sub_mails + $als_mails+$alssub_mails;
+	$props = get_user_default_props($user_id);
 
-	if ($total_mails > 0) {
-		$tpl->assign(
-			array(
-				'MAIL_MESSAGE'			=> '',
-				'DMN_TOTAL'				=> $dmn_mails,
-				'SUB_TOTAL'				=> $sub_mails,
-				'ALSSUB_TOTAL'				=> $sub_mails,
-				'ALS_TOTAL'				=> $als_mails,
-				'TOTAL_MAIL_ACCOUNTS'	=> $total_mails,
-				'ALLOWED_MAIL_ACCOUNTS'	=> (($dmn_mailacc_limit != 0) ? $dmn_mailacc_limit : tr('unlimited'))
-			)
-		);
+	$alssub_mails = gen_page_als_sub_mail_list($tpl, $sql, $user_id);
+	$als_mails = gen_page_als_mail_list($tpl, $sql, $user_id);
+	$cnt = $als_mails+$alssub_mails;
+
+
+	if ($cnt > 0) {
+		$tpl->assign(array(
+			'MAIL_MESSAGE'			=> '',
+			//'DMN_TOTAL'				=> $dmn_mails,
+			//'SUB_TOTAL'				=> $sub_mails,
+			'ALSSUB_TOTAL'			=> $alssub_mails,
+			'ALS_TOTAL'				=> $als_mails,
+			'TOTAL_MAIL_ACCOUNTS'	=> $cnt,
+			'ALLOWED_MAIL_ACCOUNTS'	=> (($props->max_mail != 0) ? $props->max_mail : tr('unlimited'))
+		));
 	} else {
-		$tpl->assign(
-			array(
-				'MAIL_MSG'		=> tr('Mail accounts list is empty!'),
-				'MAIL_ITEM'		=> '',
-				'MAILS_TOTAL'	=> ''
-			)
-		);
+		$tpl->assign(array(
+			'MAIL_MSG'		=> tr('Mail accounts list is empty!'),
+			'MAIL_ITEM'		=> '',
+			'MAILS_TOTAL'	=> ''
+		));
 
 		$tpl->parse('MAIL_MESSAGE', 'mail_message');
 	}
 
-	return $total_mails;
+	return $cnt['cnt'];
 }
 
 // dynamic page data.
@@ -514,7 +300,7 @@ gen_page_message($tpl);
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

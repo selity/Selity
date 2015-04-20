@@ -4,7 +4,7 @@
  *
  * @copyright 	2001-2006 by moleSoftware GmbH
  * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2014 by Selity
+ * @copyright	2012-2015 by Selity
  * @link 		http://selity.org
  * @author 		ispCP Team
  *
@@ -44,79 +44,44 @@ function translate_sse($value)
 }
 
 function gen_plan_details(&$tpl, &$sql, $user_id, $plan_id) {
-	if (Config::exists('HOSTING_PLANS_LEVEL') && Config::get('HOSTING_PLANS_LEVEL') === 'admin') {
-		$query = '
-			select
-				*
-			from
-				hosting_plans
-			where
-				id = ?
-';
+	$hp = new selity_hp();
+	$hp->id = $plan_id;
+	$hp->reseller_id = $user_id;
+	$hp->setMode(configs::getInstance()->HOSTING_PLANS_LEVEL);
 
-		$rs = exec_query($sql, $query, array($plan_id));
-	} else {
-		$query = '
-			select
-				*
-			from
-				hosting_plans
-			where
-				reseller_id = ?
-			  and
-				id = ?
-';
 
-		$rs = exec_query($sql, $query, array($user_id, $plan_id));
-	}
-	if ($rs->RecordCount() == 0) {
-		header("Location: index.php?user_id=$user_id");
+	if (!$hp->loadData()) {
+		header('Location: index.php?user_id='.$user_id);
 		die();
 	} else {
-		$props = $rs->fields['props'];
-		list($hp_php, $hp_cgi, $hp_sub, $hp_als, $hp_mail, $hp_ftp, $hp_sql_db, $hp_sql_user, $hp_traff, $hp_disk) = explode(";", $props);
 
-		$price = $rs->fields['price'];
-		$setup_fee = $rs->fields['setup_fee'];
+		$price = ($hp->price == 0 || $hp->price == '') ? tr('free of charge') : $hp->price . ' ' . $hp->value . ' ' . $hp->payment;
+		$setup_fee = ($hp->setup_fee == 0 || $hp->setup_fee == '') ? tr('free of charge') : $hp->setup_fee . ' ' . $hp->value . ' ' . $hp->payment;
+		$setup_fee = $hp->setup_fee;
 
-		if ($price == 0 || $price == '') {
-			$price = tr('free of charge');
-		} else {
-			$price = $price . " " . $rs->fields['value'] . " " . $rs->fields['payment'];
-		}
 
-		if ($setup_fee == 0 || $setup_fee == '') {
-			$setup_fee = tr('free of charge');
-		} else {
-			$setup_fee = $setup_fee . " " . $rs->fields['value'];
-		}
-		$description = $rs->fields['description'];
+		$hp_disk = translate_limit_value($hp->hp_disk, true) . '<br>';
+		$hp_traff = translate_limit_value($hp->hp_traff, true);
 
-		$hp_disk = translate_limit_value($hp_disk, true) . "<br>";
-
-		$hp_traff = translate_limit_value($hp_traff, true);
-
-		$tpl->assign(
-			array('PACK_NAME' => $rs->fields['name'],
-				'DESCRIPTION' => $description,
-				'PACK_ID' => $rs->fields['id'],
-				'USER_ID' => $user_id,
-				'PURCHASE' => tr('Purchase'),
-				'ALIAS' => translate_limit_value($hp_als),
-				'SUBDOMAIN' => translate_limit_value($hp_sub),
-				'HDD' => $hp_disk,
-				'TRAFFIC' => $hp_traff,
-				'PHP' => translate_sse($hp_php),
-				'CGI' => translate_sse($hp_cgi),
-				'MAIL' => translate_limit_value($hp_mail),
-				'FTP' => translate_limit_value($hp_ftp),
-				'SQL_DB' => translate_limit_value($hp_sql_db),
-				'SQL_USR' => translate_limit_value($hp_sql_user),
-				'PRICE' => $price,
-				'SETUP' => $setup_fee,
-
-				)
-			);
+		$tpl->assign(array(
+			'PACK_NAME'		=> $hp->name,
+			'DESCRIPTION'	=> $hp->description,
+			'PACK_ID'		=> $hp->id,
+			'USER_ID'		=> $user_id,
+			'PURCHASE'		=> tr('Purchase'),
+			'ALIAS'			=> translate_limit_value($hp->max_als),
+			'SUBDOMAIN'		=> translate_limit_value($hp->max_sub),
+			'HDD'			=> $hp_disk,
+			'TRAFFIC'		=> $hp_traff,
+			'PHP'			=> translate_sse($hp->max_php),
+			'CGI'			=> translate_sse($hp->max_cgi),
+			'MAIL'			=> translate_limit_value($hp->max_mail),
+			'FTP'			=> translate_limit_value($hp->max_ftp),
+			'SQL_DB'		=> translate_limit_value($hp->max_sqldb),
+			'SQL_USR'		=> translate_limit_value($hp->max_sqlu),
+			'PRICE'			=> $price,
+			'SETUP'			=> $setup_fee,
+		));
 	}
 }
 
@@ -190,7 +155,7 @@ $tpl->assign(
 $tpl->parse('PAGE', 'page');
 $tpl->prnt();
 
-if (Config::get('DUMP_GUI_DEBUG'))
+if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
 
 unset_messages();

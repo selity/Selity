@@ -106,16 +106,14 @@ sub engine {
 	my $sql;
 
 	## First we add / delete certificates
-	## First we add / alter main domain
-	## Then we add / alter subdomain for main domain
-	## Next we add / alter alias for main domain
+	## First we add / alter user
+	## Next we add / alter users domains
 	## Next we add / alter subdomain for alias
 	## Next we process mailboxes
 	## Next we process .htaccess related data
 	## Now we can delete in order alias subdomains
-	## Subdomains
 	## Alias
-	## Main domain
+	## Main user
 
 	$sql = "
 		SELECT
@@ -136,46 +134,6 @@ sub engine {
 	$rs |= mngr_engine_process('Certificates', $sql);
 
 	my $ipsMod = 0;
-
-	$sql = "
-		SELECT
-			`domain_id` AS 'id',
-			`domain_name` AS 'name',
-			`domain_status` AS 'status'
-		FROM
-			`domain`
-		WHERE
-			`domain_status`
-		IN (
-			'toadd',
-			'change',
-			'dnschange',
-			'restore',
-			'toenable',
-			'todisable'
-		)
-	";
-
-	$rs |= mngr_engine_process('Domain', $sql, \$ipsMod);
-
-	$sql = "
-		SELECT
-			`subdomain_id` AS 'id',
-			`subdomain_name` AS 'name',
-			`subdomain_status` AS 'status'
-		FROM
-			`subdomain`
-		WHERE
-			`subdomain_status`
-		IN (
-			'toadd',
-			'change',
-			'toenable',
-			'todisable'
-		)
-	";
-
-	$rs |= mngr_engine_process('Subdomain', $sql, \$ipsMod);
 
 	$sql = "
 		SELECT
@@ -300,18 +258,6 @@ sub engine {
 
 	$rs |= mngr_engine_process('SubAlias', $sql, \$ipsMod);
 
-	$sql = "
-		SELECT
-			`subdomain_id` AS 'id',
-			`subdomain_name` AS 'name',
-			`subdomain_status` AS 'status'
-		FROM
-			`subdomain`
-		WHERE
-			`subdomain_status` = 'delete'
-	";
-
-	$rs |= mngr_engine_process('Subdomain', $sql, \$ipsMod);
 
 	$sql = "
 		SELECT
@@ -326,18 +272,6 @@ sub engine {
 
 	$rs |= mngr_engine_process('Alias', $sql, \$ipsMod);
 
-	$sql = "
-		SELECT
-			`domain_id` AS 'id',
-			`domain_name` AS 'name',
-			`domain_status` AS 'status'
-		FROM
-			`domain`
-		WHERE
-			`domain_status` = 'delete'
-	";
-
-	$rs |= mngr_engine_process('Domain', $sql, \$ipsMod);
 
 	#
 	# Network card management BEGIN.
