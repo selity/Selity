@@ -85,33 +85,33 @@ function genClientList(){
 	$tpl = template::getInstance();
 	$sql = mysql::getInstance();
 	$query = '
-		SELECT `t1`.*, `t2`.`admin_name` AS `parent`, `t3`.`user_status`
+		SELECT `t1`.*, `t2`.`admin_name` AS `parent`, `t3`.`status`
 		FROM `admin` AS `t1`
 		LEFT JOIN `admin` AS `t2`
 		ON `t1`.`created_by` = `t2`.`admin_id`
 		LEFT JOIN `user_system_props` AS `t3`
-		ON `t1`.`admin_id` = `t3`.`user_admin_id`
+		ON `t1`.`admin_id` = `t3`.`admin_id`
 		WHERE t1.`admin_type` = ?
 	';
 	$rs = $sql->doQuery($query, 'user');
 	$admins = array();
 	while (!$rs->EOF){
 		$tpl->saveSection('USERS');
-		switch($rs->user_status){
-			case configs::getInstance()->ITEM_OK_STATUS:
+		switch($rs->status){
+			case OK_STATUS:
 				$status = tr('Ok');
 				$status_action = 'users_status_change.php?user_id='.$rs->admin_id;
 				break;
-			case configs::getInstance()->ITEM_DISABLED_STATUS:
+			case DISABLED_STATUS:
 				$status = tr('Disabled');
 				$status_action = 'users_status_change.php?user_id='.$rs->admin_id;
 				break;
-			case configs::getInstance()->ITEM_ADD_STATUS:
-			case configs::getInstance()->ITEM_RESTORE_STATUS:
-			case configs::getInstance()->ITEM_CHANGE_STATUS:
-			case configs::getInstance()->ITEM_TODISABLED_STATUS:
-			case configs::getInstance()->ITEM_DELETE_STATUS:
-			case configs::getInstance()->ITEM_TOENABLE_STATUS:
+			case ADD_STATUS:
+			case RESTORE_STATUS:
+			case CHANGE_STATUS:
+			case TODISABLED_STATUS:
+			case DELETE_STATUS:
+			case TOENABLE_STATUS:
 				$status = tr('Changing');
 				$status_action = '#';
 				break;

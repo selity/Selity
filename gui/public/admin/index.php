@@ -166,10 +166,10 @@ $tpl->saveVariable(
 		'SERVERS'			=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `servers`')->cnt,
 		'DOMAINS'			=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `domains`')->cnt,
 		'SUBDOMAINS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `subdomains`')->cnt,
-		//'MAIL_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `mail_users`')->cnt,
-		//'FTP_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `ftp_users`')->cnt,
-		//'SQL_DATABASES'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `sql_database`')->cnt,
-		//'SQL_USERS'			=> $sql->doQuery('SELECT COUNT(DISTINCT(`sqlu_name`)) AS `cnt` FROM `sql_user`')->cnt,
+		'MAIL_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `mail_users`')->cnt,
+		'FTP_ACCOUNTS'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `ftp_users`')->cnt,
+		'SQL_DATABASES'		=> $sql->doQuery('SELECT COUNT(*) AS `cnt` FROM `mysql_db`')->cnt,
+		'SQL_USERS'			=> $sql->doQuery('SELECT COUNT(DISTINCT(`sqlu_name`)) AS `cnt` FROM `mysql_user`')->cnt,
 	)
 );
 

@@ -27,58 +27,42 @@ require '../include/selity-lib.php';
 
 check_user_login();
 
-function genData($admin) {
-
-	$tpl = template::getInstance();
-
-	$tpl->saveVariable(array(
-		'FIRST_NAME'	=> is_null($admin->fname) ? '' : $admin->fname,
-		'LAST_NAME'		=> is_null($admin->lname) ? '' : $admin->lname,
-		'FIRM'			=> is_null($admin->firm) ? '' : $admin->firm,
-		'ZIP'			=> is_null($admin->zip) ? '' : $admin->zip,
-		'CITY'			=> is_null($admin->city) ? '' : $admin->city,
-		'STATE'			=> is_null($admin->state) ? '' : $admin->state,
-		'COUNTRY'		=> is_null($admin->country) ? '' : $admin->country,
-		'STREET_1'		=> is_null($admin->street1) ? '' : $admin->street1,
-		'STREET_2'		=> is_null($admin->street2) ? '' : $admin->street2,
-		'EMAIL'			=> is_null($admin->email) ? '' : $admin->email,
-		'PHONE'			=> is_null($admin->phone) ? '' : $admin->phone,
-		'FAX'			=> is_null($admin->fax) ? '' : $admin->fax,
-		'VL_MALE'		=> (($admin->gender == 'M') ? 'selected' : ''),
-		'VL_FEMALE'		=> (($admin->gender == 'F') ? 'selected' : ''),
-		'VL_UNKNOWN'	=> ((($admin->gender == 'U') || (is_null($admin->gender))) ? 'selected' : ''),
-	));
+function updData($user) {
+	$user->fname	= clean_input($_POST['fname']);
+	$user->lname	= clean_input($_POST['lname']);
+	$user->gender	= clean_input($_POST['gender']);
+	$user->firm		= clean_input($_POST['firm']);
+	$user->zip		= clean_input($_POST['zip']);
+	$user->city		= clean_input($_POST['city']);
+	$user->state	= clean_input($_POST['state']);
+	$user->country	= clean_input($_POST['country']);
+	$user->street1	= clean_input($_POST['street1']);
+	$user->street2	= clean_input($_POST['street2']);
+	$user->email	= clean_input($_POST['email']);
+	$user->phone	= clean_input($_POST['phone']);
+	$user->fax		= clean_input($_POST['fax']);
+	if($user->save()){
+		template::getInstance()->addMessage(tr('Personal data updated successfully!'));
+	} else{
+		template::getInstance()->addMessage($user->getMessage());
+	}
 }
-
-function updData($admin) {
-	$admin->fname	= clean_input($_POST['fname']);
-	$admin->lname	= clean_input($_POST['lname']);
-	$admin->gender	= clean_input($_POST['gender']);
-	$admin->firm	= clean_input($_POST['firm']);
-	$admin->zip		= clean_input($_POST['zip']);
-	$admin->city	= clean_input($_POST['city']);
-	$admin->state	= clean_input($_POST['state']);
-	$admin->country	= clean_input($_POST['country']);
-	$admin->street1	= clean_input($_POST['street1']);
-	$admin->street2	= clean_input($_POST['street2']);
-	$admin->email	= clean_input($_POST['email']);
-	$admin->phone	= clean_input($_POST['phone']);
-	$admin->fax		= clean_input($_POST['fax']);
-	$admin->save();
-	template::getInstance()->addMessage(tr('Personal data updated successfully!'));
-}
-
 
 $cfg = configs::getInstance();
 $tpl = template::getInstance();
 $theme_color = $cfg->USER_INITIAL_THEME;
-$admin = new selity_user($_SESSION['user_id']);
 
-if (array_key_exists('Submit', $_POST)) {
-	updData($admin);
+try{
+	$user = new selity_user($_SESSION['user_id']);
+} catch(Exception $e){
+	template::getInstance()->addMessage(tr('Invalid user data!'));
+	header('Location: index.php');
+	die();
 }
 
-genData($admin);
+if (array_key_exists('Submit', $_POST)) {
+	updData($user);
+}
 
 genMainMenu();
 genGeneralMenu();
@@ -109,13 +93,26 @@ $tpl->saveVariable(array(
 	'TR_FEMALE'					=> tr('Female'),
 	'TR_UNKNOWN'				=> tr('Unknown'),
 	'TR_UPDATE_DATA'			=> tr('Update data'),
+
+	'FIRST_NAME'	=> $user->fname,
+	'LAST_NAME'		=> $user->lname,
+	'FIRM'			=> $user->firm,
+	'ZIP'			=> $user->zip,
+	'CITY'			=> $user->city,
+	'STATE'			=> $user->state,
+	'COUNTRY'		=> $user->country,
+	'STREET_1'		=> $user->street1,
+	'STREET_2'		=> $user->street2,
+	'EMAIL'			=> $user->email,
+	'PHONE'			=> $user->phone,
+	'FAX'			=> $user->fax,
+	'VL_MALE'		=> $user->gender == 'M' ? 'selected' : '',
+	'VL_FEMALE'		=> $user->gender == 'F' ? 'selected' : '',
+	'VL_UNKNOWN'	=> in_array($user->gender, array('M', 'F')) ? '' : 'selected'
 ));
 
 $tpl->flushOutput('common/personal_data');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
-
-unset_messages();
-
 

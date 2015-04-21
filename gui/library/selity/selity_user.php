@@ -40,11 +40,7 @@ class selity_user extends selity_multicontainer{
 
 	public function __construct($id = null){
 		parent::__construct($id);
-		if($id != null){
-			if($this->admin_type !== $this->userType){
-				throw new Exception (tr('User do not exists'));
-			}
-		} else {
+		if(is_null($id)){
 			$this->admin_type = $this->userType;
 		}
 	}
@@ -91,6 +87,11 @@ class selity_user extends selity_multicontainer{
 	public function validate(){
 		$this->checkPassword();
 		$this->checkEmail();
+		if(is_null($this->admin_id)){
+			if(mysql::getInstance()->doQuery('SELECT COUNT(*) AS `cnt` FROM `admin` WHERE `email`= ?', $this->email)->cnt){
+				$this->errors[] = tr('Email %s already exist!', $this->email);
+			}
+		}
 		return $this->errors == array();
 	}
 
@@ -101,9 +102,6 @@ class selity_user extends selity_multicontainer{
 		if($this->passModified){
 			$this->admin_pass = md5($this->admin_pass);
 			$this->passModified = false;
-		}
-		if($this->admin_type != $this->userType){
-			$this->admin_type = $this->userType;
 		}
 		mysql::getInstance()->beginTransaction();
 		$result = parent::save();

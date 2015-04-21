@@ -25,7 +25,38 @@
 							</div>
 						<!--:PageMessage:_Section-->
 
-						<form name="" method="post" action="">
+						<form name="server" method="post">
+							<div class="col1">
+								<b>{TR_SERVER_LIST}</b>
+							</div>
+							<div class="clear">&nbsp;</div>
+
+							<!--Repeats_:SERVER:-->
+							<div class="content-wrap">
+								<div class='col2_2'>
+									{SERVER_NAME}
+								</div>
+							</div>
+							<div class='col2_1'>
+								<input type="checkbox" name="serverLST[]" value="{SERVER_ID}" {SERVER_CHK} />
+							</div>
+							<div class="clear">&nbsp;</div>
+							<!--:SERVER:_Repeats-->
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input name="select" type="submit" class="button" value="{TR_SELECT}">
+								</div>
+							</div>
+							<div class='col2_1'>
+								&nbsp;
+							</div>
+							<div class="clear">&nbsp;</div>
+						</form>
+
+
+<!--///////////////-->
+						<form name="data" method="post">
 							<input name="submit" type="submit" class="button" style="display:none;">
 
 							<div class="col1">

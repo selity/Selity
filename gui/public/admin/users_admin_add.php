@@ -34,15 +34,13 @@ $theme_color = configs::getInstance()->USER_INITIAL_THEME;
 
 
 
-function addAdmin() {
+function addAdmin($admin) {
 
 	$sql = mysql::getInstance();
 	$tpl = template::getInstance();
 	$cfg = configs::getInstance();
 
 	if (array_key_exists('submit', $_POST)) {
-
-		$admin = new selity_admin();
 
 		if($_POST['pass'] != $_POST['pass_rep']){
 			$tpl->addMessage(tr('Password do not match!'));
@@ -98,15 +96,16 @@ function addAdmin() {
 genMainMenu();
 genAdminUsersMenu();
 
-addAdmin();
+$admin = new selity_admin();
+addAdmin($admin);
 
 $tpl->saveVariable(array(
-	'TR_PAGE_TITLE'		=> tr('Selity - Add administrator'),
+	'TR_PAGE_TITLE'			=> tr('Selity - Add administrator'),
 	'THEME_COLOR_PATH'		=> '../themes/'.$theme_color,
 	//'THEME_CHARSET'		=> tr('encoding'),
 	'TR_ADD_ADMIN'			=> tr('Add admin'),
 	'TR_CORE_DATA'			=> tr('Core data'),
-	'TR_EMAIL'		=> tr('Email'),
+	'TR_EMAIL'				=> tr('Email'),
 	'TR_PASSWORD'			=> tr('Password'),
 	'TR_PASSWORD_REPEAT'	=> tr('Repeat password'),
 	'TR_GENPAS'				=> tr('Generate password'),
@@ -140,15 +139,15 @@ if(array_key_exists('submit', $_POST) || array_key_exists('genpass', $_POST)){
 		'FIRM'			=> clean_input($_POST['firm']),
 		'ZIP'			=> clean_input($_POST['zip']),
 		'CITY'			=> clean_input($_POST['city']),
-		'COUNTRY'		=> clean_input($_POST['country']),
 		'STATE'			=> clean_input($_POST['state']),
+		'COUNTRY'		=> clean_input($_POST['country']),
 		'STREET_1'		=> clean_input($_POST['street1']),
 		'STREET_2'		=> clean_input($_POST['street2']),
 		'PHONE'			=> clean_input($_POST['phone']),
 		'FAX'			=> clean_input($_POST['fax']),
-		'VL_MALE'		=> (($_POST['gender'] == 'M') ? 'selected' : ''),
-		'VL_FEMALE'		=> (($_POST['gender'] == 'F') ? 'selected' : ''),
-		'VL_UNKNOWN'	=> ((($_POST['gender'] == 'U') || (empty($_POST['gender']))) ? 'selected' : ''),
+		'VL_MALE'		=> $_POST['gender'] == 'M' ? 'selected' : '',
+		'VL_FEMALE'		=> $_POST['gender'] == 'F' ? 'selected' : '',
+		'VL_UNKNOWN'	=> in_array($_POST['gender'], array('M', 'F'))  ? '' : 'selected',
 	));
 }
 
@@ -156,6 +155,3 @@ $tpl->flushOutput('admin/admin_add');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
-
-unset_messages();
-

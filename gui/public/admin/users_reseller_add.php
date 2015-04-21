@@ -33,26 +33,51 @@ $cfg = configs::getInstance();
 $theme_color = configs::getInstance()->USER_INITIAL_THEME;
 
 
-function getIp() {
+function getServerList() {
 	$sql = mysql::getInstance();
 	$tpl = template::getInstance();
-	$query = 'SELECT * FROM `server_ips`  ORDER BY `ip_number`';
+	$query = 'SELECT * FROM `servers`';
 	$rs = $sql->doQuery($query);
+	$servers = array();
 	if ($rs->countRows() == 0) {
-		$tpl->addMessage(tr('Reseller IP list is empty!'));
+		$tpl->addMessage(tr('Server list is empty! You must add at lest one!'));
 	} else {
-		$ips = array();
 		while (!$rs->EOF) {
-			$checked = array_key_exists('ip', $_POST) && is_array($_POST['ip']) && in_array($rs->ip_id, $_POST['ip']) ? 'checked' : '';
-			$ips[] = array(
-				'IP_NUMBER'		=> $rs->ip_number,
-				'IP_ID'			=> $rs->ip_id,
-				'IP_CHK'		=> $checked
+			$checked = in_array($rs->server_id, $_SESSION['serverLST']) ? 'checked' : '';
+			$servers[] = array(
+				'SERVER_NAME'		=> $rs->server_name,
+				'SERVER_ID'			=> $rs->server_id,
+				'SERVER_CHK'		=> $checked
 			);
 			$rs->nextRow();
 		}
-		$tpl->saveRepeats(array('IPS' => $ips));
 	}
+	$tpl->saveRepeats(array('SERVER' => $servers));
+}
+
+function getIp($serverList) {
+	$sql = mysql::getInstance();
+	$tpl = template::getInstance();
+	$ips = array();
+	if(is_array($serverList) && $serverList != array()){
+		$inQuery = implode(',', array_fill(0, count($serverList), '?'));
+		$query = 'SELECT * FROM `server_ips` WHERE `server_id` IN ('.$inQuery.') ORDER BY `ip_number`';
+		$rs = $sql->doQuery($query, $serverList);
+		if ($rs->countRows() == 0) {
+			$tpl->addMessage(tr('IP list is empty! You must add some ip before!'));
+		} else {
+			while (!$rs->EOF) {
+				$checked = array_key_exists('ip', $_POST) && is_array($_POST['ip']) && in_array($rs->ip_id, $_POST['ip']) ? 'checked' : '';
+				$ips[] = array(
+					'IP_NUMBER'		=> $rs->ip_number,
+					'IP_ID'			=> $rs->ip_id,
+					'IP_CHK'		=> $checked
+				);
+				$rs->nextRow();
+			}
+		}
+	}
+	$tpl->saveRepeats(array('IPS' => $ips));
 }
 
 function addReseller() {
@@ -92,12 +117,12 @@ function addReseller() {
 		$reseller->layout	= $cfg->USER_INITIAL_THEME;
 
 		$reseller->max_usr		= clean_input($_POST['max_usr']);
-		$reseller->max_als		= clean_input($_POST['max_als']);
+		$reseller->max_dmn		= clean_input($_POST['max_als']);
 		$reseller->max_sub		= clean_input($_POST['max_sub']);
 		$reseller->max_mail		= clean_input($_POST['max_mail']);
 		$reseller->max_ftp		= clean_input($_POST['max_ftp']);
-		$reseller->max_sqldb	= clean_input($_POST['max_sqldb']);
-		$reseller->max_sqlu		= clean_input($_POST['max_sqlu']);
+		$reseller->max_mysqld	= clean_input($_POST['max_sqldb']);
+		$reseller->max_mysqlu	= clean_input($_POST['max_sqlu']);
 		$reseller->max_traff	= clean_input($_POST['max_traffic']);
 		$reseller->max_disk		= clean_input($_POST['max_disk']);
 		$reseller->php			= clean_input(isset($_POST['php']) ? $_POST['php'] : '');
@@ -138,13 +163,24 @@ function addReseller() {
 genMainMenu();
 genAdminUsersMenu();
 
-getIp();
-addReseller();
+if(!array_key_exists('serverLST', $_SESSION)){
+	$_SESSION['serverLST'] = array();
+}if(array_key_exists('select', $_POST)){
+	$_SESSION['serverLST'] = array_key_exists('serverLST', $_POST) && is_array($_POST['serverLST']) ? $_POST['serverLST'] : array();
+}
+
+getServerList();
+
+getIp($_SESSION['serverLST']);
+//addReseller();
 
 $tpl->saveVariable(array(
 	'TR_PAGE_TITLE'				=> tr('Selity - Add reseller'),
 	'THEME_COLOR_PATH'			=> '../themes/'.$theme_color,
 	//'THEME_CHARSET'				=> tr('encoding'),
+	'TR_SERVER_LIST'			=> tr('Servers list'),
+	'TR_SELECT_SERVER'			=> tr('Select server'),
+	'TR_SELECT'					=> tr('Select'),
 	'TR_ADD_RESELLER'			=> tr('Add reseller'),
 	'TR_CORE_DATA'				=> tr('Core data'),
 	'TR_EMAIL'					=> tr('Email'),
@@ -195,7 +231,6 @@ $tpl->saveVariable(array(
 
 if(array_key_exists('submit', $_POST) || array_key_exists('genpass', $_POST)){
 	$tpl->saveVariable(array(
-
 		'EMAIL'			=> clean_input($_POST['email']),
 		'GENPAS'		=> array_key_exists('genpass', $_POST) ? passgen() : '',
 		'FIRST_NAME'	=> clean_input($_POST['fname']),
@@ -209,9 +244,9 @@ if(array_key_exists('submit', $_POST) || array_key_exists('genpass', $_POST)){
 		'STREET_2'		=> clean_input($_POST['street2']),
 		'PHONE'			=> clean_input($_POST['phone']),
 		'FAX'			=> clean_input($_POST['fax']),
-		'VL_MALE'		=> (($_POST['gender'] == 'M') ? 'selected' : ''),
-		'VL_FEMALE'		=> (($_POST['gender'] == 'F') ? 'selected' : ''),
-		'VL_UNKNOWN'	=> ((($_POST['gender'] == 'U') || (empty($_POST['gender']))) ? 'selected' : ''),
+		'VL_MALE'		=> $_POST['gender'] == 'M' ? 'selected' : '',
+		'VL_FEMALE'		=> $_POST['gender'] == 'F' ? 'selected' : '',
+		'VL_UNKNOWN'	=> in_array($_POST['gender'], array('M', 'F'))  ? '' : 'selected',
 
 		'MAX_USR_COUNT'		=> clean_input($_POST['max_usr']),
 		'MAX_ALS_COUNT'		=> clean_input($_POST['max_als']),

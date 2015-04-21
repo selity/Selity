@@ -32,29 +32,44 @@ $tpl = template::getInstance();
 $theme_color = $cfg->USER_INITIAL_THEME;
 
 function genList(){
-	$tpl = template::getInstance();
-	$cfg = configs::getInstance();
-	$lng = selity_language::getInstance();
-	$languageList = $lng->getDisponibleLanguages();
-	$languageDir = $cfg->GUI_ROOT_DIR.'/i18n/locales';
-	$list = array();
-	$old_language = $_SESSION['user_def_lang'];
-	foreach($languageList as $lang){
+	$tpl	= template::getInstance();
+	$lng	= selity_language::getInstance();
+	$lList	= $lng->getDisponibleLanguages();
+	$list	= array();
+	$oLng	= $_SESSION['user_def_lang'];
+	foreach($lList as $lang){
 		$lng->setLanguage($lang);
-		$list[] = array('LANGUAGE' => $lang, 'TR_LANGUAGE'=>tr('Localised language'), 'TR_SELECTED' => $_SESSION['user_def_lang'] == $lang ? 'selected' : '');
+		$list[] = array(
+			'LANGUAGE'		=> $lang,
+			'TR_LANGUAGE'	=> _('Localised language'),
+			'TR_SELECTED'	=> $_SESSION['user_def_lang'] == $lang ? 'selected' : ''
+		);
 	}
-	$lng->setLanguage($old_language);
-	$tpl->saveRepeats(array('LANGUAGE'=>$list));
+	$lng->setLanguage($oLng);
+	$tpl->saveRepeats(array('LANGUAGE' => $list));
 }
 
+try{
+	$user = new selity_user($_SESSION['user_id']);
+} catch(Exception $e){
+	template::getInstance()->addMessage(tr('Invalid user data!'));
+	header('Location: index.php');
+	die();
+}
 
 if (array_key_exists('Submit', $_POST)) {
-
-	$admin = new selity_user($_SESSION['user_id']);
-	$admin->lang = $_POST['language'];
-	$admin->save();
-	$_SESSION['user_def_lang'] = $_POST['language'];
-	$tpl->addMessage(tr('User language updated successfully!'));
+	$user->lang = $_POST['language'];
+	$lList = selity_language::getInstance()->getDisponibleLanguages();
+	if(in_array($_POST['language'], $lList)){
+		if($user->save()){
+			$_SESSION['user_def_lang'] = $_POST['language'];
+			$tpl->addMessage(tr('User language updated successfully!'));
+		}  else{
+			template::getInstance()->addMessage($user->getMessage());
+		}
+	} else {
+		template::getInstance()->addMessage(tr('Invalid language'));
+	}
 }
 
 if (!isset($_SESSION['logged_from']) && !isset($_SESSION['logged_from_id'])) {
@@ -87,6 +102,4 @@ $tpl->flushOutput('common/personal_lang');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
-
-unset_messages();
 

@@ -32,7 +32,7 @@ $tpl = template::getInstance();
 $theme_color = $cfg->USER_INITIAL_THEME;
 
 
-function update_password($admin) {
+function update_password($user) {
 	$tpl = template::getInstance();
 	$cfg = configs::getInstance();
 	$sql = mysql::getInstance();
@@ -48,13 +48,13 @@ function update_password($admin) {
 			}
 		} else if ($_POST['pass'] !== $_POST['pass_rep']) {
 			$tpl->addMessage(tr('Passwords do not match!'));
-		} else if ((crypt($_POST['curr_pass'], $admin->admin_pass) == $admin->admin_pass) || (md5($_POST['curr_pass']) == $admin->admin_pass) === false) {
+		} else if ((crypt($_POST['curr_pass'], $user->admin_pass) == $user->admin_pass) || (md5($_POST['curr_pass']) == $user->admin_pass) === false) {
 			$tpl->addMessage(tr('The current password is wrong!'));
 		} else {
 			$upass = crypt_user_pass($_POST['pass']);
 			$_SESSION['user_pass'] = $upass;
-			$admin->admin_pass = $upass;
-			$admin->save();
+			$user->admin_pass = $upass;
+			$user->save();
 			$tpl->addMessage(tr('User password updated successfully!'));
 		}
 	}
@@ -64,6 +64,17 @@ genMainMenu();
 genGeneralMenu();
 
 //gen_logged_from($tpl);
+
+try{
+	$user = new selity_user($_SESSION['user_id']);
+} catch(Exception $e){
+	template::getInstance()->addMessage(tr('Invalid user data!'));
+	header('Location: index.php');
+	die();
+}
+
+update_password($user);
+
 
 $tpl->saveVariable(array(
 	'ADMIN_TYPE'				=> $_SESSION['user_type'],
@@ -78,13 +89,7 @@ $tpl->saveVariable(array(
 	'TR_CURR_PASSWORD'		=> tr('Current password')
 ));
 
-$admin = new selity_user($_SESSION['user_id']);
-update_password($admin);
-
 $tpl->flushOutput('common/personal_pass');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
-
-unset_messages();
-

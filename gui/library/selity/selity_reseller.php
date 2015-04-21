@@ -50,17 +50,11 @@ class selity_reseller extends selity_user{
 	public function validate(){
 		parent::validate();
 
-		if(is_null($this->admin_id)){
-			if(mysql::getInstance()->doQuery('SELECT COUNT(*) AS `cnt` FROM `admin` WHERE `email`= ?', $this->email)->cnt){
-				$this->errors[] = tr('Email %s already exist!', $this->email);
-			}
-		}
-
 		if($this->max_usr === '' || (int) $this->max_usr < 0){
 			$this->errors[] = tr('Incorrect user limit %s!', $this->max_usr);
 		}
-		if($this->max_als === '' || (int) $this->max_als < -1){
-			$this->errors[] = tr('Incorrect aliases limit %s!', $this->max_als);
+		if($this->max_dmn === '' || (int) $this->max_dmn < -1){
+			$this->errors[] = tr('Incorrect aliases limit %s!', $this->max_dmn);
 		}
 		if($this->max_sub === '' || (int) $this->max_sub < -1){
 			$this->errors[] = tr('Incorrect subdomains limit %s!', $this->max_sub);
@@ -71,13 +65,13 @@ class selity_reseller extends selity_user{
 		if($this->max_mail === '' || (int) $this->max_mail < -1){
 			$this->errors[] = tr('Incorrect mail accounts limit %s!', $this->max_mail);
 		}
-		if($this->max_sqldb === '' || (int) $this->max_sqldb < -1){
-			$this->errors[] = tr('Incorrect SQL databases limit %s!', $this->max_sqldb);
+		if($this->max_mysqld === '' || (int) $this->max_mysqld < -1){
+			$this->errors[] = tr('Incorrect SQL databases limit %s!', $this->max_mysqld);
 		}
-		if($this->max_sqlu === '' || (int) $this->max_sqlu < -1){
-			$this->errors[] = tr('Incorrect SQL users limit %s!', $this->max_sqlu);
+		if($this->max_mysqlu === '' || (int) $this->max_mysqlu < -1){
+			$this->errors[] = tr('Incorrect SQL users limit %s!', $this->max_mysqlu);
 		}
-		if($this->max_sqldb >= 0 && (int) $this->max_sqlu < -1){
+		if($this->max_mysqld >= 0 && (int) $this->max_mysqlu < -1){
 			$this->errors[] = tr('Enabling database usage require sql users!');
 		}
 		if($this->max_traff === '' || (int) $this->max_traff < 0){
