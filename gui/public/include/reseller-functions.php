@@ -68,46 +68,47 @@ function gen_reseller_mainmenu(&$tpl, $menu_file) {
 			'TR_MENU_LOSTPW_EMAIL' => tr('Lostpw email setup'),
 			)
 		);
-
-	$query = '
-		SELECT
-			*
-		FROM
-			custom_menus
-		WHERE
-			menu_level = \'reseller\'
-		  or
-			menu_level = \'all\'
-';
-
-	$rs = exec_query($sql, $query, array());
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign('CUSTOM_BUTTONS', '');
-	} else {
-		global $i;
-		$i = 100;
-
-		while (!$rs->EOF) {
-			$menu_name = $rs->fields['menu_name'];
-			$menu_link = get_menu_vars($rs->fields['menu_link']);
-			$menu_target = $rs->fields['menu_target'];
-
-			if ($menu_target !== "") {
-				$menu_target = "target=\"" . $menu_target . "\"";
-			}
-
-			$tpl->assign(array(
-				'BUTTON_LINK' => $menu_link,
-				'BUTTON_NAME' => $menu_name,
-				'BUTTON_TARGET' => $menu_target,
-				'BUTTON_ID' => $i,
-			));
-
-			$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
-			$rs->MoveNext();
-			$i++;
-		} // end while
-	} // end else
+//
+	//$query = '
+		//SELECT
+			//*
+		//FROM
+			//custom_menus
+		//WHERE
+			//menu_level = \'reseller\'
+		  //or
+			//menu_level = \'all\'
+	//';
+//
+	//$rs = exec_query($sql, $query, array());
+	//if ($rs->RecordCount() == 0) {
+		//$tpl->assign('CUSTOM_BUTTONS', '');
+	//} else {
+		//global $i;
+		//$i = 100;
+//
+		//while (!$rs->EOF) {
+			//$menu_name = $rs->fields['menu_name'];
+			//$menu_link = get_menu_vars($rs->fields['menu_link']);
+			//$menu_target = $rs->fields['menu_target'];
+//
+			//if ($menu_target !== "") {
+				//$menu_target = "target=\"" . $menu_target . "\"";
+			//}
+//
+			//$tpl->assign(array(
+				//'BUTTON_LINK' => $menu_link,
+				//'BUTTON_NAME' => $menu_name,
+				//'BUTTON_TARGET' => $menu_target,
+				//'BUTTON_ID' => $i,
+			//));
+//
+			//$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
+			//$rs->MoveNext();
+			//$i++;
+		//} // end while
+	//} // end else
+//
 	if (!Config::get('SELITY_SUPPORT_SYSTEM')) {
 		$tpl->assign('ISACTIVE_SUPPORT', '');
 	}
@@ -156,46 +157,47 @@ function gen_reseller_menu(&$tpl, $menu_file) {
 			)
 		);
 
-	$query = '
-		SELECT
-			*
-		FROM
-			custom_menus
-		WHERE
-			menu_level = \'reseller\'
-		  or
-			menu_level = \'all\'
-';
-
-	$rs = exec_query($sql, $query, array());
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign('CUSTOM_BUTTONS', '');
-	} else {
-		global $i;
-		$i = 100;
-
-		while (!$rs->EOF) {
-			$menu_name = $rs->fields['menu_name'];
-			$menu_link = get_menu_vars($rs->fields['menu_link']);
-			$menu_target = $rs->fields['menu_target'];
-
-			if ($menu_target !== "") {
-				$menu_target = "target=\"" . $menu_target . "\"";
-			}
-
-			$tpl->assign(
-				array('BUTTON_LINK' => $menu_link,
-					'BUTTON_NAME' => $menu_name,
-					'BUTTON_TARGET' => $menu_target,
-					'BUTTON_ID' => $i,
-					)
-				);
-
-			$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
-			$rs->MoveNext();
-			$i++;
-		} // end while
-	} // end else
+	//$query = '
+		//SELECT
+			//*
+		//FROM
+			//custom_menus
+		//WHERE
+			//menu_level = \'reseller\'
+		  //or
+			//menu_level = \'all\'
+	//';
+//
+	//$rs = exec_query($sql, $query, array());
+	//if ($rs->RecordCount() == 0) {
+		//$tpl->assign('CUSTOM_BUTTONS', '');
+	//} else {
+		//global $i;
+		//$i = 100;
+//
+		//while (!$rs->EOF) {
+			//$menu_name = $rs->fields['menu_name'];
+			//$menu_link = get_menu_vars($rs->fields['menu_link']);
+			//$menu_target = $rs->fields['menu_target'];
+//
+			//if ($menu_target !== "") {
+				//$menu_target = "target=\"" . $menu_target . "\"";
+			//}
+//
+			//$tpl->assign(
+				//array('BUTTON_LINK' => $menu_link,
+					//'BUTTON_NAME' => $menu_name,
+					//'BUTTON_TARGET' => $menu_target,
+					//'BUTTON_ID' => $i,
+					//)
+				//);
+//
+			//$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
+			//$rs->MoveNext();
+			//$i++;
+		//} // end while
+	//} // end else
+//
 	if (!Config::get('SELITY_SUPPORT_SYSTEM')) {
 		$tpl->assign('ISACTIVE_SUPPORT', '');
 	}
@@ -721,11 +723,11 @@ function gen_manage_user_query (&$search_query, &$count_query,
 	}
 
 	if (!in_array($search_status, array('', 'all'))) {
-		$add_query .= " AND `user_status` = '$search_status'";
+		$add_query .= " AND `status` = '$search_status'";
 	}
 
-	$count_query = "SELECT COUNT(*) AS `cnt` FROM `admin` LEFT JOIN `user_system_props` ON `admin`.`admin_id` = `user_system_props`.`user_admin_id` WHERE `admin_type` = 'user' $add_query";
-	$search_query = "SELECT * FROM `admin` LEFT JOIN `user_system_props` ON `admin`.`admin_id` = `user_system_props`.`user_admin_id` WHERE `admin_type` = 'user' $add_query ORDER BY `admin_name` ASC LIMIT $start_index, $rows_per_page";
+	$count_query = "SELECT COUNT(*) AS `cnt` FROM `admin` LEFT JOIN `user_system_props` ON `admin`.`admin_id` = `user_system_props`.`admin_id` WHERE `admin_type` = 'user' $add_query";
+	$search_query = "SELECT * FROM `admin` LEFT JOIN `user_system_props` ON `admin`.`admin_id` = `user_system_props`.`admin_id` WHERE `admin_type` = 'user' $add_query ORDER BY `admin_name` ASC LIMIT $start_index, $rows_per_page";
 }
 
 function gen_user_search_options (&$tpl, $search_for, $search_common, $search_status) {

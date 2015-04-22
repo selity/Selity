@@ -64,10 +64,10 @@
 								<div class="content-wrap">
 									<div class='col4_4'>
 										<center>
-											<a href="users_admin_edit.php?user_id={ADMIN_ID}" class="link">{TR_EDIT}</a>
+											<a href="users_admin_op.php?user_id={ADMIN_ID}">{TR_EDIT}</a>
 											<!--Section_:DELETE_ADMIN{ADMIN_ID}:-->
 											&nbsp;|&nbsp;
-											<a href="#" onclick="action_delete('{URL_DELETE_ADMIN}', '{NAME}')" class="link">{TR_DELETE}</a>
+											<a href="#" onclick="action_delete('{URL_DELETE_ADMIN}', '{NAME}')">{TR_DELETE}</a>
 											<!--:DELETE_ADMIN{ADMIN_ID}:_Section-->
 										</center>
 									</div>
@@ -89,9 +89,24 @@
 							<!--:ADMINS:_Repeats-->
 						<!--:ADMIN:_Section-->
 
-						<div class="col1">
+						<div class="col1"  id="resellers">
 							<b>{TR_RESELLERS}</b>
 						</div>
+
+						<form action="users_show.php#resellers" method="post" class='searchForm'>
+							<input name="rslSearchFor" type="text" value="{RSL_SEARCH_FOR}" />
+							<select name="rslSearchWhere">
+								<option value="mail" {R_MAIL_SEL}>{U_MAIL}</option>
+								<option value="servName" {R_SERV_NAME_SEL}>{U_SERV_NAME}</option>
+								<option value="name" {R_NAME_SEL}>{U_NAME}</option>
+								<option value="firm" {R_COMP_SEL}>{U_COMP}</option>
+								<option value="city" {R_CITY_SEL}>{U_CITY}</option>
+								<option value="country" {R_COUNTRY_SEL}>{U_COUNTRY}</option>
+								<option value="dmn_name" {R_DMN_NAME_SEL}>{U_DMN_NAME}</option>
+							</select>
+							<input name="submitRSLR" type="submit"value="{TR_SEARCH}" />
+						</form>
+						<div class='clear'>&nbsp;</div>
 
 						<div class="content-wrap">
 							<div class='col4_4'>
@@ -120,9 +135,11 @@
 							<div class="content-wrap">
 								<div class='col4_4'>
 									<center>
-										<a href="users_reseller_op.php?user_id={ADMIN_ID}" class="link">{TR_EDIT}</a>
+										<a href="change_user_interface.php?to_id={ADMIN_ID}">{TR_CHANGE_USERS}</a>
 										&nbsp;|&nbsp;
-										<a href="#" onclick="action_delete('{URL_DELETE_RESELLER}', '{NAME}')" class="link">{TR_DELETE}</a>
+										<a href="users_reseller_op.php?user_id={ADMIN_ID}">{TR_EDIT}</a>
+										&nbsp;|&nbsp;
+										<a href="#" onclick="action_delete('{URL_DELETE_RESELLER}', '{NAME}')">{TR_DELETE}</a>
 									</center>
 								</div>
 							</div>
@@ -141,11 +158,38 @@
 							</div>
 							<div class='clear'>&nbsp;</div>
 						<!--:RESELLER:_Repeats-->
+							<!--Section_:prevReseller:-->
+							<a href="?go={rslPrv}#resellers">&lt;-&nbsp;{TR_PREVIOUS}</a>
+							<!--:prevReseller:_Section-->
+							<!--Section_:nextReseller:-->
+							<div class="right"><a href="?go={rslNxt}#resellers">{TR_NEXT}&nbsp;-&gt;</a></div>
+							<!--:nextReseller:_Section-->
+							<div class='clear'>&nbsp;</div>
 						<!--:RESELLER:_Section-->
 
 						<div class="col1">
 							<b>{TR_USERS}</b>
 						</div>
+
+						<form method="post" class='searchForm'>
+							<input name="search_for" type="text" value="{SEARCH_FOR}" />
+							<select name="search_common">
+								<option value="mail" {U_MAIL_SEL}>{U_MAIL}</option>
+								<option value="servName" {U_SERV_NAME_SEL}>{U_SERV_NAME}</option>
+								<option value="dmnName" {U_DMN_NAME_SEL}>{U_DMN_NAME}</option>
+								<option value="firm" {U_COMP_SEL}>{U_COMP}</option>
+								<option value="city" {U_CITY_SEL}>{U_CITY}</option>
+								<option value="country" {U_COUNTRY_SEL}>{U_COUNTRY}</option>
+							</select>
+							<select name="search_status">
+								<option value="all" {S_ALL}>{ALL}</option>
+								<option value="ok" {S_OK}>{OK}</option>
+								<option value="disabled" {S_SUSPENDED}>{SUSPENDED}</option>
+							</select>
+							<input name="submitUSR" type="submit"value="{TR_SEARCH}" />
+							<div class="right"><a href="?showDomains" >{TR_SHOW_DOMAINS}</a></div>
+						</form>
+						<div class='clear'>&nbsp;</div>
 
 						<div class="content-wrap">
 							<div class='col4_4'>
@@ -174,17 +218,17 @@
 							<div class="content-wrap">
 								<div class='col4_4'>
 									<center>
-										<a href="change_user_interface.php?to_id={ADMIN_ID}" class="link">{TR_CHANGE_USERS}</a>
+										<a href="change_user_interface.php?to_id={ADMIN_ID}">{TR_CHANGE_USERS}</a>
 										&nbsp;|&nbsp;
-										<a href="users_client_edit.php?user_id={ADMIN_ID}" class="link">{TR_EDIT}</a>
+										<a href="users_client_edit.php?user_id={ADMIN_ID}">{TR_EDIT}</a>
 										&nbsp;|&nbsp;
-										<a href="#" onclick="action_delete('{URL_DELETE_CLIENT}', '{NAME}')" class="link">{TR_DELETE}</a>
+										<a href="#" onclick="action_delete('{URL_DELETE_CLIENT}', '{NAME}')">{TR_DELETE}</a>
 									</center>
 								</div>
 							</div>
 							<div class='col4_1'>
 								<center>
-									<a href="{STATUS_URL}" class="link">{STATUS}</a>
+									<a href="{STATUS_URL}">{STATUS}</a>
 								</center>
 							</div>
 							<div class='col4_2'>
@@ -197,6 +241,8 @@
 							</div>
 							<div class='clear'>&nbsp;</div>
 						<!--:USERS:_Repeats-->
+						<a href="?go=usrPrv">&lt;-&nbsp;{TR_PREVIOUS}</a>
+						<div class="right"><a href="?go=usrNxt">{TR_NEXT}&nbsp;-&gt;</a></div>
 						<!--:USERS:_Section-->
 
 

@@ -88,6 +88,9 @@ function addReseller($user) {
 
 	if($user->admin_id){
 		$tpl->saveSection('EDIT');
+		$isNew = false;
+	} else {
+		$isNew = true;
 	}
 
 	if (array_key_exists('submit', $_POST)) {
@@ -100,8 +103,10 @@ function addReseller($user) {
 		if($_POST['pass'] != ''){
 			$user->admin_pass	= clean_input($_POST['pass']);
 		}
-		$user->created_by	= $_SESSION['user_id'];
-		$user->created_on	= time();
+
+		if($isNew) $user->created_by	= $_SESSION['user_id'];
+		if($isNew) $user->created_on	= time();
+
 		$user->email		= clean_input($_POST['email']);
 
 		$user->fname	= clean_input($_POST['fname']);
@@ -117,8 +122,8 @@ function addReseller($user) {
 		$user->street1	= clean_input($_POST['street1']);
 		$user->street2	= clean_input($_POST['street2']);
 
-		$user->lang		= $cfg->USER_INITIAL_LANG;
-		$user->layout	= $cfg->USER_INITIAL_THEME;
+		if($isNew) $user->lang		= $cfg->USER_INITIAL_LANG;
+		if($isNew) $user->layout	= $cfg->USER_INITIAL_THEME;
 
 		$user->max_usr		= clean_input($_POST['max_usr']);
 		$user->max_dmn		= clean_input($_POST['max_als']);
@@ -154,15 +159,12 @@ function addReseller($user) {
 			$user->removeIP($ip);
 		}
 
-
-		if(!$user->admin_id){
+		if($isNew){
 			$logMess	= '%s: added reseller: %s (%s)!';
 			$showMess	= tr('Reseller added');
-			$isNew		= true;
 		} else {
 			$logMess	= '%s: changes data/password for reseller: %s (%s)!';
 			$showMess	= tr('Reseller saved');
-			$isNew		= false;
 		}
 
 		if($user->save()){
@@ -198,7 +200,6 @@ function addReseller($user) {
 			$tpl->addMessage($showMess);
 			header('Location: users_show.php');
 			die();
-
 		} else {
 			$tpl->addMessage($user->getMessage());
 		}
@@ -210,7 +211,16 @@ $id = (int) $_GET['user_id'];
 	try{
 		$user = new selity_reseller($id);
 	} catch (Exception $e) {
-		$tpl->addMessage(tr('Reseller not found!'));
+		$tpl->addMessage(tr('User not found!'));
+		header('Location: users_show.php');
+		die();
+	}
+	if(array_key_exists('op', $_GET) && $_GET['op'] == 'delete'){
+		if($user->delete()){
+			$tpl->addMessage(tr('User deleted!'));
+		}else{
+			$tpl->addMessage(tr('User not deleted!'));
+		}
 		header('Location: users_show.php');
 		die();
 	}
@@ -291,7 +301,6 @@ $tpl->saveVariable(array(
 	'TR_SUBMIT'				=> tr('Add'),
 	'TR_DISABLED_MSG'		=> tr('-1 disabled'),
 	'TR_UNLIMITED_MSG'		=> tr('0 unlimited'),
-
 
 	'USERNAME'		=> $user->admin_name,
 	'EMAIL'			=> isset($_POST['email']) ? clean_input($_POST['email']) : $user->email,

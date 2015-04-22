@@ -1,3 +1,21 @@
+-- phpMyAdmin SQL Dump
+-- version 4.0.8
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost:3306
+-- Generation Time: Apr 22, 2015 at 11:23 PM
+-- Server version: 5.5.43-0+deb8u1
+-- PHP Version: 5.6.7-1
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+--
+-- Database: `selity`
+--
+
+-- --------------------------------------------------------
+
 --
 -- Table structure for table `admin`
 --
@@ -42,24 +60,6 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
---
--- Dumping data for table `config`
---
-
-INSERT INTO `config` (`name`, `value`, `readonly`) VALUES
-('BRUTEFORCE', '1', '0'),
-('BRUTEFORCE_BETWEEN', '1', '0'),
-('BRUTEFORCE_BETWEEN_TIME', '30', '0'),
-('BRUTEFORCE_BLOCK_TIME', '30', '0'),
-('BRUTEFORCE_MAX_CAPTCHA', '5', '0'),
-('BRUTEFORCE_MAX_LOGIN', '3', '0'),
-('CHECK_FOR_UPDATES', '0', '0'),
-('GUI_DEBUG', '1', '0'),
-('HOSTING_PLANS_LEVEL', 'reseller', '0'),
-('LOSTPASSWORD', '1', '0'),
-('LOSTPASSWORD_TIMEOUT', '30', '0'),
-('USER_INITIAL_LANG', 'en_GB', '0');
-
 -- --------------------------------------------------------
 
 --
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `domains` (
   `dmn_forward_url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`dmn_id`),
   KEY `admin_id` (`admin_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -121,6 +121,37 @@ CREATE TABLE IF NOT EXISTS `ftp_users` (
   `shell` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `homedir` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   UNIQUE KEY `userid` (`userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hosting_plans`
+--
+
+CREATE TABLE IF NOT EXISTS `hosting_plans` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `reseller_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `max_dmn` int(11) NOT NULL DEFAULT '-1',
+  `max_sub` int(11) NOT NULL DEFAULT '-1',
+  `max_mail` int(11) NOT NULL DEFAULT '-1',
+  `max_ftp` int(11) NOT NULL DEFAULT '-1',
+  `max_mysqld` int(11) NOT NULL DEFAULT '-1',
+  `max_mysqlu` int(11) NOT NULL DEFAULT '-1',
+  `max_disk` bigint(20) NOT NULL DEFAULT '-1',
+  `max_traff` bigint(20) NOT NULL DEFAULT '-1',
+  `php` enum('no','yes') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
+  `cgi` enum('no','yes') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
+  `support` enum('no','yes') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
+  `backup` enum('no','sql','full') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
+  `description` text COLLATE utf8_unicode_ci,
+  `price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `setup_fee` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `value` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `payment` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `status` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
@@ -208,13 +239,55 @@ CREATE TABLE IF NOT EXISTS `mysql_user` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `orders`
+--
+
+CREATE TABLE IF NOT EXISTS `orders` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `reseller_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `plan_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `date` int(10) unsigned NOT NULL DEFAULT '0',
+  `email` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `fname` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `lname` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `gender` enum('M','F','U') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'U',
+  `firm` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `zip` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `city` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `state` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `country` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `phone` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `fax` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `street1` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `street2` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orders_settings`
+--
+
+CREATE TABLE IF NOT EXISTS `orders_settings` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `reseller_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `header` text COLLATE utf8_unicode_ci,
+  `footer` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reseller_props`
 --
 
 CREATE TABLE IF NOT EXISTS `reseller_props` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `reseller_id` int(10) unsigned NOT NULL,
-  `server_ids` int(10) unsigned NOT NULL,
+  `server_ids` text COLLATE utf8_unicode_ci,
   `reseller_ips` text COLLATE utf8_unicode_ci,
   `max_usr` int(11) NOT NULL DEFAULT '-1',
   `max_dmn` int(11) NOT NULL DEFAULT '-1',
@@ -230,7 +303,7 @@ CREATE TABLE IF NOT EXISTS `reseller_props` (
   `support` enum('no','yes') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'yes',
   PRIMARY KEY (`id`),
   KEY `reseller_id` (`reseller_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -271,7 +344,7 @@ CREATE TABLE IF NOT EXISTS `server_ips` (
   `ip_op_result` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`ip_id`),
   KEY `server_id` (`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -324,13 +397,6 @@ CREATE TABLE IF NOT EXISTS `straff_settings` (
   `straff_warn` int(10) unsigned DEFAULT NULL,
   `straff_email` int(10) unsigned DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
---
--- Dumping data for table `straff_settings`
---
-
-INSERT INTO `straff_settings` (`straff_max`, `straff_warn`, `straff_email`) VALUES
-(0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -393,6 +459,7 @@ CREATE TABLE IF NOT EXISTS `user_gui_props` (
 
 CREATE TABLE IF NOT EXISTS `user_system_props` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `server_id` int(10) unsigned NOT NULL,
   `gid` int(10) unsigned NOT NULL DEFAULT '0',
   `uid` int(10) unsigned NOT NULL DEFAULT '0',
   `admin_id` int(10) unsigned NOT NULL DEFAULT '0',
@@ -408,10 +475,11 @@ CREATE TABLE IF NOT EXISTS `user_system_props` (
   `cgi` enum('no','yes') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
   `support` enum('no','yes') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
   `backup` enum('no','sql','full') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
-  `ips` int(10) unsigned DEFAULT NULL,
+  `ips` text COLLATE utf8_unicode_ci,
   `status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `op_result` text COLLATE utf8_unicode_ci,
   `disk_amnt` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `admin_id` (`admin_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  KEY `admin_id` (`admin_id`),
+  KEY `server_id` (`server_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

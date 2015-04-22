@@ -227,9 +227,9 @@ class selity_reseller extends selity_user{
 		$sql->beginTransaction();
 		$query = 'DELETE FROM `email_tpls` WHERE `owner_id` = ?';
 		$sql->doQuery($query, $this->admin_id);
-		$query = 'DELETE FROM `orders` WHERE `user_id` = ?';
+		$query = 'DELETE FROM `orders` WHERE `reseller_id` = ?';
 		$sql->doQuery($query, $this->admin_id);
-		$query = 'DELETE FROM `orders_settings` WHERE `user_id`  = ?';
+		$query = 'DELETE FROM `orders_settings` WHERE `reseller_id`  = ?';
 		$sql->doQuery($query, $this->admin_id);
 		$query = 'DELETE FROM `hosting_plans` WHERE `reseller_id` = ?';
 		$sql->doQuery($query, $this->admin_id);

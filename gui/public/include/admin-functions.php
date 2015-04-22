@@ -116,46 +116,47 @@ function gen_admin_mainmenu(&$tpl, $menu_file) {
 			)
 		);
 
-	$query = "
-		SELECT
-			*
-		FROM
-			`custom_menus`
-		WHERE
-			`menu_level` = 'admin'
-	";
+	//$query = "
+		//SELECT
+			//*
+		//FROM
+			//`custom_menus`
+		//WHERE
+			//`menu_level` = 'admin'
+	//";
+//
+	//$rs = exec_query($sql, $query, array());
+	//if ($rs->RecordCount() == 0) {
+		//$tpl->assign('CUSTOM_BUTTONS', '');
+	//} else {
+		//global $i;
+		//$i = 100;
+//
+		//while (!$rs->EOF) {
+			//$menu_name = $rs->fields['menu_name'];
+			//$menu_link = get_menu_vars($rs->fields['menu_link']);
+			//$menu_target = $rs->fields['menu_target'];
+//
+			//if ($menu_target === '') {
+				//$menu_target = "";
+			//} else {
+				//$menu_target = "target=\"" . $menu_target . "\"";
+			//}
+//
+			//$tpl->assign(
+				//array('BUTTON_LINK' => $menu_link,
+					//'BUTTON_NAME' => $menu_name,
+					//'BUTTON_TARGET' => $menu_target,
+					//'BUTTON_ID' => $i,
+					//)
+				//);
+//
+			//$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
+			//$rs->MoveNext();
+			//$i++;
+		//} // end while
+	//} // end else
 
-	$rs = exec_query($sql, $query, array());
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign('CUSTOM_BUTTONS', '');
-	} else {
-		global $i;
-		$i = 100;
-
-		while (!$rs->EOF) {
-			$menu_name = $rs->fields['menu_name'];
-			$menu_link = get_menu_vars($rs->fields['menu_link']);
-			$menu_target = $rs->fields['menu_target'];
-
-			if ($menu_target === '') {
-				$menu_target = "";
-			} else {
-				$menu_target = "target=\"" . $menu_target . "\"";
-			}
-
-			$tpl->assign(
-				array('BUTTON_LINK' => $menu_link,
-					'BUTTON_NAME' => $menu_name,
-					'BUTTON_TARGET' => $menu_target,
-					'BUTTON_ID' => $i,
-					)
-				);
-
-			$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
-			$rs->MoveNext();
-			$i++;
-		} // end while
-	} // end else
 	if (!Config::get('SELITY_SUPPORT_SYSTEM')) {
 		$tpl->assign('ISACTIVE_SUPPORT', '');
 	}
@@ -220,46 +221,47 @@ function gen_admin_menu(&$tpl, $menu_file) {
 			'CODENAME' => Config::get('CodeName')
 			)
 		);
-	$query = "
-		SELECT
-			*
-		FROM
-			custom_menus
-		where
-			menu_level = 'admin1'
-";
+	//$query = "
+		//SELECT
+			//*
+		//FROM
+			//custom_menus
+		//where
+			//menu_level = 'admin1'
+//";
+//
+	//$rs = exec_query($sql, $query, array());
+	//if ($rs->RecordCount() == 0) {
+		//$tpl->assign('CUSTOM_BUTTONS', '');
+	//} else {
+		//global $i;
+		//$i = 100;
+//
+		//while (!$rs->EOF) {
+			//$menu_name = $rs->fields['menu_name'];
+			//$menu_link = get_menu_vars($rs->fields['menu_link']);
+			//$menu_target = $rs->fields['menu_target'];
+//
+			//if ($menu_target === '') {
+				//$menu_target = "";
+			//} else {
+				//$menu_target = "target=\"" . $menu_target . "\"";
+			//}
+//
+			//$tpl->assign(
+				//array('BUTTON_LINK' => $menu_link,
+					//'BUTTON_NAME' => $menu_name,
+					//'BUTTON_TARGET' => $menu_target,
+					//'BUTTON_ID' => $i,
+					//)
+				//);
+//
+			//$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
+			//$rs->MoveNext();
+			//$i++;
+		//} // end while
+	//} // end else
 
-	$rs = exec_query($sql, $query, array());
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign('CUSTOM_BUTTONS', '');
-	} else {
-		global $i;
-		$i = 100;
-
-		while (!$rs->EOF) {
-			$menu_name = $rs->fields['menu_name'];
-			$menu_link = get_menu_vars($rs->fields['menu_link']);
-			$menu_target = $rs->fields['menu_target'];
-
-			if ($menu_target === '') {
-				$menu_target = "";
-			} else {
-				$menu_target = "target=\"" . $menu_target . "\"";
-			}
-
-			$tpl->assign(
-				array('BUTTON_LINK' => $menu_link,
-					'BUTTON_NAME' => $menu_name,
-					'BUTTON_TARGET' => $menu_target,
-					'BUTTON_ID' => $i,
-					)
-				);
-
-			$tpl->parse('CUSTOM_BUTTONS', '.custom_buttons');
-			$rs->MoveNext();
-			$i++;
-		} // end while
-	} // end else
 	if (!Config::get('SELITY_SUPPORT_SYSTEM')) {
 		$tpl->assign('SUPPORT_SYSTEM', '');
 	}

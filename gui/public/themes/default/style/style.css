@@ -23,11 +23,10 @@ p {
 }
 */
 
-/*
 a{
 	text-decoration: none;
+	color:			#000;
 }
-*/
 
 /*
 img{
@@ -279,7 +278,9 @@ h3 {
 }
 
 .right{
-	text-align: right;
+	float: right;
+	line-height: 20px;
+	margin:			0px 5px 5px 0px;
 }
 
 /*
@@ -408,7 +409,7 @@ h3 {
 	padding: 		3px 3px 3px 10px;
 	background:		#EEE;
 	border:			1px solid #CCC;
-	height:			20px;
+	min-height:			20px;
 	text-align:		right;
 	line-height:	20px;
 }
@@ -420,7 +421,7 @@ h3 {
 	padding: 		3px 3px 3px 10px;
 	background:		#EEE;
 	border:			1px solid #CCC;
-	height:			20px;
+	min-height:			20px;
 	line-height:	20px;
 }
 
@@ -431,7 +432,7 @@ h3 {
 	padding: 		3px 3px 3px 10px;
 	background:		#EEE;
 	border:			1px solid #CCC;
-	height:			20px;
+	min-height:			20px;
 	line-height:	20px;
 }
 
@@ -440,7 +441,7 @@ h3 {
 	padding: 	3px 3px 3px 10px;
 	border:		1px solid #CCC;
 	background:	#EEE;
-	height:		20px;
+	min-height:		20px;
 	line-height:	20px;
 }
 
@@ -506,3 +507,6 @@ h3 {
 	line-height:	20px;
 }
 
+.searchForm{
+	margin: 0px 0px 5px 0px;
+}
