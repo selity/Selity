@@ -89,20 +89,21 @@
 							<!--:ADMINS:_Repeats-->
 						<!--:ADMIN:_Section-->
 
-						<div class="col1"  id="resellers">
-							<b>{TR_RESELLERS}</b>
+						<div class="col1" id="resellers">
+							<b>{TR_RESELLERS} - {rslShowing}</b>
 						</div>
 
 						<form action="users_show.php#resellers" method="post" class='searchForm'>
 							<input name="rslSearchFor" type="text" value="{RSL_SEARCH_FOR}" />
 							<select name="rslSearchWhere">
-								<option value="mail" {R_MAIL_SEL}>{U_MAIL}</option>
-								<option value="servName" {R_SERV_NAME_SEL}>{U_SERV_NAME}</option>
-								<option value="name" {R_NAME_SEL}>{U_NAME}</option>
-								<option value="firm" {R_COMP_SEL}>{U_COMP}</option>
-								<option value="city" {R_CITY_SEL}>{U_CITY}</option>
-								<option value="country" {R_COUNTRY_SEL}>{U_COUNTRY}</option>
-								<option value="dmn_name" {R_DMN_NAME_SEL}>{U_DMN_NAME}</option>
+								<option value="mail" {R_MAIL_SEL}>{TR_MAIL}</option>
+								<option value="servName" {R_SERV_NAME_SEL}>{TR_SERV_NAME}</option>
+								<option value="ipNumber" {R_IP_NO_SEL}>{TR_IP_NUMBER}</option>
+								<option value="name" {R_NAME_SEL}>{TR_NAME}</option>
+								<option value="firm" {R_COMP_SEL}>{TR_COMP}</option>
+								<option value="city" {R_CITY_SEL}>{TR_CITY}</option>
+								<option value="country" {R_COUNTRY_SEL}>{TR_COUNTRY}</option>
+								<option value="dmn_name" {R_DMN_NAME_SEL}>{TR_DMN_NAME}</option>
 							</select>
 							<input name="submitRSLR" type="submit"value="{TR_SEARCH}" />
 						</form>
@@ -159,32 +160,34 @@
 							<div class='clear'>&nbsp;</div>
 						<!--:RESELLER:_Repeats-->
 							<!--Section_:prevReseller:-->
-							<a href="?go={rslPrv}#resellers">&lt;-&nbsp;{TR_PREVIOUS}</a>
+							<a href="?rgo={rslPrv}#resellers">&lt;-&nbsp;{TR_PREVIOUS}</a>
 							<!--:prevReseller:_Section-->
 							<!--Section_:nextReseller:-->
-							<div class="right"><a href="?go={rslNxt}#resellers">{TR_NEXT}&nbsp;-&gt;</a></div>
+							<div class="right"><a href="?rgo={rslNxt}#resellers">{TR_NEXT}&nbsp;-&gt;</a></div>
 							<!--:nextReseller:_Section-->
 							<div class='clear'>&nbsp;</div>
 						<!--:RESELLER:_Section-->
 
-						<div class="col1">
-							<b>{TR_USERS}</b>
+						<div class="col1" id="users">
+							<b>{TR_USERS} - {usrShowing}</b>
 						</div>
 
-						<form method="post" class='searchForm'>
-							<input name="search_for" type="text" value="{SEARCH_FOR}" />
-							<select name="search_common">
-								<option value="mail" {U_MAIL_SEL}>{U_MAIL}</option>
-								<option value="servName" {U_SERV_NAME_SEL}>{U_SERV_NAME}</option>
-								<option value="dmnName" {U_DMN_NAME_SEL}>{U_DMN_NAME}</option>
-								<option value="firm" {U_COMP_SEL}>{U_COMP}</option>
-								<option value="city" {U_CITY_SEL}>{U_CITY}</option>
-								<option value="country" {U_COUNTRY_SEL}>{U_COUNTRY}</option>
+						<form action="users_show.php#users" method="post" class='searchForm'>
+							<input name="usrSearchFor" type="text" value="{USR_SEARCH_FOR}" />
+							<select name="usrSearchWhere">
+								<option value="mail" {U_MAIL_SEL}>{TR_MAIL}</option>
+								<option value="servName" {U_SERV_NAME_SEL}>{TR_SERV_NAME}</option>
+								<option value="ipNumber" {U_IP_NO_SEL}>{TR_IP_NUMBER}</option>
+								<option value="name" {U_NAME_SEL}>{TR_NAME}</option>
+								<option value="firm" {U_COMP_SEL}>{TR_COMP}</option>
+								<option value="city" {U_CITY_SEL}>{TR_CITY}</option>
+								<option value="country" {U_COUNTRY_SEL}>{TR_COUNTRY}</option>
+								<option value="dmn_name" {U_DMN_NAME_SEL}>{TR_DMN_NAME}</option>
 							</select>
-							<select name="search_status">
-								<option value="all" {S_ALL}>{ALL}</option>
-								<option value="ok" {S_OK}>{OK}</option>
-								<option value="disabled" {S_SUSPENDED}>{SUSPENDED}</option>
+							<select name="usrSearchStatus">
+								<option value="all" {U_ALL}>{TR_ALL}</option>
+								<option value="ok" {U_OK}>{TR_OK}</option>
+								<option value="disabled" {U_SUSPENDED}>{TR_SUSPENDED}</option>
 							</select>
 							<input name="submitUSR" type="submit"value="{TR_SEARCH}" />
 							<div class="right"><a href="?showDomains" >{TR_SHOW_DOMAINS}</a></div>
@@ -241,8 +244,13 @@
 							</div>
 							<div class='clear'>&nbsp;</div>
 						<!--:USERS:_Repeats-->
-						<a href="?go=usrPrv">&lt;-&nbsp;{TR_PREVIOUS}</a>
-						<div class="right"><a href="?go=usrNxt">{TR_NEXT}&nbsp;-&gt;</a></div>
+							<!--Section_:prevUser:-->
+							<a href="?ugo={usrPrv}#users">&lt;-&nbsp;{TR_PREVIOUS}</a>
+							<!--:prevUser:_Section-->
+							<!--Section_:nextUser:-->
+							<div class="right"><a href="?ugo={usrNxt}#users">{TR_NEXT}&nbsp;-&gt;</a></div>
+							<!--:nextUser:_Section-->
+							<div class='clear'>&nbsp;</div>
 						<!--:USERS:_Section-->
 
 

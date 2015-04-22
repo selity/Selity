@@ -63,13 +63,13 @@ function genResellerList(){
 
 	$showRows	= $cfg->USER_ROWS_PER_PAGE;
 
-	$startIndex = isset($_GET['go']) ? (int) $_GET['go'] : 0;
+	$startIndex = isset($_GET['rgo']) ? (int) $_GET['rgo'] : 0;
 	if (array_key_exists('submitRSLR', $_POST)) {
 		$_SESSION['rslSearchFor'] 	= trim(clean_input($_POST['rslSearchFor']));
 		$_SESSION['rslSearchWhere']	= $_POST['rslSearchWhere'];
 		$startIndex = 0;
 	} else {
-		if (isset($_SESSION['rslSearchFor']) && !isset($_GET['go'])) {
+		if (isset($_SESSION['rslSearchFor']) && !isset($_GET['rgo'])) {
 			unset($_SESSION['rslSearchFor']);
 			unset($_SESSION['rslSearchWhere']);
 		}
@@ -85,6 +85,10 @@ function genResellerList(){
 			$rs = $sql->doQuery('SELECT `server_id` FROM `servers` WHERE `server_name` RLIKE ?', $_SESSION['rslSearchFor']);
 			$add_query .= " AND (`t4`.`server_ids` rlike ?) ";
 			array_push($data, ':"'.($rs->countRows() > 0 ? $rs->server_id : 'n/a').'";');
+		} else if ($_SESSION['rslSearchWhere'] === 'ipNumber') {
+			$rs = $sql->doQuery('SELECT `ip_id` FROM `server_ips` WHERE `ip_number` RLIKE ?', $_SESSION['rslSearchFor']);
+			$add_query .= " AND (`t4`.`reseller_ips` rlike ?) ";
+			array_push($data, ':"'.($rs->countRows() > 0 ? $rs->ip_id : 'n/a').'";');
 		} else if ($_SESSION['rslSearchWhere'] === 'name') {
 			$add_query .= " AND (`t1`.`lname` rlike ? or `t1`.fname rlike ?) ";
 			array_push($data, $_SESSION['rslSearchFor'], $_SESSION['rslSearchFor']);
@@ -117,25 +121,6 @@ function genResellerList(){
 
 	$cnt = $sql->doQuery($cQuery, 'reseller', $data)->countRows();
 
-	$prevIndex = $startIndex - $showRows < 0 ? 0 : $startIndex - $showRows;
-	$nextIndex = $startIndex + $showRows >= $cnt ? $startIndex : $startIndex + $showRows;
-
-	$tpl->saveVariable(array(
-		'rslPrv'			=> $prevIndex,
-		'rslNxt'			=> $nextIndex,
-		'RSL_SEARCH_FOR'		=> isset($_SESSION['rslSearchFor']) ? $_SESSION['rslSearchFor'] : '',
-		'R_MAIL_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'mail' ? 'selected' : '',
-		'R_SERV_NAME_SEL'	=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'servName' ? 'selected' : '',
-		'R_NAME_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'name' ? 'selected' : '',
-		'R_COMP_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'firm' ? 'selected' : '',
-		'R_CITY_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'city' ? 'selected' : '',
-		'R_COUNTRY_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'country' ? 'selected' : '',
-		'R_DMN_NAME_SEL'	=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'dmn_name' ? 'selected' : '',
-	));
-	if($prevIndex != $startIndex) $tpl->saveSection('prevReseller');
-	if($nextIndex != $startIndex) $tpl->saveSection('nextReseller');
-
-
 	$query = "
 		SELECT `t1`.*, `t2`.`admin_name` AS `parent`
 		FROM `admin` AS `t1`
@@ -151,6 +136,25 @@ function genResellerList(){
 	";
 	$rs = $sql->doQuery($query, 'reseller', $data);
 
+	$prevIndex = $startIndex - $showRows < 0 ? 0 : $startIndex - $showRows;
+	$nextIndex = $startIndex + $showRows >= $cnt ? $startIndex : $startIndex + $showRows;
+
+	$tpl->saveVariable(array(
+		'rslShowing'		=> tr('showing %s resellers from a total of %s', $rs->countRows(), $cnt),
+		'rslPrv'			=> $prevIndex,
+		'rslNxt'			=> $nextIndex,
+		'RSL_SEARCH_FOR'		=> isset($_SESSION['rslSearchFor']) ? $_SESSION['rslSearchFor'] : '',
+		'R_MAIL_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'mail' ? 'selected' : '',
+		'R_SERV_NAME_SEL'	=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'servName' ? 'selected' : '',
+		'R_IP_NO_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'ipNumber' ? 'selected' : '',
+		'R_NAME_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'name' ? 'selected' : '',
+		'R_COMP_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'firm' ? 'selected' : '',
+		'R_CITY_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'city' ? 'selected' : '',
+		'R_COUNTRY_SEL'		=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'country' ? 'selected' : '',
+		'R_DMN_NAME_SEL'	=> isset($_SESSION['rslSearchWhere']) && $_SESSION['rslSearchWhere'] == 'dmn_name' ? 'selected' : '',
+	));
+	if($prevIndex != $startIndex) $tpl->saveSection('prevReseller');
+	if($nextIndex != $startIndex) $tpl->saveSection('nextReseller');
 
 	$admins = array();
 	while (!$rs->EOF){
@@ -169,16 +173,114 @@ function genResellerList(){
 function genClientList(){
 	$tpl = template::getInstance();
 	$sql = mysql::getInstance();
-	$query = '
-		SELECT `t1`.*, `t2`.`admin_name` AS `parent`, `t3`.`status`
+	$cfg = configs::getInstance();
+	$add_query = '';
+
+	$showRows	= $cfg->USER_ROWS_PER_PAGE;
+
+	$startIndex = isset($_GET['ugo']) ? (int) $_GET['ugo'] : 0;
+	if (array_key_exists('submitUSR', $_POST)) {
+		$_SESSION['usrSearchFor'] 	= trim(clean_input($_POST['usrSearchFor']));
+		$_SESSION['usrSearchWhere']	= $_POST['usrSearchWhere'];
+		$_SESSION['usrSearchStatus'] = $_POST['usrSearchStatus'];
+		$startIndex = 0;
+	} else {
+		if (isset($_SESSION['usrSearchFor']) && !isset($_GET['ugo'])) {
+			unset($_SESSION['usrSearchFor']);
+			unset($_SESSION['usrSearchWhere']);
+			unset($_SESSION['usrSearchStatus']);
+		}
+	}
+
+	$data = array();
+
+	if (isset($_SESSION['usrSearchFor']) && $_SESSION['usrSearchFor'] != '') {
+		if ($_SESSION['usrSearchWhere'] === 'mail') {
+			$add_query .= " AND `t1`.`email` rlike ? ";
+			array_push($data, $_SESSION['usrSearchFor']);
+		} else if ($_SESSION['usrSearchWhere'] === 'servName') {
+			$rs = $sql->doQuery('SELECT `server_id` FROM `servers` WHERE `server_name` RLIKE ?', $_SESSION['usrSearchFor']);
+			echo $add_query .= " AND (`t2`.`server_id` = ?) ";
+			array_push($data, $rs->countRows() > 0 ? $rs->server_id : 'n/a');
+			var_dump($data);
+		} else if ($_SESSION['usrSearchWhere'] === 'ipNumber') {
+			$rs = $sql->doQuery('SELECT `ip_id` FROM `server_ips` WHERE `ip_number` RLIKE ?', $_SESSION['usrSearchFor']);
+			$add_query .= " AND (`t2`.`ips` rlike ?) ";
+			array_push($data, ':"'.($rs->countRows() > 0 ? $rs->ip_id : 'n/a').'";');
+			var_dump($data);
+		} else if ($_SESSION['usrSearchWhere'] === 'name') {
+			$add_query .= " AND (`t1`.`lname` rlike ? or `t1`.fname rlike ?) ";
+			array_push($data, $_SESSION['usrSearchFor'], $_SESSION['usrSearchFor']);
+		} else if ($_SESSION['usrSearchWhere'] === 'firm') {
+			$add_query .= " AND `t1`.`firm` rlike ? ";
+			array_push($data, $_SESSION['usrSearchFor']);
+		} else if ($_SESSION['usrSearchWhere'] === 'city') {
+			$add_query .= " AND `t1`.`city` rlike ? ";
+			array_push($data, $_SESSION['usrSearchFor']);
+		} else if ($_SESSION['usrSearchWhere'] === 'country') {
+			$add_query .= " AND `t1`.`country` rlike ? ";
+			array_push($data, $_SESSION['usrSearchFor']);
+		} else if ($_SESSION['usrSearchWhere'] === 'dmn_name') {
+			$add_query .= " AND `t4`.`dmn_name` rlike ? ";
+			array_push($data, $_SESSION['usrSearchFor']);
+		}
+	}
+
+	if (isset($_SESSION['usrSearchStatus']) && !in_array($_SESSION['usrSearchStatus'], array('', 'all'))) {
+		$add_query .= " AND `t2`.`status` = ?";
+		array_push($data, $_SESSION['usrSearchStatus']);
+	}
+
+	$cQuery = "
+		SELECT COUNT(*) AS `cnt`
 		FROM `admin` AS `t1`
-		LEFT JOIN `admin` AS `t2`
-		ON `t1`.`created_by` = `t2`.`admin_id`
-		LEFT JOIN `user_system_props` AS `t3`
-		ON `t1`.`admin_id` = `t3`.`admin_id`
-		WHERE t1.`admin_type` = ?
-	';
-	$rs = $sql->doQuery($query, 'client');
+		LEFT JOIN `user_system_props` AS `t2` ON `t1`.`admin_id` = `t2`.`admin_id` /* to obtain user props */
+		LEFT JOIN `admin` AS `t3` ON `t1`.`created_by` = `t3`.`admin_id` /* to obtain parent name */
+		LEFT JOIN `domains` AS `t4` ON `t4`.`admin_id` = `t1`.`admin_id` /* to obtain domains belonging to clients */
+		WHERE `t1`.`admin_type` = ?
+		$add_query
+		GROUP BY `t1`.`admin_id`
+	";
+
+	$cnt = $sql->doQuery($cQuery, 'reseller', $data)->countRows();
+
+	$query = "
+		SELECT `t1`.*, `t2`.`status`, `t3`.`admin_name` AS `parent`
+		FROM `admin` AS `t1`
+		LEFT JOIN `user_system_props` AS `t2` ON `t1`.`admin_id` = `t2`.`admin_id` /* to obtain user props */
+		LEFT JOIN `admin` AS `t3` ON `t1`.`created_by` = `t3`.`admin_id` /* to obtain parent name */
+		LEFT JOIN `domains` AS `t4` ON `t4`.`admin_id` = `t1`.`admin_id` /* to obtain domains belonging to clients */
+		WHERE `t1`.`admin_type` = ?
+		$add_query
+		GROUP BY `t1`.`admin_id`
+		ORDER BY `t1`.`admin_name` ASC
+		LIMIT $startIndex, $showRows
+	";
+	$rs = $sql->doQuery($query, 'client', $data);
+
+	$prevIndex = $startIndex - $showRows < 0 ? 0 : $startIndex - $showRows;
+	$nextIndex = $startIndex + $showRows >= $cnt ? $startIndex : $startIndex + $showRows;
+
+	$tpl->saveVariable(array(
+		'usrShowing'		=> tr('showing %s users from a total of %s', $rs->countRows(), $cnt),
+		'usrPrv'			=> $prevIndex,
+		'usrNxt'			=> $nextIndex,
+		'USR_SEARCH_FOR'	=> isset($_SESSION['usrSearchFor']) ? $_SESSION['usrSearchFor'] : '',
+		'U_MAIL_SEL'		=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'mail' ? 'selected' : '',
+		'U_SERV_NAME_SEL'	=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'servName' ? 'selected' : '',
+		'U_IP_NO_SEL'		=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'ipNumber' ? 'selected' : '',
+		'U_NAME_SEL'		=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'name' ? 'selected' : '',
+		'U_COMP_SEL'		=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'firm' ? 'selected' : '',
+		'U_CITY_SEL'		=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'city' ? 'selected' : '',
+		'U_COUNTRY_SEL'		=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'country' ? 'selected' : '',
+		'U_DMN_NAME_SEL'	=> isset($_SESSION['usrSearchWhere']) && $_SESSION['usrSearchWhere'] == 'dmn_name' ? 'selected' : '',
+		'U_ALL'				=> isset($_SESSION['usrSearchStatus']) && $_SESSION['usrSearchStatus'] == 'all' ? 'selected' : '',
+		'U_OK'				=> isset($_SESSION['usrSearchStatus']) && $_SESSION['usrSearchStatus'] == 'ok' ? 'selected' : '',
+		'U_SUSPENDED'		=> isset($_SESSION['usrSearchStatus']) && $_SESSION['usrSearchStatus'] == 'disabled' ? 'selected' : '',
+	));
+	if($prevIndex != $startIndex) $tpl->saveSection('prevUser');
+	if($nextIndex != $startIndex) $tpl->saveSection('nextUser');
+
 	$admins = array();
 	while (!$rs->EOF){
 		$tpl->saveSection('USERS');
@@ -255,16 +357,17 @@ $tpl->saveVariable(array(
 	'TR_MESSAGE_DELETE'	=> tr('Are you sure you want to delete %s?', '%s'),
 	'TR_EDIT'			=> tr('Edit'),
 	'TR_CHANGE_USERS'	=> tr('Switch'),
-	'U_MAIL'			=> tr('Email'),
-	'U_SERV_NAME'		=> tr('Server name'),
-	'U_NAME'			=> tr('Name'),
-	'U_COMP'			=> tr('Company'),
-	'U_CITY'			=> tr('City'),
-	'U_COUNTRY'			=> tr('Country'),
-	'U_DMN_NAME'		=> tr('Domain name'),
-	'ALL'				=> tr('All'),
-	'OK'				=> tr('ok'),
-	'SUSPENDED'			=> tr('Suspended'),
+	'TR_MAIL'			=> tr('Email'),
+	'TR_SERV_NAME'		=> tr('Server name'),
+	'TR_IP_NUMBER'		=> tr('IP number'),
+	'TR_NAME'			=> tr('Name'),
+	'TR_COMP'			=> tr('Company'),
+	'TR_CITY'			=> tr('City'),
+	'TR_COUNTRY'		=> tr('Country'),
+	'TR_DMN_NAME'		=> tr('Domain name'),
+	'TR_ALL'			=> tr('All'),
+	'TR_OK'				=> tr('Ok'),
+	'TR_SUSPENDED'		=> tr('Suspended'),
 	'TR_SEARCH'			=> tr('Search'),
 	'TR_SHOW_DOMAINS'	=> tr('Show domains'),
 	'TR_PREVIOUS'		=> tr('Previous'),
