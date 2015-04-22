@@ -70,7 +70,6 @@ class selity_container{
 		} else {
 			throw new Exception (tr('Variable %s do not exists', $var));
 		}
-
 		$this->modified = true;
 	}
 
@@ -108,7 +107,9 @@ class selity_container{
 	}
 
 	public function save(){
-		if(!$this->modified) return true;
+		if(!$this->modified){
+			return true;
+		}
 		if(is_callable(array($this, 'validate')) && !$this->validate()){
 			return false;
 		}

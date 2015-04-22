@@ -122,16 +122,14 @@ class mysql {
 	}
 
 	public function doQuery() {
-		$data = $data2 = func_get_args();
-		$query = array_shift($data);
+		$params = func_get_args();
+		$query = array_shift($params);
+		$data = array();
+		array_walk_recursive($params,function($v, $k) use (&$data){ $data[] = $v; });
 		$this->lastQuerry = $query;
 		//try{
 			$query = $this->Prepare($query);
-			if(array_key_exists(0, $data) && is_array($data[0])){
-				$rs = $this->Execute($query, $data[0]);
-			} else {
-				$rs = $this->Execute($query, $data);
-			}
+			$rs = $this->Execute($query, $data);
 		//} catch (Exception $e) {
 			//return false;
 		//}

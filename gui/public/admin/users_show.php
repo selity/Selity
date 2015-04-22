@@ -133,11 +133,6 @@ function genClientList(){
 	$tpl->saveRepeats(array('USERS' => $admins));
 }
 
-/*
- *
- * static page messages.
- *
- */
 
 if (isset($_POST['details']) && !empty($_POST['details'])) {
 	$_SESSION['details'] = $_POST['details'];
@@ -145,6 +140,10 @@ if (isset($_POST['details']) && !empty($_POST['details'])) {
 	if (!isset($_SESSION['details'])) {
 		$_SESSION['details'] = 'hide';
 	}
+}
+
+if(array_key_exists('serverLST', $_SESSION)){
+	unset($_SESSION['serverLST']);
 }
 
 genMainMenu();

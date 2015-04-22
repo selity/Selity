@@ -98,7 +98,12 @@ class selity_multicontainer{
 	public function save(){
 		$containers = array_keys($this->values);
 		mysql::getInstance()->beginTransaction();
-		$this->values[$this->mainTable]->save();
+		try{
+			$this->values[$this->mainTable]->save();
+		} catch (Exception $e){
+			mysql::getInstance()->rollback();
+			return false;
+		}
 		$uid = $this->values[$this->mainTable]->{$this->mainTableUid};
 		foreach($containers as $container){
 			if($container == $this->mainTable) continue;

@@ -39,6 +39,12 @@ class selity_reseller extends selity_user{
 
 	public function __construct($id = null){
 		parent::__construct($id);
+		$servers = @unserialize($this->values['reseller_props']->server_ids);
+		if(!$servers){
+			$this->values['reseller_props']->server_ids = array();
+		} else {
+			$this->values['reseller_props']->server_ids = $servers;
+		}
 		$ips = @unserialize($this->values['reseller_props']->reseller_ips);
 		if(!$ips){
 			$this->values['reseller_props']->reseller_ips = array();
@@ -90,31 +96,45 @@ class selity_reseller extends selity_user{
 			$this->errors[] = tr('Incorrect support system value %s!', $this->support);
 		}
 
-		$ips = @unserialize($this->reseller_ips);
-		$ips = $ips === false ? $this->reseller_ips : $ips;
+		$servers = @unserialize($this->server_ids);
+		$servers = $servers === false ? $this->server_ids : $servers;
 
-		if($ips == array()){
-			$this->errors[] = tr('You must assign at least one IP number for a reseller!');
-		}
+		if($servers == array()){
+			$this->errors[] = tr('You must assign at least one server for reseller!');
+		} else {
 
-		foreach($ips as $ip => $value){
-			if(mysql::getInstance()->doQuery('SELECT COUNT(*) AS `cnt` FROM `server_ips` WHERE `ip_id` = ?', $ip)->cnt == 0){
-				$this->errors[] = tr('Invalid ip id %s', $ip);
+			$ips = @unserialize($this->reseller_ips);
+			$ips = $ips === false ? $this->reseller_ips : $ips;
+
+			if($ips == array()){
+				$this->errors[] = tr('You must assign at least one IP number for a reseller!');
+			}
+
+			$inQuery = implode(',', array_fill(0, count($servers), '?'));
+			foreach($ips as $ip => $value){
+				if(mysql::getInstance()->doQuery('SELECT COUNT(*) AS `cnt` FROM `server_ips` WHERE `server_id` IN ('.$inQuery.') AND `ip_id` = ?', $servers, $ip)->cnt == 0){
+					$this->errors[] = tr('Invalid ip id %s', $ip);
+				}
 			}
 		}
 		return $this->errors == array();
 	}
 
 	public function save(){
+		$this->values['reseller_props']->server_ids = serialize($this->server_ids);
 		$this->values['reseller_props']->reseller_ips = serialize($this->reseller_ips);
 		mysql::getInstance()->beginTransaction();
 		$result = parent::save();
 		mysql::getInstance()->commit();
+		$this->values['reseller_props']->server_ids = unserialize($this->server_ids);
 		$this->values['reseller_props']->reseller_ips = unserialize($this->reseller_ips);
 		return $result;
 	}
 
 	public function __set($var, $value){
+		if($var == 'server_ids'){
+			trigger_error('Reseller servers should be added using addServer method', E_USER_ERROR);
+		}
 		if($var == 'reseller_ips'){
 			trigger_error('Reseller ip`s should be added using addIP method', E_USER_ERROR);
 		}
@@ -163,7 +183,7 @@ class selity_reseller extends selity_user{
 			LEFT JOIN
 				`admin`
 			ON
-				`admin`.`admin_id` = `user_system_props`.`user_admin_id`
+				`admin`.`admin_id` = `user_system_props`.`admin_id`
 			WHERE
 				`created_by` = ?
 		';
@@ -224,6 +244,7 @@ class selity_reseller extends selity_user{
 			$ips[$ip] = $ip;
 			parent::__set('reseller_ips', $ips);
 		}
+		return true;
 	}
 
 	public function removeIP($ip){
@@ -238,21 +259,78 @@ class selity_reseller extends selity_user{
 				LEFT JOIN
 					`admin`
 				ON
-					`admin_id` = `user_admin_id`
+					`user_system_props`.`admin_id` = `admin`.`admin_id`
 				WHERE
 					`created_by` = ?
 				AND
-					`user_ips` LIKE "%:'.$ip.';%"
+					`ips` LIKE "%:'.$ip.';%"
 			';
 			$cnt = mysql::getInstance()->doQuery($query, $this->admin_id)->cnt;
 			if($cnt > 0) {
 				$query = 'SELECT `ip_number` FROM `server_ips` WHERE `ip_id` = ?';
 				$ipNumber = mysql::getInstance()->doQuery($query, $ip)->ip_number;
 				$this->errors[] = tr('Reseller have already assigned to users ip %s!', $ipNumber);
-				return ;
+				return false;
 			}
 			unset($ips[$ip]);
 			parent::__set('reseller_ips', $ips);
 		}
+		return true;
+	}
+
+	public function addServer($server){
+		if(!array_key_exists($server, $this->server_ids)){
+			$servers = $this->server_ids;
+			$servers[$server] = $server;
+			parent::__set('server_ids', $servers);
+		}
+		return true;
+	}
+
+	public function removeServer($server){
+		if(array_key_exists($server, $this->server_ids)){
+			$servers = $this->server_ids;
+			$server = (int) $server;
+			$rv = true;
+			$query = '
+				SELECT
+					COUNT(*) AS `cnt`
+				FROM
+					`user_system_props`
+				LEFT JOIN
+					`admin`
+				ON
+					`user_system_props`.`admin_id` = `admin`.`admin_id`
+				WHERE
+					`created_by` = ?
+				AND
+					`server_id` = ?
+			';
+			$cnt = mysql::getInstance()->doQuery($query, $this->admin_id, $server)->cnt;
+			if($cnt > 0) {
+				$query = 'SELECT `server_name` FROM `servers` WHERE `server_id` = ?';
+				$serverName = mysql::getInstance()->doQuery($query, $server)->server_name;
+				$this->errors[] = tr('Reseller have already assigned to users server %s!', $serverName);
+				$rv = false;
+			}
+			$query = '
+				SELECT
+					`ip_id`
+				FROM
+					`server_ips`
+				WHERE
+					`server_id` = ?
+			';
+			$rs = mysql::getInstance()->doQuery($query, $server);
+			while($rs->EOF){
+				$rv &= $this->removeIP($rs->ip_id);
+				$rs->nextRow();
+			}
+			if($rv){
+				unset($servers[$server]);
+				parent::__set('server_ids', $servers);
+			}
+		}
+		return true;
 	}
 }
