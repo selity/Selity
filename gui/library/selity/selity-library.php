@@ -55,13 +55,36 @@ if (!isset($_SESSION)) {
 selity_language::getInstance();
 //new selity_login();
 //
-$cfg->ROOT_TEMPLATE_PATH = '/themes/';
-$cfg->LOGIN_TEMPLATE_PATH = $cfg->ROOT_TEMPLATE_PATH . $cfg->USER_INITIAL_THEME;
+$cfg->LOSTPASSWORD				= true;
+$cfg->LOSTPASSWORD_TIMEOUT		= 30;
+$cfg->PASSWD_CHARS				= 6;
+$cfg->PASSWD_STRONG				= true;
+$cfg->BRUTEFORCE				= true;
+$cfg->BRUTEFORCE_BETWEEN		= true;
+$cfg->BRUTEFORCE_MAX_LOGIN		= 3;
+$cfg->BRUTEFORCE_BLOCK_TIME		= 30;
+$cfg->BRUTEFORCE_BETWEEN_TIME	= 30;
+$cfg->BRUTEFORCE_MAX_CAPTCHA	= 5;
+
+
+$cfg->HOSTING_PLANS_LEVEL	= 'reseller';
+
+$cfg->CHECK_FOR_UPDATES		= true;
+
+$cfg->ROOT_TEMPLATE_PATH	= '/themes/';
+$cfg->LOGIN_TEMPLATE_PATH	= $cfg->ROOT_TEMPLATE_PATH . $cfg->USER_INITIAL_THEME;
+$cfg->USER_ROWS_PER_PAGE	= 10;
+$cfg->USER_INITIAL_LANG		= 'en_US';
+$cfg->SUPPORT_SYSTEM		= true;
+$cfg->CREATE_DEFAULT_EMAILS	= true;
+$cfg->HARD_MAIL_SUSPENSION	= false;
+$cfg->LOG_LEVEL				= E_USER_NOTICE;
+
 
 
 // variable for development edition	=> shows all php variables under the pages
 // false = disable, true = enable
-//$cfg->DUMP_GUI_DEBUG = true;
+$cfg->GUI_DEBUG				= false;
 
 require('selity_layout.php');
 //require('selity_input.php');

@@ -25,8 +25,14 @@
 							</div>
 						<!--:PageMessage:_Section-->
 
-						<div class="content-wrap"><div class='col2_2'><b>{TR_ACTION}</b></div></div>
-						<div class='col2_1'><b>{TR_LANGUAGE}</b></div>
+						<div class="content-wrap">
+							<div class='col2_2'>
+								<center><b>{TR_ACTION}</b></center>
+							</div>
+						</div>
+						<div class='col2_1'>
+							<center><b>{TR_LANGUAGE}</b></center>
+						</div>
 
 						<script type="text/javascript">
 							function action_delete(url, language) {
@@ -38,13 +44,20 @@
 						</script>
 
 						<!--Repeats_:LANGUAGE:-->
-						<div class="content-wrap"><div class='col2_2'>
-							<a href="{URL_EXPORT}" class="link" target="_blank">{TR_EXPORT}</a>
-							<a href="#" onclick="action_delete('{URL_DELETE}', '{LANG_NAME}')" class="link">{TR_UNINSTALL}</a>
-						</div></div>
+						<div class="content-wrap">
+							<div class='col2_2'>
+								<center>
+									<a href="{URL_EXPORT}" class="link" target="_blank">{TR_EXPORT}</a>
+									&nbsp;|&nbsp;
+									<a href="#" onclick="action_delete('{URL_DELETE}', '{LANG_NAME}')" class="link">{TR_UNINSTALL}</a>
+								</center>
+							</div>
+						</div>
 						<div class='col2_1'>
-							<input type="radio" name="default_language" value="{LANG_VALUE}" {TR_CHECKED}/>
-							{LANG_NAME}
+							<p style="text-align: left">
+								<input type="radio" name="default_language" value="{LANG_VALUE}" {TR_CHECKED}/>
+								{LANG_NAME}
+							</p>
 						</div>
 						<!--:LANGUAGE:_Repeats-->
 

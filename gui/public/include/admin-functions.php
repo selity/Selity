@@ -1002,24 +1002,7 @@ function get_user_name($user_id) {
 }
 
 function get_logo($user_id) {
-	$sql = Database::getInstance();
-	// check what logo we should return:
-	$query = "
-		SELECT
-			`admin_id`, `created_by`, `admin_type`
-		FROM
-			`admin`
-		WHERE
-			`admin_id` = ?
-	";
-
-	$rs = exec_query($sql, $query, array($user_id));
-
-	if ($rs->fields['admin_type'] == 'admin') {
-		return get_admin_logo($user_id);
-	} else {
-		return get_admin_logo($rs->fields['created_by']);
-	}
+	return;
 }
 
 function get_own_logo($user_id) {

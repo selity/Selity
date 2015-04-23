@@ -66,7 +66,7 @@ final class dbConfigs{
 			$query = 'REPLACE INTO `config` (`name`, `value`) VALUES (?, ?)';
 			$sql->doQuery($query,array($name,$this->values[$name]));
 		} else{
-			$query = 'DELETE FROM `setting` WHERE `name` = ?';
+			$query = 'DELETE FROM `config` WHERE `name` = ?';
 			$sql->doQuery($query,$name);
 		}
 	}

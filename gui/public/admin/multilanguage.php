@@ -27,15 +27,6 @@ $tpl = template::getInstance();
 
 $theme_color = $cfg->USER_INITIAL_THEME;
 
-$tpl->saveVariable(
-		array(
-			'TR_PAGE_TITLE'	=> tr('Selity - Admin/Internationalisation'),
-			'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
-			'THEME_CHARSET'	=> tr('encoding'),
-			//'ISP_LOGO'	=> get_logo($_SESSION['user_id'])
-			)
-	);
-
 function install_lang() {
 
 	if (array_key_exists('Submit', $_POST)) {
@@ -163,44 +154,32 @@ function show_lang() {
 		$tpl->parse('LANG_ROW', '.lang_row');
 }
 
-/*
- *
- * static page messages.
- *
- */
-
 install_lang();
 show_lang();
 
-$tpl->saveVariable(
-		array(
-			'TR_MULTILANGUAGE'			=> tr('Internationalisation'),
-			'TR_INSTALLED_LANGUAGES'	=> tr('Installed languages'),
-			'TR_LANGUAGE'				=> tr('Language'),
-			'TR_MESSAGES'				=> tr('Messages'),
-			'TR_DEFAULT'				=> tr('Default'),
-			'TR_ACTION'					=> tr('Action'),
-			'TR_SAVE'					=> tr('Save'),
-			'TR_INSTALL_NEW_LANGUAGE'	=> tr('Install new language'),
-			'TR_LANGUAGE_FILE'			=> tr('Language file'),
-			'ISP_LOGO'					=> get_logo($_SESSION['user_id']),
-			'TR_INSTALL'				=> tr('Install'),
-			'TR_UNINSTALL'				=> tr('Uninstall'),
-			'TR_EXPORT'					=> tr('Export'),
-			'TR_MESSAGE_DELETE'			=> tr('Are you sure you want to delete %s?', '%s'),
-			)
-	);
+$tpl->saveVariable(array(
+	'TR_PAGE_TITLE'				=> tr('Selity - Admin/Internationalisation'),
+	'THEME_COLOR_PATH'			=> '../themes/'.$theme_color,
+	//'THEME_CHARSET'				=> tr('encoding'),
+	'TR_MULTILANGUAGE'			=> tr('Internationalisation'),
+	'TR_INSTALLED_LANGUAGES'	=> tr('Installed languages'),
+	'TR_LANGUAGE'				=> tr('Language'),
+	'TR_MESSAGES'				=> tr('Messages'),
+	'TR_DEFAULT'				=> tr('Default'),
+	'TR_ACTION'					=> tr('Action'),
+	'TR_SAVE'					=> tr('Save'),
+	'TR_INSTALL_NEW_LANGUAGE'	=> tr('Install new language'),
+	'TR_LANGUAGE_FILE'			=> tr('Language file'),
+	'TR_INSTALL'				=> tr('Install'),
+	'TR_UNINSTALL'				=> tr('Uninstall'),
+	'TR_EXPORT'					=> tr('Export'),
+	'TR_MESSAGE_DELETE'			=> tr('Are you sure you want to delete %s?', '%s'),
+));
 
 genAdminMainMenu();
 genAdminSettingsMenu();
 
-
 $tpl->flushOutput('admin/multilanguage');
-
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
-
-unset_messages();
-
-
