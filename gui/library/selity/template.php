@@ -153,6 +153,7 @@ class template{
 	public function flushOutput($page){
 		$this->output = $this->loadlayout($page);
 		$this->processOutput();
+		$this->replaceConstants();
 		$this->deleteComments();
 		echo $this->output;
 	}
@@ -164,7 +165,6 @@ class template{
 		$level += $this->deleteSections();
 		$level += $this->replaceRepeats();
 		$level += $this->replaceVariable();
-		$level += $this->replaceConstants();
 		if($level > 0){
 			$this->processOutput();
 		}
@@ -230,7 +230,7 @@ class template{
 			}
 			$this->output = str_replace($substituent,defined(substr($substituent,1,-1))?nl2br(constant(substr($substituent,1,-1))):'',$this->output);
 		}
-		return $inlocuiri;
+		if($inlocuiri!=0||$matches!=0)$this->replaceConstants();
 	}
 
 	protected function replaceVariable(){

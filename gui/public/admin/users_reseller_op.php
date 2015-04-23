@@ -298,7 +298,7 @@ $tpl->saveVariable(array(
 	'TR_PHONE'				=> tr('Phone'),
 	'TR_FAX'				=> tr('Fax'),
 	'TR_SEND_DATA'			=> tr('Send new login data'),
-	'TR_SUBMIT'				=> tr('Add'),
+	'TR_SUBMIT'				=> tr('Save'),
 	'TR_DISABLED_MSG'		=> tr('-1 disabled'),
 	'TR_UNLIMITED_MSG'		=> tr('0 unlimited'),
 

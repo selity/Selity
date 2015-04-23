@@ -117,6 +117,17 @@ function genAdminUsersMenu(){
 }
 
 function genAdminToolsMenu(){
+	template::getInstance()->saveVariable(
+		array(
+			'TR_TOOLS_OVERVIEW'		=> tr('Selity debugger'),
+			'TR_LOGS'				=> tr('Logs'),
+			'TR_SESSIONS'			=> tr('Session manager'),
+			'TR_MAINTENANCE_MODE'	=> tr('Maintenance mode'),
+			'TR_SELITY_UPDATE'		=> tr('Selity update'),
+			'TR_DATABASE_UPDATE'	=> tr('Database update'),
+		)
+	);
+	template::getInstance()->saveSection('TOOLS_MENU');
 }
 
 function genAdminStatsMenu(){

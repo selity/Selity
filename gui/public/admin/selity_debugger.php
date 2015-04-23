@@ -1,522 +1,205 @@
 <?php
+
 /**
  * Selity - A server control panel
  *
- * @copyright 	2001-2006 by moleSoftware GmbH
- * @copyright 	2006-2008 by ispCP | http://isp-control.net
- * @copyright	2012-2015 by Selity
+ * @copyright	2009-2015 by Selity
  * @link 		http://selity.org
- * @author 		ispCP Team
+ * @author 		Daniel Andreca (sci2tech@gmail.com)
  *
  * @license
- *   This program is free software; you can redistribute it and/or modify it under
- *   the terms of the MPL General Public License as published by the Free Software
- *   Foundation; either version 1.1 of the License, or (at your option) any later
- *   version.
- *   You should have received a copy of the MPL Mozilla Public License along with
- *   this program; if not, write to the Open Source Initiative (OSI)
- *   http://opensource.org | osi@opensource.org
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 require '../include/selity-lib.php';
 
 check_login(__FILE__);
 
-function count_requests(&$sql, $id_name, $table){
-	$query = "SELECT `$id_name` FROM `$table` WHERE `$id_name` NOT IN (?, ?, ?)";
-	$rs = exec_query($sql, $query, array(Config::get('ITEM_OK_STATUS'), Config::get('ITEM_DISABLED_STATUS'), Config::get('ITEM_ORDERED_STATUS')));
-	$count = $rs->RecordCount();
-	return $count;
-}
+$tpl = template::getInstance();
+$cfg = configs::getInstance();
+$sql = mysql::getInstance();
 
-function get_error_domains(&$sql, &$tpl) {
-	$ok_status = Config::get('ITEM_OK_STATUS');
-	$disabled_status = Config::get('ITEM_DISABLED_STATUS');
-	$delete_status = Config::get('ITEM_DELETE_STATUS');
-	$add_status = Config::get('ITEM_ADD_STATUS');
-	$restore_status = Config::get('ITEM_RESTORE_STATUS');
-	$change_status = Config::get('ITEM_CHANGE_STATUS');
-	$toenable_status = Config::get('ITEM_TOENABLE_STATUS');
-	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
+$theme_color = configs::getInstance()->USER_INITIAL_THEME;
 
-	$dmn_query = "SELECT `domain_name`, `domain_status`, `domain_id` FROM `domain` WHERE `domain_status` NOT IN (?, ?, ?, ?, ?, ?, ?, ?)";
-
-	$rs = exec_query($sql, $dmn_query, array($ok_status, $disabled_status, $delete_status, $add_status,
-			$restore_status, $change_status, $toenable_status, $todisable_status));
-
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign(
-			array(
-				'DOMAIN_LIST' => '',
-				'TR_DOMAIN_MESSAGE' => tr('No domain system errors'),
-			)
-		);
-		$tpl->parse('DOMAIN_MESSAGE', 'domain_message');
-	} else {
-		$i = 1;
-		while (!$rs->EOF) {
-			if ($i % 2 == 0) {
-				$tpl->assign(array('CONTENT' => 'content2'));
-			} else {
-				$tpl->assign(array('CONTENT' => 'content1'));
-			}
-
-			$tpl->assign(
-					array(
-						'DOMAIN_MESSAGE' => '',
-						'TR_DOMAIN_NAME' => $rs->fields['domain_name'],
-						'TR_DOMAIN_ERROR' => $rs->fields['domain_status'],
-						'CHANGE_ID' => $rs->fields['domain_id'],
-						'CHANGE_TYPE' => 'domain',
-						)
-				);
-
-			$tpl->parse('DOMAIN_LIST', '.domain_list');
-
-			$i++;
-			$rs->MoveNext();
-		}
-	}
-
-}
-
-function get_error_aliases(&$sql, &$tpl) {
-	$ok_status = Config::get('ITEM_OK_STATUS');
-	$disabled_status = Config::get('ITEM_DISABLED_STATUS');
-	$delete_status = Config::get('ITEM_DELETE_STATUS');
-	$add_status = Config::get('ITEM_ADD_STATUS');
-	$restore_status = Config::get('ITEM_RESTORE_STATUS');
-	$change_status = Config::get('ITEM_CHANGE_STATUS');
-	$toenable_status = Config::get('ITEM_TOENABLE_STATUS');
-	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
-	$ordered_status = Config::get('ITEM_ORDERED_STATUS');
-
-	$dmn_query = '
-		SELECT
-			alias_name, alias_status, alias_id
-		FROM
-			domain_aliasses
-		WHERE
-			alias_status
-		NOT IN
-			(?, ?, ?, ?, ?, ?, ?, ?, ?)
-';
-
-	$rs = exec_query($sql, $dmn_query, array(
-											$ok_status,
-											$disabled_status,
-											$delete_status,
-											$add_status,
-											$restore_status,
-											$change_status,
-											$toenable_status,
-											$todisable_status,
-											$ordered_status));
-
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign(
-				array(
-					'ALIAS_LIST' => '',
-					'TR_ALIAS_MESSAGE' => tr('No domain alias system errors'),
-					)
+function generateSection($table, $name, $id, $status, $op_result, $title, $join){
+	$errors = $pending = 0;
+	$query = "
+		SELECT $name AS `name`, `$id` AS `id`, `$status` AS `status`, `$op_result` AS `op_result`
+		FROM `$table`
+		$join
+		WHERE `$status` NOT IN (?, ?)
+		OR `$op_result` IS NOT NULL
+	";
+	$rs = mysql::getInstance()->doQuery($query, OK_STATUS, DISABLED_STATUS);
+	$repeats = array();
+	while(!$rs->EOF){
+		if($rs->op_result){
+			$errors += 1;
+			$repeats[] = array(
+				$table.'NAME'		=> $rs->name,
+				$table.'ID'			=> $rs->id,
+				$table.'STATUS'		=> $rs->status,
+				$table.'OP_RESULT'	=> $rs->op_result,
 			);
-
-		$tpl->parse('ALIAS_MESSAGE', 'alias_message');
-	} else {
-		$i = 1;
-		while (!$rs->EOF) {
-			if ($i % 2 == 0) {
-				$tpl->assign(
-						array(
-							'CONTENT' => 'content',
-							)
-					);
-			} else {
-				$tpl->assign(
-						array(
-							'CONTENT' => 'content2',
-							)
-					);
-			}
-
-			$tpl->assign(
-					array(
-						'ALIAS_MESSAGE' => '',
-						'TR_ALIAS_NAME' => $rs->fields['alias_name'],
-						'TR_ALIAS_ERROR' => $rs->fields['alias_status'],
-						'CHANGE_ID' => $rs->fields['alias_id'],
-						'CHANGE_TYPE' => 'alias',
-						)
-				);
-
-			$tpl->parse('ALIAS_LIST', '.alias_list');
-
-			$i ++;
-			$rs->MoveNext();
-		}
-	}
-}
-
-function get_error_subdomains(&$sql, &$tpl) {
-	$ok_status = Config::get('ITEM_OK_STATUS');
-	$disabled_status = Config::get('ITEM_DISABLED_STATUS');
-	$delete_status = Config::get('ITEM_DELETE_STATUS');
-	$add_status = Config::get('ITEM_ADD_STATUS');
-	$restore_status = Config::get('ITEM_RESTORE_STATUS');
-	$change_status = Config::get('ITEM_CHANGE_STATUS');
-	$toenable_status = Config::get('ITEM_TOENABLE_STATUS');
-	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
-
-	$dmn_query = '
-	  SELECT
-		  subdomain_name, subdomain_status, subdomain_id
-	  FROM
-		  subdomain
-	  WHERE
-		  subdomain_status
-	  NOT IN
-			(?, ?, ?, ?, ?, ?, ?, ?)
-';
-
-	$rs = exec_query($sql, $dmn_query, array(
-											$ok_status,
-											$disabled_status,
-											$delete_status,
-											$add_status,
-											$restore_status,
-											$change_status,
-											$toenable_status,
-											$todisable_status));
-
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign(
-				array(
-					'SUBDOMAIN_LIST' => '',
-					'TR_SUBDOMAIN_MESSAGE' => tr('No subdomain system errors'),
-					)
-			);
-
-		$tpl->parse('SUBDOMAIN_MESSAGE', 'subdomain_message');
-	} else {
-		$i = 1;
-		while (!$rs->EOF) {
-			if ($i % 2 == 0) {
-				$tpl->assign(array('CONTENT' => 'content'));
-			} else {
-				$tpl->assign(array('CONTENT' => 'content2'));
-			}
-
-			$tpl->assign(
-					array(
-						'SUBDOMAIN_MESSAGE' => '',
-						'TR_SUBDOMAIN_NAME' => $rs->fields['subdomain_name'],
-						'TR_SUBDOMAIN_ERROR' => $rs->fields['subdomain_status'],
-						'CHANGE_ID' => $rs->fields['subdomain_id'],
-						'CHANGE_TYPE' => 'subdomain'
-						)
-				);
-
-			$tpl->parse('SUBDOMAIN_LIST', '.subdomain_list');
-
-			$i ++;
-			$rs->MoveNext();
-		}
-	}
-}
-
-function get_error_alias_subdomains(&$sql, &$tpl) {
-	$ok_status = Config::get('ITEM_OK_STATUS');
-	$disabled_status = Config::get('ITEM_DISABLED_STATUS');
-	$delete_status = Config::get('ITEM_DELETE_STATUS');
-	$add_status = Config::get('ITEM_ADD_STATUS');
-	$restore_status = Config::get('ITEM_RESTORE_STATUS');
-	$change_status = Config::get('ITEM_CHANGE_STATUS');
-	$toenable_status = Config::get('ITEM_TOENABLE_STATUS');
-	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
-
-	$dmn_query = '
-	  SELECT
-		  subdomain_alias_name, subdomain_alias_status, subdomain_alias_id
-	  FROM
-		  subdomain_alias
-	  WHERE
-		  subdomain_alias_status
-	  NOT IN
-			(?, ?, ?, ?, ?, ?, ?, ?)
-';
-
-	$rs = exec_query($sql, $dmn_query, array(
-											$ok_status,
-											$disabled_status,
-											$delete_status,
-											$add_status,
-											$restore_status,
-											$change_status,
-											$toenable_status,
-											$todisable_status));
-
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign(
-				array(
-					'SUBDOMAIN_ALIAS_LIST' => '',
-					'TR_SUBDOMAIN_ALIAS_MESSAGE' => tr('No alias subdomain system errors'),
-					)
-			);
-
-		$tpl->parse('SUBDOMAIN_ALIAS_MESSAGE', 'subdomain_alias_message');
-	} else {
-		$i = 1;
-		while (!$rs->EOF) {
-			if ($i % 2 == 0) {
-				$tpl->assign(array('CONTENT' => 'content'));
-			} else {
-				$tpl->assign(array('CONTENT' => 'content2'));
-			}
-
-			$tpl->assign(
-					array(
-						'SUBDOMAIN_ALIAS_MESSAGE' => '',
-						'TR_SUBDOMAIN_ALIAS_NAME' => $rs->fields['subdomain_alias_name'],
-						'TR_SUBDOMAIN_ALIAS_ERROR' => $rs->fields['subdomain_alias_status'],
-						'CHANGE_ID' => $rs->fields['subdomain_alias_id'],
-						'CHANGE_TYPE' => 'subdomain_alias'
-						)
-				);
-
-			$tpl->parse('SUBDOMAIN_ALIAS_LIST', '.subdomain_alias_list');
-
-			$i ++;
-			$rs->MoveNext();
-		}
-	}
-}
-
-function get_error_mails(&$sql, &$tpl) {
-	$ok_status = Config::get('ITEM_OK_STATUS');
-	$disabled_status = Config::get('ITEM_DISABLED_STATUS');
-	$delete_status = Config::get('ITEM_DELETE_STATUS');
-	$add_status = Config::get('ITEM_ADD_STATUS');
-	$restore_status = Config::get('ITEM_RESTORE_STATUS');
-	$change_status = Config::get('ITEM_CHANGE_STATUS');
-	$toenable_status = Config::get('ITEM_TOENABLE_STATUS');
-	$todisable_status = Config::get('ITEM_TODISABLED_STATUS');
-	$ordered_status = Config::get('ITEM_ORDERED_STATUS');
-
-	$dmn_query = '
-		SELECT
-			mail_acc, domain_id, mail_type, status, mail_id
-		FROM
-			mail_users
-		WHERE
-			status
-		NOT IN
-			(?, ?, ?, ?, ?, ?, ?, ?, ?)
-';
-
-	$rs = exec_query($sql, $dmn_query, array(
-											$ok_status,
-											$disabled_status,
-											$delete_status,
-											$add_status,
-											$restore_status,
-											$change_status,
-											$toenable_status,
-											$todisable_status,
-											$ordered_status));
-
-	if ($rs->RecordCount() == 0) {
-		$tpl->assign(
-				array(
-					'MAIL_LIST' => '',
-					'TR_MAIL_MESSAGE' => tr('No email account system errors'),
-					)
-			);
-
-		$tpl->parse('MAIL_MESSAGE', 'mail_message');
-	} else {
-		$i = 1;
-		while (!$rs->EOF) {
-			$searched_id = $rs->fields['domain_id'];
-			$query = '';
-			switch($rs->fields['mail_type']){
-				case 'normal_mail':
-				case 'normal_forward':
-				case 'normal_mail,normal_forward':
-					$query = 'SELECT `domain_name` FROM `domain` WHERE `domain_id` = ?';
-					break;
-				case 'subdom_mail':
-				case 'subdom_forward':
-				case 'subdom_mail,subdom_forward':
-					$query = ' SELECT `subdomain_name` AS `domain_name` FROM `subdomain` WHERE `subdomain_id` = ?';
-					break;
-				case 'alias_mail':
-				case 'alias_forward':
-				case 'alias_mail,alias_forward':
-					$query = 'SELECT `alias_name` AS `domain_name` FROM `domain_aliasses` WHERE `alias_id`  = ?';
-					break;
-				case 'alssub_mail':
-				case 'alssub_forward':
-				case 'alssub_mail,alssub_forward':
-					$query = ' SELECT `subdomain_alias_name` AS `domain_name` FROM `subdomain_alias` WHERE `subdomain_alias_id` = ?';
-					break;
-				default:
-					write_log(sprintf('FIXME: %s:%d' . "\n" . 'Unknown mail type %s',__FILE__, __LINE__, $rs->fields['mail_type']));
-					die('FIXME: ' . __FILE__ . ':' . __LINE__);
-			}
-
-			$sr = exec_query($sql, $query, array($searched_id));
-			$domain_name = $sr->fields['domain_name'];
-
-			if ($i % 2 == 0) {
-				$tpl->assign(
-						array(
-							'CONTENT' => 'content',
-							)
-					);
-			} else {
-				$tpl->assign(
-						array(
-							'CONTENT' => 'content2',
-							)
-					);
-			}
-
-			$tpl->assign(
-					array(
-						'MAIL_MESSAGE' => '',
-						'TR_MAIL_NAME' => $rs->fields['mail_acc'] . "@" . $domain_name,
-						'TR_MAIL_ERROR' => $rs->fields['status'],
-						'CHANGE_ID' => $rs->fields['mail_id'],
-						'CHANGE_TYPE' => 'mail',
-						)
-				);
-
-			$tpl->parse('MAIL_LIST', '.mail_list');
-
-			$i ++;
-			$rs->MoveNext();
-		}
-	}
-}
-
-$exec_count = count_requests($sql, 'domain_status', 'domain');
-$exec_count = $exec_count + count_requests($sql, 'alias_status', 'domain_aliasses');
-$exec_count = $exec_count + count_requests($sql, 'subdomain_status', 'subdomain');
-$exec_count = $exec_count + count_requests($sql, 'subdomain_alias_status', 'subdomain_alias');
-$exec_count = $exec_count + count_requests($sql, 'status', 'mail_users');
-$exec_count = $exec_count + count_requests($sql, 'status', 'htaccess');
-$exec_count = $exec_count + count_requests($sql, 'status', 'htaccess_groups');
-$exec_count = $exec_count + count_requests($sql, 'status', 'htaccess_users');
-
-$tpl = new pTemplate();
-
-$tpl->define_dynamic('page', Config::get('ADMIN_TEMPLATE_PATH') . '/selity_debugger.tpl');
-$tpl->define_dynamic('page_message', 'page');
-$tpl->define_dynamic('hosting_plans', 'page');
-$tpl->define_dynamic('domain_message', 'page');
-$tpl->define_dynamic('alias_message', 'page');
-$tpl->define_dynamic('subdomain_message', 'page');
-$tpl->define_dynamic('subdomain_alias_message', 'page');
-$tpl->define_dynamic('mail_message', 'page');
-$tpl->define_dynamic('domain_list', 'page');
-$tpl->define_dynamic('alias_list', 'page');
-$tpl->define_dynamic('subdomain_list', 'page');
-$tpl->define_dynamic('subdomain_alias_list', 'page');
-$tpl->define_dynamic('mail_list', 'page');
-
-$theme_color = Config::get('USER_INITIAL_THEME');
-
-$tpl->assign(
-		array(
-			'TR_PAGE_TITLE' => tr('Selity - Virtual Hosting Control System'),
-			'THEME_COLOR_PATH' => '../themes/'.$theme_color,
-			'THEME_CHARSET' => tr('encoding'),
-			'ISP_LOGO' => get_logo($_SESSION['user_id'])
-			)
-	);
-
-/*
- *
- * static page messages.
- *
- */
-gen_admin_mainmenu($tpl, Config::get('ADMIN_TEMPLATE_PATH') . '/main_menu_system_tools.tpl');
-gen_admin_menu($tpl, Config::get('ADMIN_TEMPLATE_PATH') . '/menu_system_tools.tpl');
-
-$tpl->assign(
-		array(
-			'TR_DEBUGGER_TITLE' => tr('Selity debugger'),
-			'TR_DOMAIN_ERRORS' => tr('Domain errors'),
-			'TR_ALIAS_ERRORS' => tr('Domain alias errors'),
-			'TR_SUBDOMAIN_ERRORS' => tr('Subdomain errors'),
-			'TR_SUBDOMAIN_ALIAS_ERRORS' => tr('Alias subdomain errors'),
-			'TR_MAIL_ERRORS' => tr('Mail account errors'),
-			'TR_DAEMON_TOOLS' => tr('Selity Daemon tools'),
-			'TR_EXEC_REQUESTS' => tr('Execute requests'),
-			'TR_CHANGE_STATUS' => tr('Set status to "change"'),
-			'EXEC_COUNT' => $exec_count,
-			)
-	);
-
-if (isset($_GET['action']) && $exec_count > 0) {
-	if ($_GET['action'] == 'run_engine') {
-				$c = send_request();
-		set_page_message(tr('Daemon returned %d as status code', $c));
-	} else if ($_GET['action'] == 'change_status' && (
-			isset($_GET['id']) && isset($_GET['type']))) {
-		switch ($_GET['type']) {
-			case 'domain':
-				$query = 'UPDATE domain SET domain_status = "change" WHERE domain_id = ?';
-				break;
-			case 'alias':
-				$query = 'UPDATE domain_aliasses SET alias_status = "change" WHERE alias_id = ?';
-				break;
-			case 'subdomain':
-				$query = 'UPDATE subdomain SET subdomain_status = "change" WHERE subdomain_id = ?';
-				break;
-			case 'subdomain_alias':
-				$query = 'UPDATE subdomain_alias SET subdomain_alias_status = "change" WHERE subdomain_alias_id = ?';
-				break;
-			case 'mail':
-				$query = 'UPDATE mail_users SET status = "change" WHERE mail_id = ?';
-				break;
-			default:
-				set_page_message(tr('Unknown type!'));
-				user_goto('selity_debugger.php');
-				break;
-		}
-
-		$rs = exec_query($sql, $query, $_GET['id']);
-
-		if ($rs !== false) {
-			set_page_message(tr('Done'));
-			user_goto('selity_debugger.php');
 		} else {
-			$msg = tr('Unknown Error') . '<br/>' . $sql->ErrorMsg();
-			set_page_message($msg);
-			user_goto('selity_debugger.php');
+			$pending += 1;
 		}
+		$rs->nextRow();
+	}
+	template::getInstance()->saveRepeats(array($table.'REPEATS' => $repeats));
+	return array('errors' => $errors, 'pending' => $pending);
+}
+
+$statusArray = array(
+	'servers' => array (
+		'name'		=> 'server_name',
+		'id'		=> 'server_id',
+		'status'	=> 'server_status',
+		'op_result'	=> 'server_op_result',
+		'title'		=> tr('Server errors'),
+		'join'		=> ''
+	),
+	'server_ips' => array (
+		'name'		=> 'ip_number',
+		'id'		=> 'ip_id',
+		'status'	=> 'ip_status',
+		'op_result'	=> 'ip_op_result',
+		'title'		=> tr('IP errors'),
+		'join'		=> ''
+	),
+	'user_system_props' => array (
+		'name'		=> 'CONCAT(`admin`.`admin_name`," (",IFNULL(`admin`.`email`,""),")")',
+		'id'		=> 'id',
+		'status'	=> 'status',
+		'op_result'	=> 'op_result',
+		'title'		=> tr('Client errors'),
+		'join'		=> 'LEFT JOIN `admin` ON `user_system_props`.`admin_id` =  `admin`.`admin_id`'
+	),
+	'domains' => array (
+		'name'		=> 'dmn_name',
+		'id'		=> 'dmn_id',
+		'status'	=> 'dmn_status',
+		'op_result'	=> 'dmn_op_result',
+		'title'		=> tr('Domain errors'),
+		'join'		=> ''
+	),
+	'subdomains' => array (
+		'name'		=> 'sub_name',
+		'id'		=> 'sub_id',
+		'status'	=> 'sub_status',
+		'op_result'	=> 'sub_op_result',
+		'title'		=> tr('Subdomain errors'),
+		'join'		=> ''
+	),
+	'mail_users' => array (
+		'name'		=> 'mail_addr',
+		'id'		=> 'mail_id',
+		'status'	=> 'mail_status',
+		'op_result'	=> 'mail_op_result',
+		'title'		=> tr('Mail account errors'),
+		'join'		=> ''
+	),
+	'sqld' => array (
+		'name'		=> 'sqld_name',
+		'id'		=> 'sqld_id',
+		'status'	=> 'sqld_status',
+		'op_result'	=> 'sqld_op_result',
+		'title'		=> tr('Database errors'),
+		'join'		=> ''
+	),
+	'sqlu' => array (
+		'name'		=> 'sqlu_name',
+		'id'		=> 'sqlu_id',
+		'status'	=> 'sqlu_status',
+		'op_result'	=> 'sqlu_op_result',
+		'title'		=> tr('Database account errors'),
+		'join'		=> ''
+	),
+	'ssl_certs' => array (
+		'name'		=> 'cert_id',
+		'id'		=> 'cert_id',
+		'status'	=> 'cert_status',
+		'op_result'	=> 'cert_op_result',
+		'title'		=> tr('Certificate errors'),
+		'join'		=> ''
+	),
+);
+
+$errors = $pending = 0;
+$type = array();
+
+foreach($statusArray as $table => $status){
+	$rs = generateSection($table, $status['name'], $status['id'], $status['status'], $status['op_result'], $status['title'], $status['join']);
+	$errors += $rs['errors'];
+	$pending += $rs['pending'];
+	if($rs['errors'] > 0){
+		$type[] = array(
+			'TITLE'		=> $status['title'],
+			'PREPEND'	=> $table,
+		);
 	}
 }
 
-gen_page_message($tpl);
+$tpl->saveRepeats(array('ERRORS' => $type));
+$tpl->saveSection($pending > 0 ? 'PENDINGS' : 'NOPENDINGS');
 
-get_error_domains($sql, $tpl);
+$tpl->saveVariable(array(
+	'TR_PAGE_TITLE'		=> tr('Selity - Virtual Hosting Control System'),
+	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
+	//'THEME_CHARSET'		=> tr('encoding'),
+	'TR_DEBUGGER_TITLE'	=> tr('Selity debugger'),
+	'TR_PENDING_OP'		=> tr('pending operations.'),
+	'TR_CLICK'			=> tr('Click to execute'),
+	'TR_ERRORS'			=> tr('Errors'),
+	'TR_EXEC_REQUESTS'	=> tr('Execute requests'),
+	'TR_CHANGE_STATUS'	=> tr('Force retry operation'),
 
-get_error_aliases($sql, $tpl);
+	'PENDING_OP'	=> $pending,
+	'ERRORS'		=> $errors
+));
 
-get_error_subdomains($sql, $tpl);
 
-get_error_alias_subdomains($sql, $tpl);
+if (array_key_exists('action', $_GET) && ($pending > 0 || $errors > 0)) {
+	if ($_GET['action'] == 'run_engine') {
+		$tpl->addMessage(tr('Daemon returned %d as status code', send_request()));
+	} else if ($_GET['action'] == 'change_status' && array_key_exists('id', $_GET) && array_key_exists('type', $_GET)) {
+		if(!array_key_exists($_GET['type'], $statusArray)){
+			$tpl->addMessage(tr('Unknown type!'));
+			header('Location: selity_debugger.php');
+			die;
+		}
+		echo $query = "UPDATE `{$_GET['type']}` SET `{$statusArray[$_GET['type']]['op_result']}` = NULL WHERE `{$statusArray[$_GET['type']]['id']}` = ?";
+		try{
+			$sql->doQuery($query, (int) $_GET['id']);
+		} catch(Exception $e){
+			$tpl->addMessage(tr('Unknown Error!'));
+			$tpl->addMessage($e->getMessage());
+			header('Location: selity_debugger.php');
+			die;
+		}
+		$tpl->addMessage(tr('Done'));
+		header('Location: selity_debugger.php');
+		die;
+	}
+}
 
-get_error_mails($sql, $tpl);
+genMainMenu();
+genAdminToolsMenu();
 
-$tpl->parse('PAGE', 'page');
-$tpl->prnt();
+
+$tpl->flushOutput('admin/selity_debugger');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
-
-unset_messages();
-
-

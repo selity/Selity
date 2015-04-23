@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_DEBUGGER_TITLE}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<!--Section_:PENDINGS:-->
+						<a href="selity_debugger.php?action=run_engine">{PENDING_OP}&nbsp;{TR_PENDING_OP}&nbsp;{TR_CLICK}</a><br />
+						<!--:PENDINGS:_Section-->
+						<!--Section_:NOPENDINGS:-->
+						<a href="selity_debugger.php?action=run_engine">{PENDING_OP}&nbsp;{TR_PENDING_OP}</a><br />
+						<!--:NOPENDINGS:_Section-->
+						{TR_ERRORS}: {ERRORS}<br />
+
+
+							<!--Repeats_:ERRORS:-->
+								<div class="col1">
+									<b>{TITLE}</b>
+								</div>
+								<div class="clear">&nbsp;</div>
+
+								<!--Repeats_:{PREPEND}REPEATS:-->
+								{{PREPEND}NAME} - <a href="selity_debugger.php?action=change_status&amp;id={{PREPEND}ID}&amp;type={PREPEND}">{TR_CHANGE_STATUS}</a><br />
+								<span style="color:red;">{{PREPEND}OP_RESULT}</span>
+								<hr />
+								<div class="clear">&nbsp;</div>
+								<!--:{PREPEND}REPEATS:_Repeats-->
+							<!--:ERRORS:_Repeats-->
+
+					<div class="clear">&nbsp;</div>
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>
