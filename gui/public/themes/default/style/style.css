@@ -456,7 +456,7 @@ h3 {
 	padding: 		3px 3px 3px 10px;
 	background:		#EEE;
 	border:			1px solid #CCC;
-	height:			20px;
+	min-height:			20px;
 	text-align:		right;
 	line-height:	20px;
 }
@@ -466,10 +466,8 @@ h3 {
 	padding: 	3px 3px 3px 10px;
 	border:		1px solid #CCC;
 	background:	#EEE;
-	height:		20px;
-	line-height:	20px;
+	min-height:		20px;
 }
-
 
 .col2_2 input[type=text], .col2_2 input[type=password], .col2_2 input[type=submit], .col2_2 select, .col2_2 textarea{
 	width:		250px;
@@ -509,4 +507,33 @@ h3 {
 
 .searchForm{
 	margin: 0px 0px 5px 0px;
+}
+
+table{
+	width:	100%;
+}
+
+th, td{
+	margin:			0px 5px 5px 0px;
+	padding:		3px 3px 3px 10px;
+	border:			1px solid #CCC;
+	background:		#EEE;
+	height:			25px;
+	vertical-align:	middle;
+}
+
+th{
+	text-align:		center;
+}
+
+.infolevel{
+	color:	#000;
+}
+
+.warninglevel{
+	color:	#090;
+}
+
+.errorlevel{
+	color:	#F00;
 }

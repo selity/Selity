@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_ADMIN_LOG}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<div class="col1">
+							<b>{TR_VERSION_TITLE}</b>
+						</div>
+						<p>
+							{VERSION_MESSAGE}
+						</p>
+						<p>
+							{VERSION_INFOS}
+						</p>
+
+						<div class="col1">
+							<b>{TR_DB_TITLE}</b>
+						</div>
+						<p>
+							{DB_MESSAGE}
+						</p>
+						<p>
+							{DB_INFOS}
+						</p>
+
+
+						<div class="clear">&nbsp;</div>
+
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

@@ -30,7 +30,7 @@ check_login(__FILE__);
 $tpl = template::getInstance();
 $cfg = configs::getInstance();
 
-$theme_color = configs::getInstance()->USER_INITIAL_THEME;
+$theme_color = $cfg->USER_INITIAL_THEME;
 
 function genAdminList(){
 	$tpl = template::getInstance();
@@ -50,7 +50,7 @@ function genAdminList(){
 			$tpl->saveSection('DELETE_ADMIN'. $rs->admin_id);
 		}
 		$admins[] = array(
-			'NAME'				=> sprintf('%s %s (%s %s)', $rs->admin_name, $rs->email, $rs->fname, $rs->lname),
+			'NAME'				=> sprintf('%s (%s)', $rs->admin_name, $rs->email),
 			'ADMIN_ID'			=> $rs->admin_id,
 			'CREATED_BY'		=> is_null($rs->parent) ? tr('System') : $rs->parent,
 			'URL_DELETE_ADMIN'	=> 'users_admin_op.php?op=delete&user_id=' . $rs->admin_id
@@ -165,7 +165,7 @@ function genResellerList(){
 	while (!$rs->EOF){
 		$tpl->saveSection('RESELLER');
 		$admins[] = array(
-			'NAME'				=> sprintf('%s %s (%s %s)', $rs->admin_name, $rs->email, $rs->fname, $rs->lname),
+			'NAME'				=> sprintf('%s (%s)', $rs->admin_name, $rs->email),
 			'ADMIN_ID'			=> $rs->admin_id,
 			'CREATED_BY'		=> is_null($rs->parent) ? tr('System') : $rs->parent,
 			'URL_DELETE_RESELLER'	=> 'users_reseller_op.php?op=delete&user_id=' . $rs->admin_id
@@ -315,7 +315,7 @@ function genClientList(){
 		$admins[] = array(
 			'STATUS_URL'		=> $status_action,
 			'STATUS'			=> $status,
-			'NAME'				=> sprintf('%s (%s %s)',$rs->email, $rs->fname, $rs->lname),
+			'NAME'				=> sprintf('%s (%s)', $rs->admin_name, $rs->email),
 			'ADMIN_ID'			=> $rs->admin_id,
 			'CREATED_BY'		=> is_null($rs->parent) ? tr('System') : $rs->parent,
 			'URL_DELETE_CLIENT'	=> 'users_client_delete.php?user_id='.$rs->admin_id

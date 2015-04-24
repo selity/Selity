@@ -69,7 +69,7 @@ abstract class selityUpdate{
 		return $this->functionName . $version;
 	}
 	protected function sendEngineRequest() {
-				send_request();
+		send_request();
 	}
 	protected function addErrorMessage($message){
 		$this->errorMessages.=$message;
@@ -134,8 +134,8 @@ abstract class selityUpdate{
  * @since	r1355
  */
 class versionUpdate extends selityUpdate{
-	protected $databaseVariableName="VERSION_UPDATE";
-	protected $errorMessage="Version update %s failed";
+	protected $databaseVariableName='VERSION_UPDATE';
+	protected $errorMessage='Version update %s failed';
 	public static function getInstance(){
 		static $instance=null;
 		if($instance===null)$instance= new self();
@@ -145,14 +145,14 @@ class versionUpdate extends selityUpdate{
 		return	(int)Config::get('BuildDate');
 	}
 	protected function getNextVersion() {
-		$last_update = "http://www.isp-control.net/latest.txt";
+		$last_update = 'http://www.selity.org/latest.txt';
 		ini_set('user_agent', 'Mozilla/5.0');
 		$timeout = 2;
 		$old_timeout = ini_set('default_socket_timeout', $timeout);
 		$dh2 = @fopen($last_update, 'r');
 		ini_set('default_socket_timeout', $old_timeout);
 		if (!is_resource($dh2)){
-			$this->addErrorMessage(tr("Couldn't check for updates! Website not reachable."));
+			$this->addErrorMessage(tr('Could not check for updates! Website not reachable.'));
 			return false;
 		}
 		$last_update_result = (int)fread($dh2, 8);
@@ -164,7 +164,7 @@ class versionUpdate extends selityUpdate{
 		else return false;
 	}
 	protected function returnFunctionName($version) {
-		return "dummyFunctionThatAllwaysExists";
+		return 'dummyFunctionThatAllwaysExists';
 	}
 	protected function dummyFunctionThatAllwaysExists(&$engine_run_request){
 		//uncomment when engine part will be ready

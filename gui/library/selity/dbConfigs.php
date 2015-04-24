@@ -48,7 +48,7 @@ final class dbConfigs{
 
 	public function __get($name) {
 		if(!isset($this->values[$name]))
-			throw new Exception(tr("Config variable '%s' is missing!", $name));
+			throw new Exception(tr('Config variable "%s" is missing!', $name));
 		return $this->values[$name];
 	}
 

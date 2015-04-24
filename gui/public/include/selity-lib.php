@@ -118,10 +118,8 @@ Config::set('BRUTEFORCE_BETWEEN_TIME', 30);
 // enable or disable maintenance mode
 // true = disable, false = enable
 Config::set('MAINTENANCEMODE', false);
-configs::getInstance()->MAINTENANCEMODE = false;
 // servicemode message
 Config::set('MAINTENANCEMODE_MESSAGE', tr("We are sorry, but the system is currently under maintenance.\nOnly administrators can login."));
-configs::getInstance()->MAINTENANCEMODE_MESSAGE = tr("We are sorry, but the system is currently under maintenance.\nOnly administrators can login.");
 
 // password chars
 Config::set('PASSWD_CHARS', 6);

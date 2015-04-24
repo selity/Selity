@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{TR_ADMIN_LOG}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<table>
+							<tr>
+								<th style='width: 200px;'>
+									{TR_USERNAME}
+								</th>
+								<th>
+									{TR_LOGIN_ON}
+								</th>
+								<th>
+									{TR_OPTIONS}
+								</th>
+							</tr>
+								<!--Repeats_:SESSIONS:-->
+							<tr>
+								<td>
+									<center>{USERNAME}</center>
+								</td>
+								<td>
+									<center>{TIME}</center>
+								</td>
+								<td>
+									<center>
+										<!--Section_:DELETE{ID}:-->
+										<a href="?killID={ID}&killName={USERNAME}">{TR_DELETE}</a>
+										<!--:DELETE{ID}:_Section-->
+									</center>
+								</td>
+							</tr>
+								<!--:SESSIONS:_Repeats-->
+						</table>
+
+						<!--Section_:prev:-->
+							<a href="?go={prv}#users">&lt;-&nbsp;{TR_PREVIOUS}</a>
+						<!--:prev:_Section-->
+						<!--Section_:next:-->
+							<div class="right"><a href="?go={nxt}#users">{TR_NEXT}&nbsp;-&gt;</a></div>
+						<!--:next:_Section-->
+						<div class="clear">&nbsp;</div>
+						<br />
+						<form action="" method="post" enctype="multipart/form-data" name="set_layout" id="set_layout">
+							<label for="select">{TR_DELETE}</label>
+							<select name="select">
+								<option value="0" selected="selected">{TR_EVERYTHING}</option>
+								<option value="7">{TR_LAST_WEEK}</option>
+								<option value="30">{TR_LAST_MONTH}</option>
+								<option value="91">{TR_LAST_3_MONTHS}</option>
+								<option value="182">{TR_LAST_HALF_YEAR}</option>
+								<option value="365">{TR_LAST_YEAR}</option>
+							</select>
+							<input name="submit" type="submit" class="button" value="{TR_SEND}">
+						</form>
+						<div class="clear">&nbsp;</div>
+
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

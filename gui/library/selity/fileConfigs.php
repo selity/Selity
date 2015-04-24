@@ -61,19 +61,19 @@ final class fileConfigs{
 
 	public function __get($name) {
 		if(!isset($this->values[$name]))
-			throw new Exception("Config variable '$name' is missing!");
+			throw new Exception('Config variable "%s" is missing!');
 		return $this->values[$name];
 	}
 
 	public function __set($name, $value) {
 		//if(!isset($this->values[$name]))
-			//throw new Exception("Config variable '$name' is missing!");
+			//throw new Exception('Config variable "%s" is missing!');
 		$this->values[$name] = $value;
 	}
 
 	public function __unset($name) {
 		if(!isset($this->values[$name]))
-			throw new Exception("Config variable '$name' is missing!");
+			throw new Exception('Config variable "%s" is missing!');
 		unset($this->values[$name]);
 	}
 

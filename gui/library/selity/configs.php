@@ -48,29 +48,27 @@ final class configs{
 	}
 
 	public function __get($name) {
+		if($this->dbRef){
+			try{
+				return $this->dbRef->$name;
+			} catch (Exception $e) {}
+		}
 		if($this->fileRef){
 			try{
 				return $this->fileRef->$name;
-			} catch (Exception $e) {
-				if($this->dbRef){
-					return $this->dbRef->$name;
-				}
-			}
+			} catch (Exception $e) {}
 		}
 		throw new Exception('Configs not loaded!');
 	}
 
 	public function __set($name, $value) {
-		try{
-			if($this->dbRef){
-				$this->dbRef->$name = $value;
-				return;
-			}
-		} catch (Exception $e) {
-			if($this->fileRef){
-				$this->fileRef->$name = $value;
-				return;
-			}
+		if($this->dbRef){
+			$this->dbRef->$name = $value;
+			return;
+		}
+		if($this->fileRef){
+			$this->fileRef->$name = $value;
+			return;
 		}
 		throw new Exception('Configs not loaded!');
 	}

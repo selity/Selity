@@ -30,7 +30,7 @@ check_login(__FILE__);
 
 $tpl = template::getInstance();
 $cfg = configs::getInstance();
-$theme_color = configs::getInstance()->USER_INITIAL_THEME;
+$theme_color = $cfg->USER_INITIAL_THEME;
 
 
 function getServerList($user) {

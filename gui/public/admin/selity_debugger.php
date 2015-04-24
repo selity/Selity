@@ -31,7 +31,7 @@ $tpl = template::getInstance();
 $cfg = configs::getInstance();
 $sql = mysql::getInstance();
 
-$theme_color = configs::getInstance()->USER_INITIAL_THEME;
+$theme_color = $cfg->USER_INITIAL_THEME;
 
 function generateSection($table, $name, $id, $status, $op_result, $title, $join){
 	$errors = $pending = 0;
@@ -197,7 +197,6 @@ if (array_key_exists('action', $_GET) && ($pending > 0 || $errors > 0)) {
 
 genMainMenu();
 genAdminToolsMenu();
-
 
 $tpl->flushOutput('admin/selity_debugger');
 
