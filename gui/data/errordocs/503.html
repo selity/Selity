@@ -1,14 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
 	<head>
-		<title>{DMN_NAME}</title>
+		<title>Error 503!</title>
 		<link rel="stylesheet" href="style/style.css" type="text/css" />
 		<link rel="stylesheet" href="style/index.css" type="text/css" />
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+		<script>
+			function get_path() {
+				if (document.location.pathname !== undefined) {
+					return document.location.pathname.replace( /[<]/g, "&lt;").replace(/[>]/g, "&gt;");
+				} else {
+					return "&nbsp;";
+				}
+			}
+		</script>
 	</head>
 	<body>
 		<div id="nonFooter">
 			<div id="page">
 				<div id="box">
-					<div id="title"><h1>{DMN_NAME}</h1></div>
+					<div id="title"><h1>Error 503!</h1></div>
 						<div id='NoPageMessage'>&nbsp;</div>
 					<form name="frm" action="index.php" method="post">
 						<div class="left">
@@ -19,17 +30,10 @@
 						</div>
 						<div class="main">
 							<div style="text-align: left">
-								<p>
-									This is the default page for <strong>{DMN_NAME}</strong>. This
-									page was generated automatically. Please, upload your
-									own index.html file.
-								</p>
 								<br />
-								<p>
-									If you are the owner of this domain, you can login
-									<a href="{BASE_SERVER_VHOST_PREFIX}{BASE_SERVER_VHOST}" class="link">here</a>.
-								</p>
 								<br />
+								<h2>Service unavailable!</h2>
+								<script type="text/javascript"> document.write(get_path()); </script>
 							</div>
 							<div class="clear">&nbsp;</div>
 						</div>
