@@ -40,8 +40,3 @@ define('TOINSTALL_STATUS', 'install');
 define('TOUNINSTALL_STATUS', 'uninstall');
 
 define('SERVER_TIMEOUT', 3);
-
-
-
-
-

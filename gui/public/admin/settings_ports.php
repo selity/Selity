@@ -172,11 +172,6 @@ function show_services(&$tpl, &$sql) {
 		set_page_message(tr('You have no custom service ports defined.'));
 	} else {
 		while (!$rs->EOF) {
-			if ($row++ % 2 == 0) {
-				$tpl->assign('CLASS', 'content');
-			} else {
-				$tpl->assign('CLASS', 'content2');
-			}
 
 			list($port, $protocol, $name, $status, $custom) = explode(";", $rs->fields['value']);
 
