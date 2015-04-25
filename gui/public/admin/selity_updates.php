@@ -77,6 +77,7 @@ $tpl->saveVariable(array(
 	'TR_PAGE_TITLE'		=> tr('Selity - Updates'),
 	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
 	'THEME_CHARSET'		=> tr('encoding'),
+	'TR_UPDATES'		=> tr('Updates'),
 	'TR_VERSION_TITLE'	=> tr('Selity updates'),
 	'TR_DB_TITLE'		=> tr('Available database updates'),
 ));

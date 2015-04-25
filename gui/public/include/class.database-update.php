@@ -65,7 +65,7 @@ class databaseUpdate extends selityUpdate{
 	protected function _databaseUpdate_1() {
 		$sqlUpd = array();
 
-		$sqlUpd[] = "INSERT INTO `config` (name, value) VALUES ('DATABASE_REVISION' , '1')";
+		$sqlUpd[] = "REPLACE INTO `config` (name, value) VALUES ('DATABASE_REVISION' , '1')";
 
 		return $sqlUpd;
 	}

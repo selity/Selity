@@ -1,21 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 4.0.8
--- http://www.phpmyadmin.net
---
--- Host: localhost:3306
--- Generation Time: Apr 22, 2015 at 11:23 PM
--- Server version: 5.5.43-0+deb8u1
--- PHP Version: 5.6.7-1
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
-
---
--- Database: `selity`
---
-
--- --------------------------------------------------------
-
 --
 -- Table structure for table `admin`
 --
@@ -70,10 +52,11 @@ CREATE TABLE IF NOT EXISTS `domains` (
   `dmn_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `admin_id` int(10) unsigned DEFAULT NULL,
   `dmn_name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `dmn_status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `dmn_mount` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `dmn_ips` varchar(4096) COLLATE utf8_unicode_ci DEFAULT 'a:0:{}',
   `dmn_forward_url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `dmn_status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `dmn_op_result` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`dmn_id`),
   KEY `admin_id` (`admin_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -164,6 +147,7 @@ CREATE TABLE IF NOT EXISTS `log` (
   `log_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `log_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `log_message` text COLLATE utf8_unicode_ci,
+  `log_level` enum('info','warning','error') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'error',
   PRIMARY KEY (`log_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -198,42 +182,13 @@ CREATE TABLE IF NOT EXISTS `mail_users` (
   `mail_forward` text COLLATE utf8_unicode_ci,
   `mail_type` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
   `dmn_id` int(10) unsigned DEFAULT NULL,
-  `status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `op_result` text COLLATE utf8_unicode_ci,
+  `mail_status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `mail_op_result` text COLLATE utf8_unicode_ci,
   `mail_auto_respond` tinyint(1) NOT NULL DEFAULT '0',
   `mail_auto_respond_text` text COLLATE utf8_unicode_ci,
-  `quota` bigint(20) DEFAULT '0',
+  `mail_quota` bigint(20) DEFAULT '0',
   PRIMARY KEY (`mail_id`),
   KEY `admin_id` (`admin_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `mysql_db`
---
-
-CREATE TABLE IF NOT EXISTS `mysql_db` (
-  `sqld_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `admin_id` int(10) unsigned DEFAULT '0',
-  `sqld_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT 'n/a',
-  PRIMARY KEY (`sqld_id`),
-  KEY `domain_id` (`admin_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `mysql_user`
---
-
-CREATE TABLE IF NOT EXISTS `mysql_user` (
-  `sqlu_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `sqld_id` int(10) unsigned DEFAULT '0',
-  `sqlu_name` varchar(64) COLLATE utf8_unicode_ci DEFAULT 'n/a',
-  `sqlu_pass` varchar(64) COLLATE utf8_unicode_ci DEFAULT 'n/a',
-  PRIMARY KEY (`sqlu_id`),
-  KEY `sqld_id` (`sqld_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
@@ -323,7 +278,7 @@ CREATE TABLE IF NOT EXISTS `servers` (
   `server_priv_key` text COLLATE utf8_unicode_ci,
   `server_pass_key` text COLLATE utf8_unicode_ci,
   `server_status` varchar(10) COLLATE utf8_unicode_ci NOT NULL,
-  `server_status text` text COLLATE utf8_unicode_ci,
+  `server_op_result` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`server_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -370,18 +325,53 @@ CREATE TABLE IF NOT EXISTS `server_traffic` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sqld`
+--
+
+CREATE TABLE IF NOT EXISTS `sqld` (
+  `sqld_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` int(10) unsigned DEFAULT '0',
+  `sql_type` enum('mysql') COLLATE utf8_unicode_ci NOT NULL,
+  `sqld_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT 'n/a',
+  `sqld_status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `sqld_op_result` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`sqld_id`),
+  KEY `domain_id` (`admin_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sqlu`
+--
+
+CREATE TABLE IF NOT EXISTS `sqlu` (
+  `sqlu_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sqld_id` int(10) unsigned DEFAULT '0',
+  `sqlu_name` varchar(64) COLLATE utf8_unicode_ci DEFAULT 'n/a',
+  `sqlu_pass` varchar(64) COLLATE utf8_unicode_ci DEFAULT 'n/a',
+  `sqlu_status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `sqlu_op_result` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`sqlu_id`),
+  KEY `sqld_id` (`sqld_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ssl_certs`
 --
 
 CREATE TABLE IF NOT EXISTS `ssl_certs` (
   `cert_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `id` int(10) NOT NULL,
-  `type` enum('dmn','sub') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'dmn',
-  `password` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `key` text COLLATE utf8_unicode_ci NOT NULL,
-  `cert` text COLLATE utf8_unicode_ci NOT NULL,
-  `ca_cert` text COLLATE utf8_unicode_ci,
-  `status` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `cert_type` enum('dmn','sub') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'dmn',
+  `cert_password` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `cert_key` text COLLATE utf8_unicode_ci NOT NULL,
+  `cert_cert` text COLLATE utf8_unicode_ci NOT NULL,
+  `cert_ca_cert` text COLLATE utf8_unicode_ci,
+  `cert_status` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `cert_op_result` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`cert_id`),
   KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -411,6 +401,7 @@ CREATE TABLE IF NOT EXISTS `subdomains` (
   `sub_mount` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `sub_forward_url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `sub_status` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `sub_op_result` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`sub_id`),
   KEY `alias_id` (`alias_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

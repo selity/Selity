@@ -59,7 +59,7 @@ function get_update_infos() {
 	$tpl = template::getInstance();
 
 	if(databaseUpdate::getInstance()->checkUpdateExists()) {
-		$tpl->addMessage('<a href="database_update.php" class="link">' . tr('A database update is available') . '</a>');
+		$tpl->addMessage('<a href="selity_updates.php" class="link">' . tr('A database update is available') . '</a>');
 	}
 
 	if (!$cfg->CHECK_FOR_UPDATES) {
