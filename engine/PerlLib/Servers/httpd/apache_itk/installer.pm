@@ -97,7 +97,7 @@ sub setGuiPermissions{
 	$rs |= setRights("$ROOT_DIR/gui/public",
 		{user => $panelUName, group => $apacheGName, dirmode => '0550', filemode => '0440', recursive => 'yes'}
 	);
-	$rs |= setRights("$ROOT_DIR/gui/themes",
+	$rs |= setRights("$ROOT_DIR/gui/public/themes",
 		{user => $panelUName, group => $apacheGName, dirmode => '0550', filemode => '0440', recursive => 'yes'}
 	);
 	$rs |= setRights("$ROOT_DIR/gui/library",
@@ -109,17 +109,8 @@ sub setGuiPermissions{
 	$rs |= setRights("$ROOT_DIR/gui/data",
 		{user => $panelUName, group => $apacheGName, mode => '0550'}
 	);
-	$rs |= setRights("$ROOT_DIR/gui/data/ispLogos",
-		{user => $panelUName, group => $apacheGName, dirmode => '0750', filemode => '0640', recursive => 'yes'}
-	);
 	setRights("$ROOT_DIR/gui/i18n",
 		{user => $panelUName, group => $panelGName, dirmode => '0700', filemode => '0600', recursive => 'yes'}
-	);
-	$rs |= setRights("$ROOT_DIR/gui/plugins",
-		{user => $panelUName, group => $panelGName, dirmode => '0700', filemode => '0600', recursive => 'yes'}
-	);
-	$rs |= setRights("$ROOT_DIR/gui/plugins",
-		{user => $panelUName, group => $apacheGName, mode => '0550'}
 	);
 	$rs |= setRights("$ROOT_DIR/gui/public/tools/filemanager/data",
 		{user => $panelUName, group => $panelGName, dirmode => '0700', filemode => '0600', recursive => 'yes'}

@@ -46,29 +46,21 @@ if(strpos($guiRootDir, 'GUI_ROOT_DIR') !== false) {
 }
 
 // Sets include path
-set_include_path('.' . PATH_SEPARATOR . $guiRootDir . '/library');
+set_include_path('.' . PATH_SEPARATOR . $guiRootDir . '/public/include');
 
 // Include core library
 require_once 'selity-lib.php';
+require_once 'class.database-update.php';
 
 try {
-	// Gets an iMSCP_Update_Database instance
-	$databaseUpdate = iMSCP_Update_Database::getInstance();
-
-	if(!$databaseUpdate->applyUpdates()) {
-		print "\n[ERROR]: " . $databaseUpdate->getError() . "\n\n";
-		exit(1);
-	}
-
+	$databaseUpdate = databaseUpdate::getInstance();
+	$databaseUpdate->executeUpdates();
 } catch(Exception $e) {
-	$message = "\n[ERROR]: " . $e->getMessage() . "\n\nStackTrace:\n" .
+	$message = "\n[ERROR]: " . $e->getErrorMessage() . "\n\nStackTrace:\n" .
 		$e->getTraceAsString() . "\n\n";
-
 	print "$message\n\n";
-
 	exit(1);
 }
 
 print "\n[INFO]: Selity database update succeeded!\n\n";
-
 exit(0);

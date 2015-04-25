@@ -624,7 +624,7 @@ sub addUser{
 	##################### START COMMON FILES IN USER FOLDER #########################
 
 	#ERROR DOCS
-	$rs |= execute("cp -vnRT $main::selityConfig{GUI_ROOT_DIR}/public/errordocs $hDir/errors", \$stdout, \$stderr);
+	$rs |= execute("cp -vnRT $main::selityConfig{GUI_ROOT_DIR}/data/errordocs $hDir/errors", \$stdout, \$stderr);
 	debug("$stdout") if $stdout;
 	error("$stderr") if $stderr;
 
