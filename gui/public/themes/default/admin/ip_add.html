@@ -15,7 +15,7 @@
 				<div class="content-wrap">
 					<div id="main">
 
-						<h2>{TR_SERVER_OP}</h2>
+						<h2>{TR_IP_OP}</h2>
 						<hr />
 						<p>&nbsp;</p>
 
@@ -29,50 +29,42 @@
 							<input name="submit" type="submit" class="button" style="display:none;">
 
 							<div class="col1">
-								<b>{TR_SERVER_DATA}</b>
+								<b>{TR_IP_OP}</b>
+							</div>
+							<div class="clear">&nbsp;</div>
+
+
+							<!--Repeats_:SERVER:-->
+							<div class="content-wrap">
+								<div class='col2_2'>
+									{SERVER_NAME}
+								</div>
+							</div>
+							<div class='col2_1'>
+								<input type="checkbox" name="serverLST[]" value="{SERVER_ID}" {SERVER_CHK} />
+							</div>
+							<div class="clear">&nbsp;</div>
+							<!--:SERVER:_Repeats-->
+
+							<div class="content-wrap">
+								<div class='col2_2'>
+									<input type="text" name="ipNumber" value="{IP_NUMBER}" class="textinput">
+								</div>
+							</div>
+							<div class='col2_1'>
+								{TR_IP_NUMBER}:
 							</div>
 							<div class="clear">&nbsp;</div>
 
 							<div class="content-wrap">
 								<div class='col2_2'>
-									<input type="text" name="serverName" value="{SERVER_NAME}" class="textinput">
+									<input type="text" name="ipLabel" value="{IP_LABEL}" class="textinput">
 								</div>
 							</div>
 							<div class='col2_1'>
-								{TR_SERVER_NAME}:
+								{TR_IP_LABEL}:
 							</div>
 							<div class="clear">&nbsp;</div>
-
-							<div class="content-wrap">
-								<div class='col2_2'>
-									<input type="text" name="serverIP" value="{SERVER_IP}" class="textinput">
-								</div>
-							</div>
-							<div class='col2_1'>
-								{TR_SERVER_IP}:
-							</div>
-							<div class="clear">&nbsp;</div>
-
-							<div class="content-wrap">
-								<div class='col2_2'>
-									<input type="text" name="rootUser" value="{ROOT_USER}" class="textinput">
-								</div>
-							</div>
-							<div class='col2_1'>
-								{TR_ROOT_USER}:
-							</div>
-							<div class="clear">&nbsp;</div>
-
-							<div class="content-wrap">
-								<div class='col2_2'>
-									<input type="password" name="rootPass" value="{ROOT_PASS}" class="textinput">
-								</div>
-							</div>
-							<div class='col2_1'>
-								{TR_ROOT_PASS}:
-							</div>
-							<div class="clear">&nbsp;</div>
-
 
 							<div class="content-wrap">
 								<div class='col2_2'>

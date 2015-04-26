@@ -97,7 +97,8 @@ function genAdminServerMenu(){
 		array(
 			'TR_SERVER_OVERVIEW'	=> tr('Servers list'),
 			'TR_SERVER_ADD'			=> tr('Add server'),
-			'TR_SERVER_STATUS'		=> tr('Servers status'),
+			'TR_IPS_OVERVIEW'		=> tr('IPs list'),
+			'TR_IP_ADD'				=> tr('Add ip'),
 		)
 	);
 	template::getInstance()->saveSection('SERVER_MENU');
@@ -141,7 +142,6 @@ function genAdminSettingsMenu(){
 			'TR_MENU_I18N'						=> tr('Internationalisation'),
 			'TR_MENU_LAYOUT_TEMPLATES'			=> tr('Layout'),
 			'TR_CUSTOM_MENUS'					=> tr('Custom menus'),
-			'TR_MENU_MANAGE_IPS'				=> tr('Manage IPs'),
 			'TR_MENU_SERVER_TRAFFIC_SETTINGS'	=> tr('Server traffic settings'),
 			'TR_MENU_EMAIL_SETUP'				=> tr('Email setup'),
 			'TR_MENU_LOSTPW_EMAIL'				=> tr('Lostpw email setup'),

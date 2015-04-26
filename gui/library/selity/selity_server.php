@@ -39,9 +39,6 @@ class selity_server extends selity_container{
 		if($this->server_name == ''){
 			$this->errors[] = tr('Server name can not be empty');
 		}
-		if (!filter_var($this->server_ip, FILTER_VALIDATE_IP)) {
-			$this->errors[] = tr('invalid server ip');
-		}
 		if($this->server_root_user == ''){
 			$this->errors[] = tr('Root user name can not be empty');
 		}
@@ -49,6 +46,69 @@ class selity_server extends selity_container{
 			$this->errors[] = tr('Server root password can not be empty');
 		}
 		return $this->errors == array();
+	}
+
+	public function save(){
+		mysql::getInstance()->beginTransaction();
+		parent::save();
+		$ip = new selity_ips();
+		try{
+			$ip->init($this->server_ip, 'ip_number');
+		} catch (Exception $e){
+			$ip->ip_number = $this->server_ip;
+		}
+		$ip->server_id = $this->server_id;
+		if($ip->save()){
+			mysql::getInstance()->commit();
+			return true;
+		} else {
+			$this->errors[] = $ip->getMessage();
+			mysql::getInstance()->rollback();
+			return false;
+		}
+	}
+
+	public function delete(){
+		mysql::getInstance()->beginTransaction();
+		$query = '
+			SELECT
+				COUNT(*) AS `cnt`
+			FROM
+				`reseller_props`
+			WHERE
+				`server_ids` LIKE ?
+		';
+		$cnt = mysql::getInstance()->doQuery($query, '%:'.$this->server_id.';%')->cnt;
+		if($cnt > 0) {
+			$this->errors[] = tr('Server is already assigned to reseller!');
+			return false;
+		}
+		$query = '
+			SELECT
+				`ip_id`
+			FROM
+				`server_ips`
+			WHERE
+				`server_id` = ?
+		';
+		$rs = mysql::getInstance()->doQuery($query, $this->server_id);
+		$rv = true;
+		while(!$rs->EOF){
+			$ip = new selity_ips();
+			$ip->init($rs->ip_id);
+			if(!$ip->delete()){
+				$this->errors[] = $ip->getMessage();
+				$rv = false;
+			}
+			$rs->nextRow();
+		}
+		if(!$rv){
+			mysql::getInstance()->rollback();
+			return false;
+		}
+		$rv &= parent::delete();
+		mysql::getInstance()->commit();
+		return true;
 	}
 }
 

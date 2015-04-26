@@ -67,12 +67,13 @@ function genServerList(){
 		$color = $online ? '#090' : '#900';
 
 		$admins[] = array(
-			'STATUS_URL'		=> $status_action,
-			'STATUS'			=> $status,
-			'NAME'				=> sprintf('%s (%s)', $rs->server_name, $rs->server_ip),
-			'SERVER_ID'			=> $rs->server_id,
-			'ONLINE'			=> $online ? tr('Online') : tr('Offline'),
-			'COLOR'				=> $color,
+			'STATUS_URL'	=> $status_action,
+			'STATUS'		=> $status,
+			'NAME'			=> sprintf('%s (%s)', $rs->server_name, $rs->server_ip),
+			'SERVER_ID'		=> $rs->server_id,
+			'ONLINE'		=> $online ? tr('Online') : tr('Offline'),
+			'COLOR'			=> $color,
+			'ID'			=> $rs->server_id
 		);
 		$rs->nextRow();
 	}
@@ -95,8 +96,8 @@ $tpl->saveVariable(array(
 	'TR_SERVER_NAME'		=> tr('Server name'),
 	'TR_ONLINE'			=> tr('Online'),
 	'TR_ACTION'			=> tr('Options'),
-	//'TR_DELETE'			=> tr('Delete'),
-	//'TR_MESSAGE_DELETE'	=> tr('Are you sure you want to delete %s?', '%s'),
+	'TR_DELETE'			=> tr('Delete'),
+	'TR_MESSAGE_DELETE'	=> tr('Are you sure you want to delete %s?', '%s'),
 	'TR_EDIT'			=> tr('Edit'),
 	'TR_DETAILS'		=>  tr('Details'),
 ));

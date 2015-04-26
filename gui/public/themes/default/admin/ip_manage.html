@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<head>
+		<title>{TR_PAGE_TITLE}</title>
+		<link rel="stylesheet" href="{THEME_COLOR_PATH}/style/style.css" type="text/css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script type="text/javascript">
+			function action_delete(url, object) {
+				message = "{TR_MESSAGE_DELETE}"
+				if (!confirm(message.replace(/%s/, object)))
+					return false;
+				location = url;
+			}
+		</script>
+	</head>
+	<body>
+		<div id="nonFooter">
+			<div id="page">
+				<div class="clear">&nbsp;</div>
+				<div id="menu">
+					<!--Includes_:admin/menu:-->
+				</div>
+
+				<div class="content-wrap">
+					<div id="main">
+
+						<h2>{LIST_IPS}</h2>
+						<hr />
+						<p>&nbsp;</p>
+
+						<!--Section_:PageMessage:-->
+							<div id='PageMessage'>
+								{PageMessage}
+							</div>
+						<!--:PageMessage:_Section-->
+
+						<div class='col1'>
+							{TR_AVAILABLE_IPS}
+						</div>
+
+						<table>
+							<tr>
+								<th style='width: 200px;'>
+									{TR_IP}
+								</th>
+								<th>
+									{TR_LABEL}
+								</th>
+								<th>
+									{TR_SERVER}
+								</th>
+								<th>
+									{TR_ACTION}
+								</th>
+							</tr>
+							<!--Repeats_:IPS:-->
+							<tr>
+								<td>
+									{IP}
+								</td>
+								<td>
+									{LABEL}
+								</td>
+								<td>
+									{SERVER}
+								</td>
+								<td>
+									<a href="#" onclick="action_delete('ip_op.php?op=delete&ip_id={ID}', '{IP}')">
+										{TR_DELETE}
+									</a>
+								</td>
+							</tr>
+							<!--:IPS:_Repeats-->
+						</table>
+						<div class="clear">&nbsp;</div>
+						<br />
+
+					</div>
+				</div>
+
+<!--Includes_:admin/left_menu:-->
+
+
+				<div class="clear">&nbsp;</div>
+			</div>
+			<div class="clear">&nbsp;</div>
+		</div>
+
+<!--Includes_:footer:-->
+
+	</body>
+</html>

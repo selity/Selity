@@ -54,7 +54,7 @@ class selity_container{
 
 	public function init($id, $field = null){
 		$uid = $field == null ? $this->uid : $field;
-		$rs = mysql::getInstance()->doQuery('SELECT * FROM `'. $this->tableName .'` WHERE '. $uid . ' = ?', $id);
+		$rs = mysql::getInstance()->doQuery('SELECT * FROM `'. $this->tableName .'` WHERE `'. $uid . '` = ?', $id);
 		if($rs->countRows()){
 			$this->values = $rs->fetchRow();
 		} else {

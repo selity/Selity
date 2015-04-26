@@ -32,99 +32,94 @@ $tpl = template::getInstance();
 $cfg = configs::getInstance();
 $theme_color = $cfg->USER_INITIAL_THEME;
 
-function addServer($server) {
+function addIP($ip) {
 
 	$tpl = template::getInstance();
 
 	if (array_key_exists('submit', $_POST)) {
 
-		$server->server_name		= clean_input($_POST['serverName']);
-		$server->server_ip			= clean_input($_POST['serverIP']);
-		$server->server_root_user	= clean_input($_POST['rootUser']);
-		$server->server_root_pass	= clean_input($_POST['rootPass']);
-		$server->server_status		= ADD_STATUS;
+		$ip->ip_number		= clean_input($_POST['ipNumber']);
+		$ip->ip_label		= clean_input($_POST['ipLabel']);
+		$ip->ip_status		= ADD_STATUS;
 
-		$msg = is_null($server->server_id) ? tr('Server added') : tr('Server data saved');
+		$msg = is_null($ip->ip_id) ? tr('IP added') : tr('IP saved');
 
-		if($server->save()){
+		if($ip->save()){
 
 			write_log(sprintf(
-				'%s: added server: %s (%s)',
+				'%s: added ip: %s (%s)',
 				$_SESSION['user_logged'],
-				$server->server_name,
-				$server->server_ip
-			));
+				$ip->ip_number,
+				$ip->ip_label
+			), 'info');
 			send_request();
 			$tpl->addMessage($msg);
-			header('Location: servers_show.php');
+			header('Location: ip_show.php');
 			die();
 		} else {
-			$tpl->addMessage($server->getMessage());
+			$tpl->addMessage($ip->getMessage());
 		}
 	}
 }
 
 switch($_GET['op']){
 	case 'add':
-		$server = new selity_server();
+		$ip = new selity_ips();
 		break;
 	case 'edit':
-		$id = (int) $_GET['server_id'];
+		$id = (int) $_GET['ip_id'];
 		try{
-			$server = new selity_server($id);
+			$ip = new selity_ips($id);
 		} catch (Exception $e) {
-			$tpl->addMessage(tr('Server not found!'));
-			header('Location: servers_show.php');
+			$tpl->addMessage(tr('IP not found!'));
+			header('Location: ip_show.php');
 			die();
 		}
 		break;
 	case 'delete':
-		$id = (int) $_GET['server_id'];
+		$id = (int) $_GET['ip_id'];
 		try{
-			$server = new selity_server($id);
+			$ip = new selity_ips($id);
 		} catch (Exception $e) {
-			$tpl->addMessage(tr('Server not found!'));
-			header('Location: servers_show.php');
+			$tpl->addMessage(tr('IP not found!'));
+			header('Location: ip_show.php');
 			die();
 		}
-		if($server->delete()){
-			$tpl->addMessage(tr('Server deleted!'));
+		if($ip->delete()){
+			$tpl->addMessage(tr('IP deleted!'));
 		} else {
-			$tpl->addMessage($server->getMessage());
-			$tpl->addMessage(tr('Server not deleted!'));
+			$tpl->addMessage($ip->getMessage());
+			$tpl->addMessage(tr('IP not deleted!'));
 		}
-		header('Location: servers_show.php');
+		header('Location: ip_show.php');
 		die();
 		break;
 	default:
 		$tpl->addMessage(tr('Invalid operation!'));
-		header('Location: servers_show.php');
+		header('Location: ip_show.php');
 		die();
 }
 
 genMainMenu();
 genAdminServerMenu();
 
-addServer($server);
+addIP($ip);
 
 $tpl->saveVariable(array(
-	'TR_PAGE_TITLE'		=> tr('Selity - Add server'),
+	'TR_PAGE_TITLE'		=> tr('Selity - Add ip'),
 	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
 	//'THEME_CHARSET'	=> tr('encoding'),
-	'TR_SERVER_OP'		=> $server->server_id ? tr('Edit server') : tr('Add server'),
-	'TR_SERVER_DATA'	=> tr('Server data'),
-	'TR_SERVER_NAME'	=> tr('Server name'),
-	'TR_SERVER_IP'		=> tr('Server ip'),
-	'TR_ROOT_USER'		=> tr('Root user'),
-	'TR_ROOT_PASS'		=> tr('Root password'),
+	'TR_IP_OP'			=> $ip->ip_id ? tr('Edit ip') : tr('Add ip'),
+	'SERVER_NAME'		=> tr('Server name'),
+	'TR_IP_NUMBER'		=> tr('IP number'),
+	'TR_IP_LABEL'		=> tr('IP label'),
 	'TR_SUBMIT'			=> tr('Save'),
 
-	'SERVER_NAME'	=> $server->server_name,
-	'SERVER_IP'		=> $server->server_ip,
-	'ROOT_USER'		=> $server->server_root_user
+	'IP_NUMBER'		=> $ip->ip_number,
+	'IP_LABEL'		=> $ip->ip_label,
 ));
 
-$tpl->flushOutput('admin/servers_add');
+$tpl->flushOutput('admin/ip_add');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();
