@@ -28,6 +28,13 @@ class selity_ips extends selity_container{
 
 	protected $tableName	= 'server_ips';
 
+	public function __construct($id = null){
+		parent::__construct();
+		if(!is_null($id)){
+			$this->init($id);
+		}
+	}
+
 	public function __set($var, $value){
 		if($var == 'ip_number'){
 			if(filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)){

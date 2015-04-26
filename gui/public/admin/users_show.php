@@ -53,7 +53,7 @@ function genAdminList(){
 			'NAME'				=> sprintf('%s (%s)', $rs->admin_name, $rs->email),
 			'ADMIN_ID'			=> $rs->admin_id,
 			'CREATED_BY'		=> is_null($rs->parent) ? tr('System') : $rs->parent,
-			'URL_DELETE_ADMIN'	=> 'users_admin_op.php?op=delete&user_id=' . $rs->admin_id
+			'URL_DELETE_ADMIN'	=> 'users_admin_op.php?op=delete&amp;user_id=' . $rs->admin_id
 		);
 		$rs->nextRow();
 	}

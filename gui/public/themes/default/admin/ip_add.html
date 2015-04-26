@@ -33,18 +33,19 @@
 							</div>
 							<div class="clear">&nbsp;</div>
 
-
-							<!--Repeats_:SERVER:-->
 							<div class="content-wrap">
 								<div class='col2_2'>
-									{SERVER_NAME}
+									<select name="server" size="1">
+										<!--Repeats_:SERVER:-->
+										<option value="{SERVER_ID}" {SERVER_SLT}>{SERVER_NAME}</option>
+										<!--:SERVER:_Repeats-->
+									</select>
 								</div>
 							</div>
 							<div class='col2_1'>
-								<input type="checkbox" name="serverLST[]" value="{SERVER_ID}" {SERVER_CHK} />
+								{TR_SERVER_NAME}:
 							</div>
 							<div class="clear">&nbsp;</div>
-							<!--:SERVER:_Repeats-->
 
 							<div class="content-wrap">
 								<div class='col2_2'>

@@ -75,7 +75,7 @@ $tpl->saveVariable(array(
 genMainMenu();
 genAdminServerMenu();
 
-$tpl->flushOutput('admin/ip_manage');
+$tpl->flushOutput('admin/ip_show');
 
 if (configs::getInstance()->GUI_DEBUG)
 	dump_gui_debug();

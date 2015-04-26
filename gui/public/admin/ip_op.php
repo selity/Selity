@@ -32,12 +32,35 @@ $tpl = template::getInstance();
 $cfg = configs::getInstance();
 $theme_color = $cfg->USER_INITIAL_THEME;
 
+function getServerList() {
+	$sql = mysql::getInstance();
+	$tpl = template::getInstance();
+	$query = 'SELECT * FROM `servers`';
+	$rs = $sql->doQuery($query);
+	$servers = array();
+	if ($rs->countRows() == 0) {
+		$tpl->addMessage(tr('Server list is empty! You must add at lest one!'));
+	} else {
+		while (!$rs->EOF) {
+			$checked = array_key_exists('server', $_POST) && $_POST['server'] == $rs->server_id ? 'selected' : '';
+			$servers[] = array(
+				'SERVER_NAME'		=> $rs->server_name,
+				'SERVER_ID'			=> $rs->server_id,
+				'SERVER_SLT'		=> $checked
+			);
+			$rs->nextRow();
+		}
+	}
+	$tpl->saveRepeats(array('SERVER' => $servers));
+}
+
 function addIP($ip) {
 
 	$tpl = template::getInstance();
 
 	if (array_key_exists('submit', $_POST)) {
 
+		$ip->server_id		= clean_input($_POST['server']);
 		$ip->ip_number		= clean_input($_POST['ipNumber']);
 		$ip->ip_label		= clean_input($_POST['ipLabel']);
 		$ip->ip_status		= ADD_STATUS;
@@ -65,16 +88,6 @@ function addIP($ip) {
 switch($_GET['op']){
 	case 'add':
 		$ip = new selity_ips();
-		break;
-	case 'edit':
-		$id = (int) $_GET['ip_id'];
-		try{
-			$ip = new selity_ips($id);
-		} catch (Exception $e) {
-			$tpl->addMessage(tr('IP not found!'));
-			header('Location: ip_show.php');
-			die();
-		}
 		break;
 	case 'delete':
 		$id = (int) $_GET['ip_id'];
@@ -104,13 +117,14 @@ genMainMenu();
 genAdminServerMenu();
 
 addIP($ip);
+getServerList();
 
 $tpl->saveVariable(array(
 	'TR_PAGE_TITLE'		=> tr('Selity - Add ip'),
 	'THEME_COLOR_PATH'	=> '../themes/'.$theme_color,
 	//'THEME_CHARSET'	=> tr('encoding'),
 	'TR_IP_OP'			=> $ip->ip_id ? tr('Edit ip') : tr('Add ip'),
-	'SERVER_NAME'		=> tr('Server name'),
+	'TR_SERVER_NAME'	=> tr('Server name'),
 	'TR_IP_NUMBER'		=> tr('IP number'),
 	'TR_IP_LABEL'		=> tr('IP label'),
 	'TR_SUBMIT'			=> tr('Save'),
